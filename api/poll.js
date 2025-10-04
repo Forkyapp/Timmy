@@ -6,8 +6,7 @@ const axios = require('axios');
 
 const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
 const CLICKUP_BOT_USER_ID = parseInt(process.env.CLICKUP_BOT_USER_ID || '0');
-const CLICKUP_SPACE_ID = process.env.CLICKUP_SPACE_ID || '90070039602';
-const CLICKUP_LIST_ID = process.env.CLICKUP_LIST_ID || '901210750000';
+const CLICKUP_WORKSPACE_ID = process.env.CLICKUP_WORKSPACE_ID || '90181842045';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
@@ -52,7 +51,7 @@ async function updateTaskStatus(taskId, statusId) {
 async function getAssignedTasks() {
   try {
     const response = await axios.get(
-      `https://api.clickup.com/api/v2/team/5738065/task`,
+      `https://api.clickup.com/api/v2/team/90181842045/my-work/tasks`,
       {
         headers: {
           'Authorization': CLICKUP_API_KEY,
@@ -67,17 +66,11 @@ async function getAssignedTasks() {
       }
     );
 
-    // Filter by space ID, list ID, and "in process" status only
+    // Filter by "in process" status only (my-work already filters by assignment)
     const allTasks = response.data.tasks || [];
-    const filteredTasks = allTasks.filter(task => {
-      const matchesSpace = task.space?.id === CLICKUP_SPACE_ID;
-      const matchesList = task.list?.id === CLICKUP_LIST_ID;
-      const isInProcess = task.status?.status === 'in process';
+    const filteredTasks = allTasks.filter(task => task.status?.status === 'in process');
 
-      return matchesSpace && matchesList && isInProcess;
-    });
-
-    console.log(`Found ${allTasks.length} total tasks, ${filteredTasks.length} matching filters (space: ${CLICKUP_SPACE_ID}, list: ${CLICKUP_LIST_ID}, status: in process)`);
+    console.log(`Found ${allTasks.length} total tasks, ${filteredTasks.length} with status 'in process'`);
     return filteredTasks;
   } catch (error) {
     console.error('Error fetching tasks:', error.message);
