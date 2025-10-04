@@ -13,8 +13,15 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_BASE_BRANCH = process.env.GITHUB_BASE_BRANCH || 'main';
 
-let Octokit;
-let octokit;
+// GitHub API helper using axios directly
+const github = axios.create({
+  baseURL: 'https://api.github.com',
+  headers: {
+    'Authorization': `token ${GITHUB_TOKEN}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'ClickUp-Claude-GitHub-Bot'
+  }
+});
 
 // ============================================
 // HELPER FUNCTIONS
@@ -37,13 +44,6 @@ async function getTaskDetails(taskId) {
 }
 
 async function processTask(task) {
-  // Lazy load Octokit
-  if (!Octokit) {
-    const { Octokit: OctokitClass } = await import('octokit');
-    Octokit = OctokitClass;
-    octokit = new Octokit({ auth: GITHUB_TOKEN });
-  }
-
   const taskId = task.id;
   const taskTitle = task.name;
   const taskDescription = task.description || '';
@@ -81,52 +81,36 @@ Generated file: \`${fileName}\`
 
   try {
     // Get base branch reference
-    const { data: refData } = await octokit.git.getRef({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      ref: `heads/${GITHUB_BASE_BRANCH}`
-    });
-
-    const baseSha = refData.object.sha;
+    const refResponse = await github.get(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/ref/heads/${GITHUB_BASE_BRANCH}`);
+    const baseSha = refResponse.data.object.sha;
     console.log(`Base branch SHA: ${baseSha}`);
 
     // Create new branch
-    await octokit.git.createRef({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+    await github.post(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs`, {
       ref: `refs/heads/${branchName}`,
       sha: baseSha
     });
-
     console.log(`Created branch: ${branchName}`);
 
     // Create/update file
     const contentEncoded = Buffer.from(generatedCode).toString('base64');
-
-    await octokit.repos.createOrUpdateFileContents({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      path: fileName,
+    await github.put(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${fileName}`, {
       message: commitMessage,
       content: contentEncoded,
       branch: branchName
     });
-
     console.log(`Committed file: ${fileName}`);
 
     // Create Pull Request
-    const { data: prData } = await octokit.pulls.create({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+    const prResponse = await github.post(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/pulls`, {
       title: prTitle,
       head: branchName,
       base: GITHUB_BASE_BRANCH,
       body: prBody
     });
+    console.log(`Pull Request created: ${prResponse.data.html_url}`);
 
-    console.log(`Pull Request created: ${prData.html_url}`);
-
-    return prData;
+    return prResponse.data;
 
   } catch (error) {
     console.error('Error creating GitHub PR:', error.message);
