@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { Octokit } = require('@octokit/rest');
 
 // ============================================
 // CONFIGURATION - Load from environment variables
@@ -14,9 +13,8 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_BASE_BRANCH = process.env.GITHUB_BASE_BRANCH || 'main';
 
-const octokit = new Octokit({
-  auth: GITHUB_TOKEN
-});
+let Octokit;
+let octokit;
 
 // ============================================
 // HELPER FUNCTIONS
@@ -39,6 +37,13 @@ async function getTaskDetails(taskId) {
 }
 
 async function processTask(task) {
+  // Lazy load Octokit
+  if (!Octokit) {
+    const octokitModule = await import('@octokit/rest');
+    Octokit = octokitModule.Octokit;
+    octokit = new Octokit({ auth: GITHUB_TOKEN });
+  }
+
   const taskId = task.id;
   const taskTitle = task.name;
   const taskDescription = task.description || '';
