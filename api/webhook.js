@@ -39,8 +39,8 @@ async function getTaskDetails(taskId) {
 async function processTask(task) {
   // Lazy load Octokit
   if (!Octokit) {
-    const octokitModule = await import('@octokit/rest');
-    Octokit = octokitModule.Octokit;
+    const { Octokit: OctokitClass } = await import('octokit');
+    Octokit = OctokitClass;
     octokit = new Octokit({ auth: GITHUB_TOKEN });
   }
 
