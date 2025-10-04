@@ -6,6 +6,7 @@ const axios = require('axios');
 
 const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
 const CLICKUP_BOT_USER_ID = parseInt(process.env.CLICKUP_BOT_USER_ID || '0');
+const CLICKUP_SPACE_ID = process.env.CLICKUP_SPACE_ID || '90181842045';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
