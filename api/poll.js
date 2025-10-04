@@ -66,11 +66,11 @@ async function getAssignedTasks() {
       }
     );
 
-    // Filter by "in progress" status only
+    // Filter by "bot in progress" status only
     const allTasks = response.data.tasks || [];
-    const filteredTasks = allTasks.filter(task => task.status?.status === 'in progress');
+    const filteredTasks = allTasks.filter(task => task.status?.status === 'bot in progress');
 
-    console.log(`Found ${allTasks.length} total tasks, ${filteredTasks.length} with status 'in progress'`);
+    console.log(`Found ${allTasks.length} total tasks, ${filteredTasks.length} with status 'bot in progress'`);
     return filteredTasks;
   } catch (error) {
     console.error('Error fetching tasks:', error.message);
@@ -136,8 +136,8 @@ Generated file: \`${fileName}\`
       }
     }
 
-    // If task is "in progress" and PR exists, update it
-    if (branchExists && existingPR && taskStatus === 'in progress') {
+    // If task is "bot in progress" and PR exists, update it
+    if (branchExists && existingPR && taskStatus === 'bot in progress') {
       console.log(`Updating existing PR #${existingPR.number} for task ${taskId}`);
 
       // Update the file
