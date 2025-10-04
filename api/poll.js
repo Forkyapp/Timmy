@@ -21,7 +21,8 @@ const github = axios.create({
   }
 });
 
-// Store processed task IDs (in production, use a database)
+// Note: processedTasks resets on each invocation (serverless)
+// We rely on checking if GitHub branch exists to avoid duplicates
 const processedTasks = new Set();
 
 // ============================================
@@ -90,13 +91,16 @@ Generated file: \`${fileName}\`
 `;
 
   try {
-    // Check if branch already exists
+    // Check if branch already exists (this prevents duplicates)
     try {
-      await github.get(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/ref/heads/${branchName}`);
-      console.log(`Branch ${branchName} already exists, skipping...`);
-      return null;
+      const branchCheck = await github.get(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/ref/heads/${branchName}`);
+      console.log(`Branch ${branchName} already exists (SHA: ${branchCheck.data.object.sha}), skipping...`);
+      return { skipped: true, branch: branchName };
     } catch (err) {
-      // Branch doesn't exist, continue
+      // Branch doesn't exist, continue creating PR
+      if (err.response?.status !== 404) {
+        throw err; // Re-throw if it's not a "not found" error
+      }
     }
 
     // Get base branch reference
@@ -150,6 +154,7 @@ module.exports = async (req, res) => {
 
     const tasks = await getAssignedTasks();
     console.log(`Found ${tasks.length} assigned tasks`);
+    console.log(`Currently tracking ${processedTasks.size} processed tasks`);
 
     let processedCount = 0;
     const results = [];
@@ -157,21 +162,33 @@ module.exports = async (req, res) => {
     for (const task of tasks) {
       // Skip if already processed
       if (processedTasks.has(task.id)) {
+        console.log(`Skipping already processed task: ${task.id}`);
         continue;
       }
+
+      console.log(`Processing new task: ${task.id} - ${task.name}`);
 
       try {
         const result = await processTask(task);
         if (result) {
           processedTasks.add(task.id);
-          processedCount++;
-          results.push({
-            taskId: task.id,
-            prUrl: result.html_url
-          });
+
+          if (result.skipped) {
+            console.log(`Task ${task.id} already has a PR`);
+          } else {
+            processedCount++;
+            results.push({
+              taskId: task.id,
+              prUrl: result.html_url
+            });
+          }
         }
       } catch (error) {
         console.error(`Failed to process task ${task.id}:`, error.message);
+        results.push({
+          taskId: task.id,
+          error: error.message
+        });
       }
     }
 
