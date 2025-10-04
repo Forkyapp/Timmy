@@ -51,7 +51,7 @@ async function updateTaskStatus(taskId, statusId) {
 async function getAssignedTasks() {
   try {
     const response = await axios.get(
-      `https://api.clickup.com/api/v2/team/90181842045/my-work/tasks`,
+      `https://api.clickup.com/api/v2/team/${CLICKUP_WORKSPACE_ID}/task`,
       {
         headers: {
           'Authorization': CLICKUP_API_KEY,
