@@ -7,7 +7,7 @@ const { Octokit } = require('@octokit/rest');
 
 const CLICKUP_API_KEY = process.env.CLICKUP_API_KEY;
 const CLICKUP_SECRET = process.env.CLICKUP_SECRET;
-const CLICKUP_BOT_USER_ID = process.env.CLICKUP_BOT_USER_ID;
+const CLICKUP_BOT_USER_ID = parseInt(process.env.CLICKUP_BOT_USER_ID || '0');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
@@ -167,7 +167,7 @@ module.exports = async (req, res) => {
 
         // Check if task is assigned to bot user
         const assignees = task.assignees || [];
-        const isBotAssigned = assignees.some(assignee => assignee.id === CLICKUP_BOT_USER_ID);
+        const isBotAssigned = assignees.some(assignee => parseInt(assignee.id) === CLICKUP_BOT_USER_ID);
 
         if (isBotAssigned) {
           console.log('Task assigned to bot - processing...');
