@@ -40,7 +40,6 @@ async function getAssignedTasks() {
         params: {
           assignees: [CLICKUP_BOT_USER_ID],
           subtasks: false,
-          statuses: ['to do', 'in progress'],
           order_by: 'updated',
           reverse: true
         }
