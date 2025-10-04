@@ -66,11 +66,11 @@ async function getAssignedTasks() {
       }
     );
 
-    // Filter by "in process" status only (my-work already filters by assignment)
+    // Filter by "in progress" status only
     const allTasks = response.data.tasks || [];
-    const filteredTasks = allTasks.filter(task => task.status?.status === 'in process');
+    const filteredTasks = allTasks.filter(task => task.status?.status === 'in progress');
 
-    console.log(`Found ${allTasks.length} total tasks, ${filteredTasks.length} with status 'in process'`);
+    console.log(`Found ${allTasks.length} total tasks, ${filteredTasks.length} with status 'in progress'`);
     return filteredTasks;
   } catch (error) {
     console.error('Error fetching tasks:', error.message);
@@ -136,8 +136,8 @@ Generated file: \`${fileName}\`
       }
     }
 
-    // If task is "in process" and PR exists, update it
-    if (branchExists && existingPR && taskStatus === 'in process') {
+    // If task is "in progress" and PR exists, update it
+    if (branchExists && existingPR && taskStatus === 'in progress') {
       console.log(`Updating existing PR #${existingPR.number} for task ${taskId}`);
 
       // Update the file
@@ -155,7 +155,7 @@ Generated file: \`${fileName}\`
       return { updated: true, prUrl: existingPR.html_url };
     }
 
-    // If branch exists but task not "in process", skip
+    // If branch exists but task not "in progress", skip
     if (branchExists) {
       console.log(`Branch ${branchName} already exists, skipping...`);
       return { skipped: true, branch: branchName };
