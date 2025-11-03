@@ -7,6 +7,7 @@ const queue = require('./lib/queue');
 const tracking = require('./lib/tracking');
 const clickup = require('./lib/clickup');
 const claude = require('./lib/claude');
+const orchestrator = require('./lib/orchestrator');
 
 async function pollAndProcess() {
   try {
@@ -19,7 +20,17 @@ async function pollAndProcess() {
       cache.addToProcessed(task);
 
       try {
-        await claude.launchCodex(task);
+        if (config.system.useMultiAI) {
+          // Multi-AI workflow: Gemini → Claude → PR
+          const result = await orchestrator.processTask(task);
+
+          if (!result.success) {
+            console.log(jarvis.warning(`Task ${task.id} queued for manual processing`));
+          }
+        } else {
+          // Legacy workflow: Claude only
+          await claude.launchCodex(task);
+        }
       } catch (error) {
         console.log(jarvis.error(`Failed: ${error.message}`));
       }
@@ -49,6 +60,13 @@ if (require.main === module) {
   claude.ensureClaudeSettings();
   console.log(jarvis.success('Systems online'));
   console.log(jarvis.info(`Monitoring workspace • ${config.system.pollIntervalMs / 1000}s intervals`));
+
+  if (config.system.useMultiAI) {
+    console.log(jarvis.ai('Multi-AI mode enabled (Gemini → Claude → PR)'));
+  } else {
+    console.log(jarvis.info('Legacy mode (Claude only)'));
+  }
+
   console.log(jarvis.divider() + '\n');
 
   pollAndProcess();
