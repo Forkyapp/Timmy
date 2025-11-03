@@ -1,4 +1,19 @@
 node_modules/
 .env
 .DS_Store
-.vercel
+coverage/
+*.log
+
+# Runtime data files
+processed-tasks.json
+task-queue.json
+pr-tracking.json
+
+# Temporary task files
+temp-prompt-*.txt
+task-*-prompt.txt
+task-*-launch.sh
+
+# Old folders
+local/
+api/

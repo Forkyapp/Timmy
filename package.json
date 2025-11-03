@@ -1,17 +1,29 @@
 {
-  "name": "clickup-claude-github",
+  "name": "jarvis-task-automation",
   "version": "1.0.0",
-  "private": true,
+  "description": "JARVIS-style autonomous task automation system",
+  "main": "devin.js",
   "scripts": {
-    "dev": "vercel dev"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "start": "node devin.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "ClickUp to GitHub integration via Vercel serverless functions",
   "dependencies": {
-    "express": "^5.1.0",
-    "axios": "^1.12.2",
-    "dotenv": "^16.4.5"
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/*.test.js"
+    ]
   }
 }
