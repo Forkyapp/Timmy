@@ -1,0 +1,62 @@
+You are a senior software architect analyzing a development task.
+
+**Task ID:** 86evckqwa
+**Title:** Implement Email Verification System
+**Description:**
+Description:
+Develop backend functionality that verifies a user’s email address after registration. The goal is to ensure account authenticity and prevent spam or fake sign-ups.
+Objectives:
+Generate a unique, time-limited verification token when a user registers.
+Store the token securely with reference to the user account.
+Create endpoint to verify the email (GET /api/auth/verify-email?token=).
+On success, mark the user as verified and delete or invalidate the token.
+Handle invalid or expired tokens gracefully with clear responses.
+Include an endpoint to resend the verification email if needed.
+Acceptance Criteria:
+New users receive a verification email after registration.
+Verification token expires after a defined time window (e.g., 24 hours).
+Successful verification updates the user record correctly.
+Resend endpoint works only for unverified users.
+API responses clearly communicate success, expiration, or invalid token states.
+
+**Repository:** /Users/user/Documents/Personal-Projects/collabifi-back
+
+Your job is to analyze this task and create a detailed feature specification. DO NOT include any code implementation.
+
+Please provide:
+
+1. **Feature Overview** (2-3 sentences)
+   - What needs to be built
+   - Why it's needed
+   - Expected outcome
+
+2. **Files to Modify** (CRITICAL - Be Specific)
+   List exact file paths that need to be created or modified:
+   - `path/to/file.js` - What changes are needed
+   - `path/to/another.js` - What changes are needed
+   - Include both new files and existing files to modify
+   - Use relative paths from repository root
+
+3. **Technical Approach** (4-6 bullet points)
+   - High-level architecture decisions
+   - Which parts of the codebase will be affected
+   - Any dependencies or prerequisites
+   - Potential challenges
+
+4. **Implementation Steps** (numbered list)
+   - Break down into logical steps
+   - Reference specific files from "Files to Modify" section
+   - Order of implementation
+
+5. **Testing Strategy** (3-4 bullet points)
+   - What should be tested
+   - Types of tests needed
+   - Edge cases to consider
+   - Which test files to create/modify
+
+6. **Acceptance Criteria** (checklist)
+   - Specific requirements that must be met
+   - Definition of done
+   - How to verify the feature works
+
+Format your response in clear Markdown. Be specific about file paths and changes. Focus on WHAT and WHY, not HOW (no code).

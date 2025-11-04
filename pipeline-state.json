@@ -60,5 +60,223 @@
       "aiProvider": "claude"
     },
     "errors": []
+  },
+  "86evckq2g": {
+    "taskId": "86evckq2g",
+    "taskName": "Implement Dark Mode Toggle",
+    "currentStage": "pr_creating",
+    "status": "in_progress",
+    "createdAt": "2025-11-03T20:16:10.624Z",
+    "updatedAt": "2025-11-03T20:16:25.184Z",
+    "stages": [
+      {
+        "name": "detection",
+        "stage": "detected",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:16:10.624Z",
+        "completedAt": "2025-11-03T20:16:10.624Z"
+      },
+      {
+        "name": "Gemini Analysis",
+        "stage": "analyzing",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:16:10.625Z",
+        "completedAt": "2025-11-03T20:16:22.054Z",
+        "duration": 11429,
+        "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckq2g/feature-spec.md",
+        "fallback": false
+      },
+      {
+        "name": "Claude Implementation",
+        "stage": "implementing",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:16:22.054Z",
+        "completedAt": "2025-11-03T20:16:25.183Z",
+        "duration": 3129,
+        "branch": "task-86evckq2g"
+      },
+      {
+        "name": "PR Creation",
+        "stage": "pr_creating",
+        "status": "in_progress",
+        "startedAt": "2025-11-03T20:16:25.184Z"
+      }
+    ],
+    "metadata": {
+      "geminiAnalysis": {
+        "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckq2g/feature-spec.md",
+        "fallback": false
+      },
+      "aiInstances": [
+        {
+          "provider": "claude",
+          "type": "main",
+          "branch": "task-86evckq2g",
+          "startedAt": "2025-11-03T20:16:25.184Z"
+        }
+      ],
+      "branches": [],
+      "prNumber": null,
+      "reviewIterations": 0,
+      "maxReviewIterations": 3,
+      "aiProvider": "claude"
+    },
+    "errors": []
+  },
+  "86evckq61": {
+    "taskId": "86evckq61",
+    "taskName": "Build User Activity Log API",
+    "currentStage": "pr_creating",
+    "status": "in_progress",
+    "createdAt": "2025-11-03T20:17:27.867Z",
+    "updatedAt": "2025-11-03T20:18:35.243Z",
+    "stages": [
+      {
+        "name": "detection",
+        "stage": "detected",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:17:27.867Z",
+        "completedAt": "2025-11-03T20:17:27.867Z"
+      },
+      {
+        "name": "Gemini Analysis",
+        "stage": "analyzing",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:17:27.868Z",
+        "completedAt": "2025-11-03T20:18:32.412Z",
+        "duration": 64544,
+        "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckq61/feature-spec.md",
+        "fallback": false
+      },
+      {
+        "name": "Claude Implementation",
+        "stage": "implementing",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:18:32.414Z",
+        "completedAt": "2025-11-03T20:18:35.237Z",
+        "duration": 2823,
+        "branch": "task-86evckq61"
+      },
+      {
+        "name": "PR Creation",
+        "stage": "pr_creating",
+        "status": "in_progress",
+        "startedAt": "2025-11-03T20:18:35.243Z"
+      }
+    ],
+    "metadata": {
+      "geminiAnalysis": {
+        "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckq61/feature-spec.md",
+        "fallback": false
+      },
+      "aiInstances": [
+        {
+          "provider": "claude",
+          "type": "main",
+          "branch": "task-86evckq61",
+          "startedAt": "2025-11-03T20:18:35.242Z"
+        }
+      ],
+      "branches": [],
+      "prNumber": null,
+      "reviewIterations": 0,
+      "maxReviewIterations": 3,
+      "aiProvider": "claude"
+    },
+    "errors": []
+  },
+  "86evckqwa": {
+    "taskId": "86evckqwa",
+    "taskName": "Implement Email Verification System",
+    "currentStage": "pr_creating",
+    "status": "in_progress",
+    "createdAt": "2025-11-03T20:25:47.686Z",
+    "updatedAt": "2025-11-03T20:26:16.440Z",
+    "stages": [
+      {
+        "name": "detection",
+        "stage": "detected",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:25:47.686Z",
+        "completedAt": "2025-11-03T20:25:47.686Z"
+      },
+      {
+        "name": "Gemini Analysis",
+        "stage": "analyzing",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:25:47.687Z",
+        "completedAt": "2025-11-03T20:26:13.864Z",
+        "duration": 26177,
+        "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckqwa/feature-spec.md",
+        "fallback": false
+      },
+      {
+        "name": "Claude Implementation",
+        "stage": "implementing",
+        "status": "completed",
+        "startedAt": "2025-11-03T20:26:13.865Z",
+        "completedAt": "2025-11-03T20:26:16.436Z",
+        "duration": 2571,
+        "branch": "task-86evckqwa"
+      },
+      {
+        "name": "PR Creation",
+        "stage": "pr_creating",
+        "status": "in_progress",
+        "startedAt": "2025-11-03T20:26:16.440Z"
+      }
+    ],
+    "metadata": {
+      "geminiAnalysis": {
+        "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckqwa/feature-spec.md",
+        "fallback": false
+      },
+      "aiInstances": [
+        {
+          "provider": "claude",
+          "type": "main",
+          "branch": "task-86evckqwa",
+          "startedAt": "2025-11-03T20:26:16.438Z"
+        }
+      ],
+      "branches": [],
+      "prNumber": null,
+      "reviewIterations": 0,
+      "maxReviewIterations": 3,
+      "aiProvider": "claude"
+    },
+    "errors": []
+  },
+  "86evckrqg": {
+    "taskId": "86evckrqg",
+    "taskName": "Create Admin Panel User Management API",
+    "currentStage": "analyzing",
+    "status": "in_progress",
+    "createdAt": "2025-11-04T15:47:36.193Z",
+    "updatedAt": "2025-11-04T15:47:36.194Z",
+    "stages": [
+      {
+        "name": "detection",
+        "stage": "detected",
+        "status": "completed",
+        "startedAt": "2025-11-04T15:47:36.193Z",
+        "completedAt": "2025-11-04T15:47:36.193Z"
+      },
+      {
+        "name": "Gemini Analysis",
+        "stage": "analyzing",
+        "status": "in_progress",
+        "startedAt": "2025-11-04T15:47:36.194Z"
+      }
+    ],
+    "metadata": {
+      "geminiAnalysis": null,
+      "aiInstances": [],
+      "branches": [],
+      "prNumber": null,
+      "reviewIterations": 0,
+      "maxReviewIterations": 3
+    },
+    "errors": []
   }
 }

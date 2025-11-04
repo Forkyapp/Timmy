@@ -68,12 +68,14 @@ if (require.main === module) {
       onPRFound: async (prInfo) => {
         console.log(jarvis.ai(`Starting code review workflow for task ${prInfo.taskId}`));
 
-        // Start review cycle tracking
+        // Start review cycle tracking (returns false if already exists)
         const task = { id: prInfo.taskId, name: prInfo.taskName };
-        storage.reviewTracking.startReviewCycle(task, prInfo);
+        const started = storage.reviewTracking.startReviewCycle(task, prInfo);
 
-        // Trigger Codex review
-        await codex.reviewClaudeChanges(task);
+        // Only trigger Codex if review cycle was started (not duplicate)
+        if (started) {
+          await codex.reviewClaudeChanges(task);
+        }
       }
     });
   }, config.prTracking.checkIntervalMs);
