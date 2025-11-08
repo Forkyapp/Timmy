@@ -5,7 +5,6 @@ const { jarvis, colors } = require('./lib/ui');
 const storage = require('./lib/storage');
 const clickup = require('./lib/clickup');
 const claude = require('./lib/claude');
-const codex = require('./lib/codex');
 const orchestrator = require('./lib/orchestrator');
 
 async function pollAndProcess() {
@@ -39,8 +38,6 @@ async function pollAndProcess() {
 if (require.main === module) {
   // Initialize data on startup
   storage.cache.init();
-  storage.tracking.init();
-  storage.reviewTracking.init();
 
   console.clear();
   console.log('\n' + jarvis.header('J.A.R.V.I.S'));
@@ -55,40 +52,17 @@ if (require.main === module) {
   claude.ensureClaudeSettings();
   console.log(jarvis.success('Systems online'));
   console.log(jarvis.info(`Monitoring workspace • ${config.system.pollIntervalMs / 1000}s intervals`));
-  console.log(jarvis.ai('Multi-AI workflow: Gemini → Claude → PR → Codex Review → Claude Fixes'));
-  console.log(jarvis.info(`Review iterations: Up to 3 cycles`));
+  console.log(jarvis.ai('✨ Synchronous Multi-AI Workflow:'));
+  console.log(jarvis.info('   1. Gemini Analysis'));
+  console.log(jarvis.info('   2. Claude Implementation'));
+  console.log(jarvis.info('   3. Codex Code Review'));
+  console.log(jarvis.info('   4. Claude Fixes'));
+  console.log(jarvis.info('   All in ONE terminal, sequential execution'));
   console.log(jarvis.divider() + '\n');
 
+  // Start polling for new tasks
   pollAndProcess();
   setInterval(pollAndProcess, config.system.pollIntervalMs);
-
-  // PR tracking with review workflow callback
-  setInterval(() => {
-    storage.tracking.poll(clickup, {
-      onPRFound: async (prInfo) => {
-        console.log(jarvis.ai(`Starting code review workflow for task ${prInfo.taskId}`));
-
-        // Start review cycle tracking (returns false if already exists)
-        const task = { id: prInfo.taskId, name: prInfo.taskName };
-        const started = storage.reviewTracking.startReviewCycle(task, prInfo);
-
-        // Only trigger Codex if review cycle was started (not duplicate)
-        if (started) {
-          // Get repository config from pipeline state
-          const pipelineState = storage.pipeline.get(task.id);
-          const repoName = pipelineState?.metadata?.repository || 'default';
-          const repoConfig = config.resolveRepoConfig(repoName === 'default' ? null : repoName);
-
-          await codex.reviewClaudeChanges(task, { repoConfig });
-        }
-      }
-    });
-  }, config.prTracking.checkIntervalMs);
-
-  // Review cycle tracking (polls for Codex review commits and Claude fix commits)
-  setInterval(() => {
-    storage.reviewTracking.poll(clickup, codex, claude);
-  }, config.prTracking.checkIntervalMs);
 
   // Set up shutdown handlers
   process.on('SIGINT', gracefulShutdown);
@@ -98,8 +72,6 @@ if (require.main === module) {
 function gracefulShutdown() {
   console.log('\n' + jarvis.ai('Shutting down...'));
   storage.cache.save();
-  storage.tracking.save(storage.tracking.getData());
-  storage.reviewTracking.save(storage.reviewTracking.getData());
   console.log(jarvis.success('State saved. Goodbye!') + '\n');
   process.exit(0);
 }
@@ -110,7 +82,6 @@ module.exports = {
   gracefulShutdown,
   // Re-export from modules for backward compatibility with tests
   ...storage.queue,
-  ...storage.tracking,
   ...clickup,
   ...claude,
   config,

@@ -1,0 +1,94 @@
+You are a senior software architect analyzing a development task.
+
+**Task ID:** 86eveugud
+**Title:** "EnvLens” — Environment Variable Inspector
+**Description:**
+Problem:
+ Every project ends up with a mess of .env files, missing keys, or outdated variables.
+Idea:
+ A web or CLI tool that scans your project, loads .env.example, .env, and runtime usage (in code), and shows:
+which vars are missing or unused
+where each var is referenced in code
+warnings for secrets committed by accident
+Works for Node, Python, Go projects.
+Useful for: catching config mistakes fast before deployment.
+2. “API Schema Diff” — Compare Two OpenAPI Specs
+Problem:
+ APIs change silently; frontends break.
+Idea:
+ Upload or point to two Swagger/OpenAPI files → get a visual diff of added, removed, or changed endpoints, params, and schemas.
+Include JSON diff and summary like “2 endpoints removed, 3 modified.”
+Useful for: frontend–backend sync, version control in API teams.
+3. “Docker Doctor” — Analyze Your Dockerfile
+Problem:
+ People copy bad Dockerfiles from Stack Overflow.
+Idea:
+ CLI tool that analyzes your Dockerfile and prints suggestions:
+base image too big
+missing .dockerignore
+unused layers
+unpinned versions
+Optionally shows a “cleaned” version.
+Useful for: anyone shipping containers, especially beginners.
+4. “NPM Audit Visualizer”
+Problem:
+npm audit prints a wall of text nobody reads.
+Idea:
+ A simple web UI that parses npm audit --json output and visualizes:
+dependency tree
+vulnerabilities per package
+quick fixes (npm audit fix --force suggestions)
+Just drag-drop your audit file and see results.
+Useful for: web devs maintaining multiple projects.
+5. “Latency Watcher” — Local API Response Monitor
+Problem:
+ When developing locally, you can’t see how slow each endpoint is over time.
+Idea:
+ A local web dashboard that logs every API request your frontend makes (via a proxy or browser extension) and visualizes latency trends, failures, and payload sizes.
+Useful for: debugging performance regressions.
+
+[Repo: env-lens]
+
+**Repository:** /Users/user/Documents/Personal-Projects/env-lens
+**Owner/Org:** kuxala
+**Repo Name:** env-lens
+
+Your job is to analyze this task and create a detailed feature specification. DO NOT include any code implementation.
+
+Please provide:
+
+1. **Feature Overview** (2-3 sentences)
+   - What needs to be built
+   - Why it's needed
+   - Expected outcome
+
+2. **Files to Modify** (CRITICAL - Be Specific)
+   List exact file paths that need to be created or modified:
+   - `path/to/file.js` - What changes are needed
+   - `path/to/another.js` - What changes are needed
+   - Include both new files and existing files to modify
+   - Use relative paths from repository root
+
+3. **Technical Approach** (4-6 bullet points)
+   - High-level architecture decisions
+   - Which parts of the codebase will be affected
+   - Any dependencies or prerequisites
+   - Potential challenges
+
+4. **Implementation Steps** (numbered list)
+   - Break down into logical steps
+   - Reference specific files from "Files to Modify" section
+   - Order of implementation
+
+5. **Testing Strategy** (3-4 bullet points)
+   - What should be tested
+   - Types of tests needed
+   - Edge cases to consider
+   - Which test files to create/modify
+
+6. **Acceptance Criteria** (checklist)
+   - Specific requirements that must be met
+   - Definition of done
+   - How to verify the feature works
+
+Format your response in clear Markdown. Be specific about file paths and changes. Focus on WHAT and WHY, not HOW (no code).
