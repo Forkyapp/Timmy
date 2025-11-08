@@ -250,10 +250,10 @@
   "86evckrqg": {
     "taskId": "86evckrqg",
     "taskName": "Create Admin Panel User Management API",
-    "currentStage": "analyzing",
+    "currentStage": "implementing",
     "status": "in_progress",
     "createdAt": "2025-11-04T15:47:36.193Z",
-    "updatedAt": "2025-11-04T15:47:36.194Z",
+    "updatedAt": "2025-11-04T15:48:16.516Z",
     "stages": [
       {
         "name": "detection",
@@ -265,12 +265,115 @@
       {
         "name": "Gemini Analysis",
         "stage": "analyzing",
+        "status": "completed",
+        "startedAt": "2025-11-04T15:47:36.194Z",
+        "completedAt": "2025-11-04T15:48:16.515Z",
+        "duration": 40321,
+        "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckrqg/feature-spec.md",
+        "fallback": false
+      },
+      {
+        "name": "Claude Implementation",
+        "stage": "implementing",
         "status": "in_progress",
-        "startedAt": "2025-11-04T15:47:36.194Z"
+        "startedAt": "2025-11-04T15:48:16.516Z"
       }
     ],
     "metadata": {
-      "geminiAnalysis": null,
+      "geminiAnalysis": {
+        "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evckrqg/feature-spec.md",
+        "fallback": false
+      },
+      "aiInstances": [],
+      "branches": [],
+      "prNumber": null,
+      "reviewIterations": 0,
+      "maxReviewIterations": 3
+    },
+    "errors": []
+  },
+  "86evd44zq": {
+    "taskId": "86evd44zq",
+    "taskName": "Add new endpoint",
+    "currentStage": "implementing",
+    "status": "in_progress",
+    "createdAt": "2025-11-04T17:40:42.143Z",
+    "updatedAt": "2025-11-04T17:41:39.561Z",
+    "stages": [
+      {
+        "name": "detection",
+        "stage": "detected",
+        "status": "completed",
+        "startedAt": "2025-11-04T17:40:42.143Z",
+        "completedAt": "2025-11-04T17:40:42.143Z"
+      },
+      {
+        "name": "Gemini Analysis",
+        "stage": "analyzing",
+        "status": "completed",
+        "startedAt": "2025-11-04T17:40:42.144Z",
+        "completedAt": "2025-11-04T17:41:39.561Z",
+        "duration": 57417,
+        "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evd44zq/feature-spec.md",
+        "fallback": false
+      },
+      {
+        "name": "Claude Implementation",
+        "stage": "implementing",
+        "status": "in_progress",
+        "startedAt": "2025-11-04T17:41:39.561Z"
+      }
+    ],
+    "metadata": {
+      "geminiAnalysis": {
+        "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86evd44zq/feature-spec.md",
+        "fallback": false
+      },
+      "aiInstances": [],
+      "branches": [],
+      "prNumber": null,
+      "reviewIterations": 0,
+      "maxReviewIterations": 3
+    },
+    "errors": []
+  },
+  "86eveu6ay": {
+    "taskId": "86eveu6ay",
+    "taskName": "Implement “Git Whisperer” – Automated Commit Message Generator Extension",
+    "currentStage": "implementing",
+    "status": "in_progress",
+    "createdAt": "2025-11-08T09:32:22.558Z",
+    "updatedAt": "2025-11-08T09:33:12.575Z",
+    "stages": [
+      {
+        "name": "detection",
+        "stage": "detected",
+        "status": "completed",
+        "startedAt": "2025-11-08T09:32:22.558Z",
+        "completedAt": "2025-11-08T09:32:22.558Z"
+      },
+      {
+        "name": "Gemini Analysis",
+        "stage": "analyzing",
+        "status": "completed",
+        "startedAt": "2025-11-08T09:32:22.559Z",
+        "completedAt": "2025-11-08T09:33:12.574Z",
+        "duration": 50015,
+        "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86eveu6ay/feature-spec.md",
+        "fallback": false
+      },
+      {
+        "name": "Claude Implementation",
+        "stage": "implementing",
+        "status": "in_progress",
+        "startedAt": "2025-11-08T09:33:12.575Z"
+      }
+    ],
+    "metadata": {
+      "geminiAnalysis": {
+        "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86eveu6ay/feature-spec.md",
+        "fallback": false
+      },
       "aiInstances": [],
       "branches": [],
       "prNumber": null,

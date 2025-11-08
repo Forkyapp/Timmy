@@ -74,7 +74,12 @@ if (require.main === module) {
 
         // Only trigger Codex if review cycle was started (not duplicate)
         if (started) {
-          await codex.reviewClaudeChanges(task);
+          // Get repository config from pipeline state
+          const pipelineState = storage.pipeline.get(task.id);
+          const repoName = pipelineState?.metadata?.repository || 'default';
+          const repoConfig = config.resolveRepoConfig(repoName === 'default' ? null : repoName);
+
+          await codex.reviewClaudeChanges(task, { repoConfig });
         }
       }
     });

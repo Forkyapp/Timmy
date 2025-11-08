@@ -1,0 +1,11 @@
+{
+  "default": "collabifi-back",
+  "repositories": {
+    "collabifi-back": {
+      "owner": "collabifiapp",
+      "repo": "collabifi-back",
+      "path": "/Users/user/Documents/Personal-Projects/collabifi-back",
+      "baseBranch": "main"
+    }
+  }
+}
