@@ -339,34 +339,43 @@
   },
   "86eveu6ay": {
     "taskId": "86eveu6ay",
-    "taskName": "Implement “Git Whisperer” – Automated Commit Message Generator Extension",
-    "currentStage": "implementing",
+    "taskName": "Implement “commit copilot” – Automated Commit Message Generator Extension",
+    "currentStage": "pr_creating",
     "status": "in_progress",
-    "createdAt": "2025-11-08T09:32:22.558Z",
-    "updatedAt": "2025-11-08T09:33:12.575Z",
+    "createdAt": "2025-11-08T09:44:44.462Z",
+    "updatedAt": "2025-11-08T09:52:54.478Z",
     "stages": [
       {
         "name": "detection",
         "stage": "detected",
         "status": "completed",
-        "startedAt": "2025-11-08T09:32:22.558Z",
-        "completedAt": "2025-11-08T09:32:22.558Z"
+        "startedAt": "2025-11-08T09:44:44.462Z",
+        "completedAt": "2025-11-08T09:44:44.462Z"
       },
       {
         "name": "Gemini Analysis",
         "stage": "analyzing",
         "status": "completed",
-        "startedAt": "2025-11-08T09:32:22.559Z",
-        "completedAt": "2025-11-08T09:33:12.574Z",
-        "duration": 50015,
+        "startedAt": "2025-11-08T09:44:44.463Z",
+        "completedAt": "2025-11-08T09:45:34.824Z",
+        "duration": 50361,
         "featureSpecFile": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86eveu6ay/feature-spec.md",
         "fallback": false
       },
       {
         "name": "Claude Implementation",
         "stage": "implementing",
+        "status": "completed",
+        "startedAt": "2025-11-08T09:45:34.825Z",
+        "completedAt": "2025-11-08T09:52:54.476Z",
+        "duration": 439651,
+        "branch": "task-86eveu6ay"
+      },
+      {
+        "name": "PR Creation",
+        "stage": "pr_creating",
         "status": "in_progress",
-        "startedAt": "2025-11-08T09:33:12.575Z"
+        "startedAt": "2025-11-08T09:52:54.478Z"
       }
     ],
     "metadata": {
@@ -374,11 +383,19 @@
         "file": "/Users/user/Documents/Personal-Projects/clickup-claude-github/docs/features/86eveu6ay/feature-spec.md",
         "fallback": false
       },
-      "aiInstances": [],
+      "aiInstances": [
+        {
+          "provider": "claude",
+          "type": "main",
+          "branch": "task-86eveu6ay",
+          "startedAt": "2025-11-08T09:52:54.478Z"
+        }
+      ],
       "branches": [],
       "prNumber": null,
       "reviewIterations": 0,
-      "maxReviewIterations": 3
+      "maxReviewIterations": 3,
+      "aiProvider": "claude"
     },
     "errors": []
   }

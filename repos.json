@@ -6,6 +6,12 @@
       "repo": "collabifi-back",
       "path": "/Users/user/Documents/Personal-Projects/collabifi-back",
       "baseBranch": "main"
+    },
+    "commit-copilot": {
+      "owner": "kuxala",
+      "repo": "commit-copilot",
+      "path": "/Users/user/Documents/Personal-Projects/commit-copilot",
+      "baseBranch": "main"
     }
   }
 }

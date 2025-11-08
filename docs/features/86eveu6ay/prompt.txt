@@ -1,7 +1,7 @@
 You are a senior software architect analyzing a development task.
 
 **Task ID:** 86eveu6ay
-**Title:** Implement “Git Whisperer” – Automated Commit Message Generator Extension
+**Title:** Implement “commit copilot” – Automated Commit Message Generator Extension
 **Description:**
 Description:
 Develop a VS Code extension called Git Whisperer that provides intelligent autocomplete suggestions for Git commit messages directly inside the commit input field (e.g. terminal or Source Control panel).
@@ -56,11 +56,11 @@ Works both in terminal and Source Control commit box.
 Non-blocking, fluid experience — no modal interruptions.
 Extension feels “invisible until needed.”
 
-repo:commit-copilot
+[Repo: commit-copilot]
 
-**Repository:** /Users/user/Documents/Personal-Projects/collabifi-back
-**Owner/Org:** collabifiapp
-**Repo Name:** collabifi-back
+**Repository:** /Users/user/Documents/Personal-Projects/commit-copilot
+**Owner/Org:** kuxala
+**Repo Name:** commit-copilot
 
 Your job is to analyze this task and create a detailed feature specification. DO NOT include any code implementation.
 
