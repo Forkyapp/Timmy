@@ -3,7 +3,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { jarvis, colors } from './lib/ui';
+import { forky, colors } from './lib/ui';
 import * as storage from './lib/storage';
 import * as codex from './lib/codex';
 import { RepositoryConfig, resolveRepoConfig } from './lib/config';
@@ -34,39 +34,39 @@ interface ReviewResult {
  * Retry only the Codex review stage for a specific task
  */
 async function retryCodexReview(taskId: string): Promise<void> {
-  console.log(jarvis.ai(`Retrying Codex review for ${colors.bright}${taskId}${colors.reset}`));
+  console.log(forky.ai(`Retrying Codex review for ${colors.bright}${taskId}${colors.reset}`));
 
   // Get pipeline state
   const pipelineState = storage.pipeline.get(taskId);
 
   if (!pipelineState) {
-    console.log(jarvis.error(`Task ${taskId} not found in pipeline state`));
+    console.log(forky.error(`Task ${taskId} not found in pipeline state`));
     process.exit(1);
   }
 
-  console.log(jarvis.info(`Task: ${pipelineState.taskName}`));
-  console.log(jarvis.info(`Current stage: ${pipelineState.currentStage}`));
-  console.log(jarvis.info(`Status: ${pipelineState.status}`));
+  console.log(forky.info(`Task: ${pipelineState.taskName}`));
+  console.log(forky.info(`Current stage: ${pipelineState.currentStage}`));
+  console.log(forky.info(`Status: ${pipelineState.status}`));
 
   // Check if Claude implementation was completed
   const implementingStage = pipelineState.stages.find(s => s.stage === 'implementing');
   if (!implementingStage || implementingStage.status !== 'completed') {
-    console.log(jarvis.error('Claude implementation stage not completed. Cannot run Codex review.'));
+    console.log(forky.error('Claude implementation stage not completed. Cannot run Codex review.'));
     process.exit(1);
   }
 
   const branch = implementingStage.branch || `task-${taskId}`;
-  console.log(jarvis.info(`Branch: ${branch}`));
+  console.log(forky.info(`Branch: ${branch}`));
 
   // Detect repository from task metadata or use default
   const repoName = pipelineState.metadata?.repository;
   let repoConfig: RepositoryConfig;
 
   if (repoName && repoName !== 'default') {
-    console.log(jarvis.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
+    console.log(forky.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
     repoConfig = resolveRepoConfig(repoName);
   } else {
-    console.log(jarvis.info(`Repository: ${colors.bright}default${colors.reset}`));
+    console.log(forky.info(`Repository: ${colors.bright}default${colors.reset}`));
     repoConfig = resolveRepoConfig(null);
   }
 
@@ -91,14 +91,14 @@ async function retryCodexReview(taskId: string): Promise<void> {
       branch: reviewResult.branch
     });
 
-    console.log(jarvis.success(`${colors.bright}Codex${colors.reset} review complete for ${colors.bright}${taskId}${colors.reset}`));
-    console.log(jarvis.success('✅ Done! You can now continue with Claude fixes if needed.'));
+    console.log(forky.success(`${colors.bright}Codex${colors.reset} review complete for ${colors.bright}${taskId}${colors.reset}`));
+    console.log(forky.success('✅ Done! You can now continue with Claude fixes if needed.'));
 
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Codex review error: ${err.message}`));
+    console.log(forky.error(`Codex review error: ${err.message}`));
     storage.pipeline.failStage(taskId, storage.pipeline.STAGES.CODEX_REVIEWING, err);
-    console.log(jarvis.warning('Review failed. Check the error above.'));
+    console.log(forky.warning('Review failed. Check the error above.'));
     process.exit(1);
   }
 }
@@ -111,14 +111,14 @@ async function retryCodexReview(taskId: string): Promise<void> {
 const taskId = process.argv[2];
 
 if (!taskId) {
-  console.log(jarvis.error('Usage: node retry-codex-review.ts <task-id>'));
-  console.log(jarvis.info('Example: node retry-codex-review.ts 86eveugud'));
+  console.log(forky.error('Usage: node retry-codex-review.ts <task-id>'));
+  console.log(forky.info('Example: node retry-codex-review.ts 86eveugud'));
   process.exit(1);
 }
 
 // Run the retry
 retryCodexReview(taskId).catch(error => {
   const err = error as Error;
-  console.log(jarvis.error(`Fatal error: ${err.message}`));
+  console.log(forky.error(`Fatal error: ${err.message}`));
   process.exit(1);
 });

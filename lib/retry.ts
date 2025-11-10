@@ -1,4 +1,4 @@
-import { jarvis } from './ui';
+import { forky } from './ui';
 
 interface RetryOptions {
   maxAttempts?: number;
@@ -71,10 +71,10 @@ async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): P
       const jitter = Math.random() * 0.3 * delay;
       const totalDelay = Math.round(delay + jitter);
 
-      console.log(jarvis.warning(
+      console.log(forky.warning(
         `Attempt ${attempt}/${maxAttempts} failed: ${lastError.message}`
       ));
-      console.log(jarvis.info(`Retrying in ${totalDelay}ms...`));
+      console.log(forky.info(`Retrying in ${totalDelay}ms...`));
 
       // Call retry callback if provided
       if (onRetry) {
@@ -143,7 +143,7 @@ async function withRetryAndFallback<T>(
   try {
     return await withRetry(fn, options);
   } catch (error) {
-    console.log(jarvis.warning('All retry attempts failed, using fallback'));
+    console.log(forky.warning('All retry attempts failed, using fallback'));
     return await fallbackFn(error as Error);
   }
 }

@@ -3,7 +3,7 @@ import path from 'path';
 import { promisify } from 'util';
 import { exec, spawn, ChildProcess } from 'child_process';
 import config, { RepositoryConfig } from './config';
-import { jarvis, colors } from './ui';
+import { forky, colors } from './ui';
 import * as clickup from './clickup';
 import * as storage from './storage';
 
@@ -191,7 +191,7 @@ async function launchCodex(task: ClickUpTask, options: LaunchOptions = {}): Prom
     throw new Error('Repository path is not configured');
   }
 
-  console.log(jarvis.ai(`Deploying ${colors.bright}Codex${colors.reset} for ${colors.bright}${taskId}${colors.reset}: "${taskTitle}"`));
+  console.log(forky.ai(`Deploying ${colors.bright}Codex${colors.reset} for ${colors.bright}${taskId}${colors.reset}: "${taskTitle}"`));
   ensureCodexSettings(repoPath);
 
   // Build prompt with optional Gemini analysis
@@ -285,7 +285,7 @@ ${taskDescription}
 [Brief summary of what you implemented]
 
 ---
-🤖 Automated via Devin (Codex)" --base main --head task-${taskId}
+🤖 Automated via Forky (Codex)" --base main --head task-${taskId}
 
 **CRITICAL:**
 - You MUST create the Pull Request at the end
@@ -308,7 +308,7 @@ Begin implementation now and make sure to create the PR when done!`;
     const promptFile = path.join(__dirname, '..', `task-${taskId}-codex-prompt.txt`);
     fs.writeFileSync(promptFile, prompt);
 
-    console.log(jarvis.info(`${colors.bright}Codex${colors.reset} starting implementation...`));
+    console.log(forky.info(`${colors.bright}Codex${colors.reset} starting implementation...`));
 
     // Unset GITHUB_TOKEN to let gh use keyring auth
     const cleanEnv = { ...process.env };
@@ -332,14 +332,14 @@ Begin implementation now and make sure to create the PR when done!`;
         timeout: 1800000 // 30 minute timeout
       });
 
-      console.log(jarvis.success(`${colors.bright}Codex${colors.reset} completed implementation for ${colors.bright}task-${taskId}${colors.reset}`));
+      console.log(forky.success(`${colors.bright}Codex${colors.reset} completed implementation for ${colors.bright}task-${taskId}${colors.reset}`));
 
       // Cleanup files
       fs.unlinkSync(promptFile);
       fs.unlinkSync(inputFile);
 
       // Check if Codex made any changes and auto-commit/push them
-      console.log(jarvis.info('Checking for uncommitted changes from Codex implementation...'));
+      console.log(forky.info('Checking for uncommitted changes from Codex implementation...'));
 
       try {
         const { stdout: statusOutput } = await execAsync(`cd "${repoPath}" && git status --porcelain`, {
@@ -347,7 +347,7 @@ Begin implementation now and make sure to create the PR when done!`;
         });
 
         if (statusOutput.trim()) {
-          console.log(jarvis.info('Codex made changes. Committing and pushing...'));
+          console.log(forky.info('Codex made changes. Committing and pushing...'));
 
           // Commit and push the changes
           await execAsync(
@@ -358,13 +358,13 @@ Begin implementation now and make sure to create the PR when done!`;
             }
           );
 
-          console.log(jarvis.success('Codex implementation committed and pushed'));
+          console.log(forky.success('Codex implementation committed and pushed'));
         } else {
-          console.log(jarvis.info('No changes to commit from Codex implementation'));
+          console.log(forky.info('No changes to commit from Codex implementation'));
         }
       } catch (gitError) {
         const err = gitError as Error;
-        console.log(jarvis.warning(`Failed to auto-commit Codex changes: ${err.message}`));
+        console.log(forky.warning(`Failed to auto-commit Codex changes: ${err.message}`));
         // Don't fail the whole implementation if git operations fail
       }
 
@@ -384,7 +384,7 @@ Begin implementation now and make sure to create the PR when done!`;
 
     } catch (codexError) {
       const err = codexError as Error;
-      console.log(jarvis.error(`${colors.bright}Codex${colors.reset} execution failed: ${err.message}`));
+      console.log(forky.error(`${colors.bright}Codex${colors.reset} execution failed: ${err.message}`));
 
       // Cleanup files
       if (fs.existsSync(promptFile)) {
@@ -399,8 +399,8 @@ Begin implementation now and make sure to create the PR when done!`;
 
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Codex deployment failed: ${err.message}`));
-    console.log(jarvis.info('Task queued for manual processing'));
+    console.log(forky.error(`Codex deployment failed: ${err.message}`));
+    console.log(forky.info('Task queued for manual processing'));
 
     await storage.queue.add(task);
     return { success: false, error: err.message };
@@ -422,7 +422,7 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
     throw new Error('Repository path is not configured');
   }
 
-  console.log(jarvis.ai(`${colors.bright}Codex${colors.reset} reviewing Claude's changes for ${colors.bright}${taskId}${colors.reset}`));
+  console.log(forky.ai(`${colors.bright}Codex${colors.reset} reviewing Claude's changes for ${colors.bright}${taskId}${colors.reset}`));
   ensureCodexSettings(repoPath);
 
   const prompt = `You are a senior code reviewer. Your job is to review the changes made by Claude and add constructive TODO comments for improvements.
@@ -504,7 +504,7 @@ Begin your review now and add TODO/FIXME comments to the code!`;
     const promptFile = path.join(__dirname, '..', `task-${taskId}-codex-review-prompt.txt`);
     fs.writeFileSync(promptFile, prompt);
 
-    console.log(jarvis.info(`${colors.bright}Codex${colors.reset} starting code review...`));
+    console.log(forky.info(`${colors.bright}Codex${colors.reset} starting code review...`));
 
     // Unset GITHUB_TOKEN to let gh use keyring auth
     const cleanEnv = { ...process.env };
@@ -528,14 +528,14 @@ Begin your review now and add TODO/FIXME comments to the code!`;
         timeout: 1800000 // 30 minute timeout
       });
 
-      console.log(jarvis.success(`${colors.bright}Codex${colors.reset} completed code review for ${colors.bright}${branch}${colors.reset}`));
+      console.log(forky.success(`${colors.bright}Codex${colors.reset} completed code review for ${colors.bright}${branch}${colors.reset}`));
 
       // Cleanup files
       fs.unlinkSync(promptFile);
       fs.unlinkSync(inputFile);
 
       // Check if Codex made any changes and auto-commit/push them
-      console.log(jarvis.info('Checking for uncommitted changes from Codex review...'));
+      console.log(forky.info('Checking for uncommitted changes from Codex review...'));
 
       try {
         const { stdout: statusOutput } = await execAsync(`cd "${repoPath}" && git status --porcelain`, {
@@ -543,7 +543,7 @@ Begin your review now and add TODO/FIXME comments to the code!`;
         });
 
         if (statusOutput.trim()) {
-          console.log(jarvis.info('Codex made changes. Committing and pushing...'));
+          console.log(forky.info('Codex made changes. Committing and pushing...'));
 
           // Commit and push the changes
           await execAsync(
@@ -554,13 +554,13 @@ Begin your review now and add TODO/FIXME comments to the code!`;
             }
           );
 
-          console.log(jarvis.success('Codex review changes committed and pushed'));
+          console.log(forky.success('Codex review changes committed and pushed'));
         } else {
-          console.log(jarvis.info('No changes to commit from Codex review'));
+          console.log(forky.info('No changes to commit from Codex review'));
         }
       } catch (gitError) {
         const err = gitError as Error;
-        console.log(jarvis.warning(`Failed to auto-commit Codex changes: ${err.message}`));
+        console.log(forky.warning(`Failed to auto-commit Codex changes: ${err.message}`));
         // Don't fail the whole review if git operations fail
       }
 
@@ -593,7 +593,7 @@ Begin your review now and add TODO/FIXME comments to the code!`;
 
     } catch (codexError) {
       const err = codexError as Error;
-      console.log(jarvis.error(`${colors.bright}Codex${colors.reset} review execution failed: ${err.message}`));
+      console.log(forky.error(`${colors.bright}Codex${colors.reset} review execution failed: ${err.message}`));
 
       // Cleanup files
       if (fs.existsSync(promptFile)) {
@@ -608,7 +608,7 @@ Begin your review now and add TODO/FIXME comments to the code!`;
 
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Codex review failed: ${err.message}`));
+    console.log(forky.error(`Codex review failed: ${err.message}`));
     return { success: false, error: err.message };
   }
 }

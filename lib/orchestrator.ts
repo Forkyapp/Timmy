@@ -1,5 +1,5 @@
 import path from 'path';
-import { jarvis, colors } from './ui';
+import { forky, colors } from './ui';
 import * as storage from './storage';
 import * as gemini from './gemini';
 import * as claude from './claude';
@@ -91,28 +91,28 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
   // Detect repository from task
   const repoName = clickup.detectRepository(task);
 
-  console.log(jarvis.ai(`Starting multi-AI workflow for ${colors.bright}${taskId}${colors.reset}`));
+  console.log(forky.ai(`Starting multi-AI workflow for ${colors.bright}${taskId}${colors.reset}`));
 
   let repoConfig: RepositoryConfig;
   try {
     // Ensure repository exists (auto-create if needed)
     if (repoName) {
-      console.log(jarvis.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
+      console.log(forky.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
       repoConfig = await repoManager.ensureRepository(repoName, {
         autoCreate: config.autoRepo.enabled,
         isPrivate: config.autoRepo.isPrivate,
         baseDir: config.autoRepo.baseDir,
         baseBranch: config.autoRepo.defaultBranch
       });
-      console.log(jarvis.success(`Using repository: ${repoConfig.owner}/${repoConfig.repo}`));
+      console.log(forky.success(`Using repository: ${repoConfig.owner}/${repoConfig.repo}`));
     } else {
-      console.log(jarvis.info(`Repository: ${colors.bright}default${colors.reset}`));
+      console.log(forky.info(`Repository: ${colors.bright}default${colors.reset}`));
       repoConfig = resolveRepoConfig(null);
-      console.log(jarvis.info(`Using default: ${repoConfig.owner}/${repoConfig.repo}`));
+      console.log(forky.info(`Using default: ${repoConfig.owner}/${repoConfig.repo}`));
     }
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Repository setup failed: ${err.message}`));
+    console.log(forky.error(`Repository setup failed: ${err.message}`));
     storage.pipeline.fail(taskId, err);
     await storage.queue.add(task);
     return {
@@ -149,7 +149,7 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
 
       if (analysis.fallback) {
         usedFallback = true;
-        console.log(jarvis.warning('Using fallback analysis'));
+        console.log(forky.warning('Using fallback analysis'));
       }
 
       storage.pipeline.completeStage(taskId, storage.pipeline.STAGES.ANALYZING, {
@@ -185,11 +185,11 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
 
     } catch (error) {
       const err = error as Error;
-      console.log(jarvis.error(`Gemini analysis failed: ${err.message}`));
+      console.log(forky.error(`Gemini analysis failed: ${err.message}`));
       storage.pipeline.failStage(taskId, storage.pipeline.STAGES.ANALYZING, err);
 
       // Continue without analysis
-      console.log(jarvis.info(`Continuing without ${colors.bright}Gemini${colors.reset} analysis`));
+      console.log(forky.info(`Continuing without ${colors.bright}Gemini${colors.reset} analysis`));
     }
 
     // Stage 2: Claude Implementation
@@ -213,11 +213,11 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
         branch: result.branch
       });
 
-      console.log(jarvis.success(`${colors.bright}Claude${colors.reset} implementation complete for ${colors.bright}${taskId}${colors.reset}`));
+      console.log(forky.success(`${colors.bright}Claude${colors.reset} implementation complete for ${colors.bright}${taskId}${colors.reset}`));
 
     } catch (error) {
       const err = error as Error;
-      console.log(jarvis.error(`Claude implementation error: ${err.message}`));
+      console.log(forky.error(`Claude implementation error: ${err.message}`));
       storage.pipeline.failStage(taskId, storage.pipeline.STAGES.IMPLEMENTING, err);
       storage.pipeline.fail(taskId, err);
       await storage.queue.add(task);
@@ -242,14 +242,14 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
         branch: reviewResult.branch
       });
 
-      console.log(jarvis.success(`${colors.bright}Codex${colors.reset} review complete for ${colors.bright}${taskId}${colors.reset}`));
+      console.log(forky.success(`${colors.bright}Codex${colors.reset} review complete for ${colors.bright}${taskId}${colors.reset}`));
 
     } catch (error) {
       const err = error as Error;
-      console.log(jarvis.error(`Codex review error: ${err.message}`));
+      console.log(forky.error(`Codex review error: ${err.message}`));
       storage.pipeline.failStage(taskId, storage.pipeline.STAGES.CODEX_REVIEWING, err);
       // Continue even if review fails - not critical
-      console.log(jarvis.warning(`Continuing without Codex review`));
+      console.log(forky.warning(`Continuing without Codex review`));
     }
 
     // Stage 4: Claude Fixes TODO/FIXME Comments
@@ -266,14 +266,14 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
         branch: fixResult.branch
       });
 
-      console.log(jarvis.success(`${colors.bright}Claude${colors.reset} fixes complete for ${colors.bright}${taskId}${colors.reset}`));
+      console.log(forky.success(`${colors.bright}Claude${colors.reset} fixes complete for ${colors.bright}${taskId}${colors.reset}`));
 
     } catch (error) {
       const err = error as Error;
-      console.log(jarvis.error(`Claude fixes error: ${err.message}`));
+      console.log(forky.error(`Claude fixes error: ${err.message}`));
       storage.pipeline.failStage(taskId, storage.pipeline.STAGES.CLAUDE_FIXING, err);
       // Continue even if fixes fail - not critical
-      console.log(jarvis.warning(`Continuing without Claude fixes`));
+      console.log(forky.warning(`Continuing without Claude fixes`));
     }
 
     // Stage 5: Complete
@@ -282,7 +282,7 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
       completedAt: new Date().toISOString()
     });
 
-    console.log(jarvis.success(`🎉 Multi-AI workflow complete for ${colors.bright}${taskId}${colors.reset}`));
+    console.log(forky.success(`🎉 Multi-AI workflow complete for ${colors.bright}${taskId}${colors.reset}`));
 
     await clickup.addComment(
       taskId,
@@ -304,7 +304,7 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
 
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Orchestration error: ${err.message}`));
+    console.log(forky.error(`Orchestration error: ${err.message}`));
     storage.pipeline.fail(taskId, err);
 
     // Queue for manual processing
@@ -336,7 +336,7 @@ export function getActiveTasks(): storage.PipelineData[] {
  * Re-run only the Codex review stage
  */
 export async function rerunCodexReview(taskId: string): Promise<RerunResult> {
-  console.log(jarvis.ai(`Re-running Codex review for ${colors.bright}${taskId}${colors.reset}`));
+  console.log(forky.ai(`Re-running Codex review for ${colors.bright}${taskId}${colors.reset}`));
 
   // Get pipeline state
   const pipelineState = storage.pipeline.get(taskId);
@@ -358,10 +358,10 @@ export async function rerunCodexReview(taskId: string): Promise<RerunResult> {
   let repoConfig: RepositoryConfig;
 
   if (repoName && repoName !== 'default') {
-    console.log(jarvis.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
+    console.log(forky.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
     repoConfig = resolveRepoConfig(repoName);
   } else {
-    console.log(jarvis.info(`Repository: ${colors.bright}default${colors.reset}`));
+    console.log(forky.info(`Repository: ${colors.bright}default${colors.reset}`));
     repoConfig = resolveRepoConfig(null);
   }
 
@@ -386,7 +386,7 @@ export async function rerunCodexReview(taskId: string): Promise<RerunResult> {
       branch: reviewResult.branch
     });
 
-    console.log(jarvis.success(`${colors.bright}Codex${colors.reset} review complete for ${colors.bright}${taskId}${colors.reset}`));
+    console.log(forky.success(`${colors.bright}Codex${colors.reset} review complete for ${colors.bright}${taskId}${colors.reset}`));
 
     await clickup.addComment(
       taskId,
@@ -399,7 +399,7 @@ export async function rerunCodexReview(taskId: string): Promise<RerunResult> {
     return { success: true, branch };
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Codex review error: ${err.message}`));
+    console.log(forky.error(`Codex review error: ${err.message}`));
     storage.pipeline.failStage(taskId, storage.pipeline.STAGES.CODEX_REVIEWING, err);
 
     await clickup.addComment(
@@ -416,7 +416,7 @@ export async function rerunCodexReview(taskId: string): Promise<RerunResult> {
  * Re-run only the Claude fixes stage
  */
 export async function rerunClaudeFixes(taskId: string): Promise<RerunResult> {
-  console.log(jarvis.ai(`Re-running Claude fixes for ${colors.bright}${taskId}${colors.reset}`));
+  console.log(forky.ai(`Re-running Claude fixes for ${colors.bright}${taskId}${colors.reset}`));
 
   // Get pipeline state
   const pipelineState = storage.pipeline.get(taskId);
@@ -436,10 +436,10 @@ export async function rerunClaudeFixes(taskId: string): Promise<RerunResult> {
   let repoConfig: RepositoryConfig;
 
   if (repoName && repoName !== 'default') {
-    console.log(jarvis.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
+    console.log(forky.info(`Repository: ${colors.bright}${repoName}${colors.reset}`));
     repoConfig = resolveRepoConfig(repoName);
   } else {
-    console.log(jarvis.info(`Repository: ${colors.bright}default${colors.reset}`));
+    console.log(forky.info(`Repository: ${colors.bright}default${colors.reset}`));
     repoConfig = resolveRepoConfig(null);
   }
 
@@ -464,7 +464,7 @@ export async function rerunClaudeFixes(taskId: string): Promise<RerunResult> {
       branch: fixResult.branch
     });
 
-    console.log(jarvis.success(`${colors.bright}Claude${colors.reset} fixes complete for ${colors.bright}${taskId}${colors.reset}`));
+    console.log(forky.success(`${colors.bright}Claude${colors.reset} fixes complete for ${colors.bright}${taskId}${colors.reset}`));
 
     await clickup.addComment(
       taskId,
@@ -477,7 +477,7 @@ export async function rerunClaudeFixes(taskId: string): Promise<RerunResult> {
     return { success: true, branch: fixResult.branch };
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Claude fixes error: ${err.message}`));
+    console.log(forky.error(`Claude fixes error: ${err.message}`));
     storage.pipeline.failStage(taskId, storage.pipeline.STAGES.CLAUDE_FIXING, err);
 
     await clickup.addComment(

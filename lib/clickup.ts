@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import config from './config';
-import { jarvis, colors } from './ui';
+import { forky, colors } from './ui';
 
 interface ClickUpTask {
   id: string;
@@ -44,7 +44,7 @@ async function getAssignedTasks(): Promise<ClickUpTask[]> {
   try {
     // MANUAL MODE: Fetch specific task by ID
     const TASK_ID = '869ajuxp3';
-    console.log(jarvis.info(`[MANUAL MODE] Fetching specific task: ${colors.bright}${TASK_ID}${colors.reset}`));
+    console.log(forky.info(`[MANUAL MODE] Fetching specific task: ${colors.bright}${TASK_ID}${colors.reset}`));
 
     const response = await axios.get<ClickUpTask>(
       `https://api.clickup.com/api/v2/task/${TASK_ID}`,
@@ -57,17 +57,17 @@ async function getAssignedTasks(): Promise<ClickUpTask[]> {
     );
 
     const task = response.data;
-    console.log(jarvis.success(`Task found: "${task.name}"`));
-    console.log(jarvis.info(`Status: ${colors.bright}${task.status?.status || 'unknown'}${colors.reset}`));
+    console.log(forky.success(`Task found: "${task.name}"`));
+    console.log(forky.info(`Status: ${colors.bright}${task.status?.status || 'unknown'}${colors.reset}`));
 
     // Return as array with single task
     return [task];
   } catch (error) {
     const axiosError = error as AxiosError;
-    console.log(jarvis.error(`Failed to fetch task: ${axiosError.message}`));
+    console.log(forky.error(`Failed to fetch task: ${axiosError.message}`));
     if (axiosError.response) {
-      console.log(jarvis.error(`Status code: ${axiosError.response.status}`));
-      console.log(jarvis.error(`Response data: ${JSON.stringify(axiosError.response.data, null, 2)}`));
+      console.log(forky.error(`Status code: ${axiosError.response.status}`));
+      console.log(forky.error(`Response data: ${JSON.stringify(axiosError.response.data, null, 2)}`));
     }
     return [];
   }
@@ -86,14 +86,14 @@ async function updateStatus(taskId: string, statusId: string): Promise<void> {
       }
     );
   } catch (error) {
-    console.log(jarvis.error(`Status update failed: ${(error as Error).message}`));
+    console.log(forky.error(`Status update failed: ${(error as Error).message}`));
   }
 }
 
 async function addComment(taskId: string, commentText: string): Promise<CommentResponse> {
   // Check if comments are disabled
   if (process.env.DISABLE_COMMENTS === 'true') {
-    console.log(jarvis.info(`Comment skipped (disabled) for task ${taskId}`));
+    console.log(forky.info(`Comment skipped (disabled) for task ${taskId}`));
     return { success: true, disabled: true };
   }
 
@@ -108,14 +108,14 @@ async function addComment(taskId: string, commentText: string): Promise<CommentR
         }
       }
     );
-    console.log(jarvis.success(`Comment posted to task ${taskId}`));
+    console.log(forky.success(`Comment posted to task ${taskId}`));
     return { success: true, data: response.data };
   } catch (error) {
     const axiosError = error as AxiosError;
-    console.log(jarvis.error(`Comment failed for task ${taskId}: ${axiosError.message}`));
+    console.log(forky.error(`Comment failed for task ${taskId}: ${axiosError.message}`));
     if (axiosError.response) {
-      console.log(jarvis.error(`Status: ${axiosError.response.status}`));
-      console.log(jarvis.error(`Details: ${JSON.stringify(axiosError.response.data)}`));
+      console.log(forky.error(`Status: ${axiosError.response.status}`));
+      console.log(forky.error(`Details: ${JSON.stringify(axiosError.response.data)}`));
     }
     return { success: false, error: axiosError.message };
   }
@@ -139,7 +139,7 @@ async function getTaskComments(taskId: string): Promise<Comment[]> {
     );
     return response.data.comments || [];
   } catch (error) {
-    console.log(jarvis.error(`Failed to fetch comments for task ${taskId}: ${(error as Error).message}`));
+    console.log(forky.error(`Failed to fetch comments for task ${taskId}: ${(error as Error).message}`));
     return [];
   }
 }

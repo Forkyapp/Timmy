@@ -38,7 +38,7 @@ const colors: Colors = {
   bgCyan: '\x1b[46m',
 };
 
-interface Jarvis {
+interface Forky {
   header: (text: string) => string;
   box: (text: string) => string;
   success: (text: string) => string;
@@ -53,7 +53,7 @@ interface Jarvis {
   timestamp: () => string;
 }
 
-const jarvis: Jarvis = {
+const forky: Forky = {
   header: (text: string): string => `${colors.bright}${colors.cyan}╔${'═'.repeat(text.length + 2)}╗\n║ ${text} ║\n╚${'═'.repeat(text.length + 2)}╝${colors.reset}`,
   box: (text: string): string => `${colors.cyan}┌${'─'.repeat(text.length + 2)}┐\n│ ${text} │\n└${'─'.repeat(text.length + 2)}┘${colors.reset}`,
   success: (text: string): string => `${colors.bright}${colors.green}✓${colors.reset} ${colors.green}${text}${colors.reset}`,
@@ -61,7 +61,7 @@ const jarvis: Jarvis = {
   warning: (text: string): string => `${colors.bright}${colors.yellow}⚠${colors.reset} ${colors.yellow}${text}${colors.reset}`,
   info: (text: string): string => `${colors.cyan}ℹ${colors.reset} ${colors.white}${text}${colors.reset}`,
   processing: (text: string): string => `${colors.bright}${colors.blue}⚡${colors.reset} ${colors.blue}${text}${colors.reset}`,
-  ai: (text: string): string => `${colors.bright}${colors.magenta}🤖 JARVIS${colors.reset} ${colors.gray}»${colors.reset} ${colors.white}${text}${colors.reset}`,
+  ai: (text: string): string => `${colors.bright}${colors.magenta}🍴 FORKY${colors.reset} ${colors.gray}»${colors.reset} ${colors.white}${text}${colors.reset}`,
   step: (num: number, text: string): string => `${colors.bright}${colors.cyan}[${num}]${colors.reset} ${colors.white}${text}${colors.reset}`,
   divider: (): string => `${colors.dim}${colors.gray}${'─'.repeat(70)}${colors.reset}`,
   label: (key: string, value: string): string => `${colors.dim}${key}:${colors.reset} ${colors.bright}${colors.white}${value}${colors.reset}`,
@@ -71,4 +71,4 @@ const jarvis: Jarvis = {
   }
 };
 
-export { colors, jarvis, Colors, Jarvis };
+export { colors, forky, Colors, Forky };

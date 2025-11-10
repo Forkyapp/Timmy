@@ -3,7 +3,7 @@ import path from 'path';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import config, { RepositoryConfig } from './config';
-import { jarvis, colors } from './ui';
+import { forky, colors } from './ui';
 import { withRetry, RetryOptions } from './retry';
 
 const execAsync = promisify(exec);
@@ -75,7 +75,7 @@ async function analyzeTask(task: ClickUpTask, options: AnalyzeTaskOptions = {}):
   const repoOwner = repoConfig?.owner || config.github.owner;
   const repoName = repoConfig?.repo || config.github.repo;
 
-  console.log(jarvis.processing(`${colors.bright}Gemini${colors.reset} analyzing task ${colors.bright}${taskId}${colors.reset}...`));
+  console.log(forky.processing(`${colors.bright}Gemini${colors.reset} analyzing task ${colors.bright}${taskId}${colors.reset}...`));
 
   // Create feature directory
   const featureDir = path.join(config.files.featuresDir, taskId);
@@ -183,7 +183,7 @@ Format your response in clear Markdown. Be specific about file paths and changes
         maxAttempts: 3,
         timeoutMs: 120000,
         onRetry: (attempt: number): Promise<void> => {
-          console.log(jarvis.info(`${colors.bright}Gemini${colors.reset} retry attempt ${attempt}/3...`));
+          console.log(forky.info(`${colors.bright}Gemini${colors.reset} retry attempt ${attempt}/3...`));
           updateProgress(1, 3, `Retrying analysis (attempt ${attempt}/3)...`);
           return Promise.resolve();
         }
@@ -198,7 +198,7 @@ Format your response in clear Markdown. Be specific about file paths and changes
 
     updateProgress(3, 3, 'Analysis complete');
 
-    console.log(jarvis.success(`Feature spec created: ${featureSpecFile}`));
+    console.log(forky.success(`Feature spec created: ${featureSpecFile}`));
 
     return {
       success: true,
@@ -211,7 +211,7 @@ Format your response in clear Markdown. Be specific about file paths and changes
 
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Gemini analysis failed: ${err.message}`));
+    console.log(forky.error(`Gemini analysis failed: ${err.message}`));
 
     // Create fallback feature spec
     const fallbackSpec = `# Feature Specification - ${taskTitle}

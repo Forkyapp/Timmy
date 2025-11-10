@@ -1,4 +1,4 @@
-# Devin - Autonomous Local Integration
+# Forky - Autonomous Local Integration
 
 Fully automated ClickUp task detection that launches Claude Code in separate Terminal windows.
 
@@ -11,7 +11,7 @@ Fully automated ClickUp task detection that launches Claude Code in separate Ter
 └──────────────────────────────────────────┘
                 ↓
 ┌──────────────────────────────────────────┐
-│ 2. DEVIN: Polls ClickUp (every 60s)     │
+│ 2. FORKY: Polls ClickUp (every 60s)     │
 │    - Detects new "bot in progress" task │
 │    - Automatically launches Claude Code  │
 │    - Opens in NEW Terminal window        │
@@ -73,18 +73,18 @@ git status
 
 ## Usage
 
-### Start Devin
+### Start Forky
 
 ```bash
 cd /Users/user/Documents/Personal\ Projects/clickup-claude-github/local
-node devin.js
+node forky.js
 ```
 
 You should see:
 
 ```
 ======================================================================
-🤖 DEVIN - ClickUp Task Queue Manager
+🤖 FORKY - ClickUp Task Queue Manager
 ======================================================================
 
 📍 Workspace: 90181842045
@@ -108,11 +108,11 @@ You should see:
    - **Assignee:** Yourself
    - **Status:** "bot in progress"
 
-3. Within 60 seconds, Devin will:
+3. Within 60 seconds, Forky will:
    - Detect the task
    - **Automatically open a NEW Terminal window**
    - Launch Claude Code with full task context
-   - Display progress in Devin terminal
+   - Display progress in Forky terminal
 
 4. Watch the new Terminal window:
    - Claude Code will receive the task details
@@ -124,7 +124,7 @@ You should see:
 
 ### Task Detection (Fully Automatic)
 
-Devin continuously:
+Forky continuously:
 - Polls ClickUp API every 60 seconds
 - Filters for tasks with status "bot in progress"
 - Skips already-detected tasks (cached in `processed-tasks.json`)
@@ -134,7 +134,7 @@ Devin continuously:
 
 When a new task is detected:
 
-1. **Devin creates comprehensive prompt** with:
+1. **Forky creates comprehensive prompt** with:
    - Full task context (title, description, URL)
    - Repository path and branch name
    - All Git workflow steps
@@ -215,9 +215,9 @@ npm run clean
 │   ├── codex.ts              # Codex code review
 │   ├── claude.ts             # Claude AI integration
 │   └── orchestrator.ts       # Multi-AI workflow orchestration
-├── devin.ts                  # Main entry point
+├── forky.ts                  # Main entry point
 ├── retry-codex-review.ts     # Utility script
-├── devin.test.ts             # Jest test suite
+├── forky.test.ts             # Jest test suite
 ├── dist/                     # Compiled JavaScript (git-ignored)
 ├── tsconfig.json             # TypeScript configuration
 ├── package.json              # Dependencies and scripts
@@ -234,7 +234,7 @@ npm run clean
 
 ## Troubleshooting
 
-### Devin doesn't detect tasks
+### Forky doesn't detect tasks
 
 1. Check ClickUp credentials:
    ```bash
@@ -264,7 +264,7 @@ npm run clean
 
 1. Verify tasks have "bot in progress" status (exact match, lowercase)
 
-2. Check Devin is running and polling:
+2. Check Forky is running and polling:
    ```bash
    # Should show polling logs
    ```
@@ -273,11 +273,11 @@ npm run clean
 
 - Processed tasks are cached in `processed-tasks.json`
 - Delete this file to reset cache
-- Devin won't reprocess tasks unless cache is cleared
+- Forky won't reprocess tasks unless cache is cleared
 
-## Stopping Devin
+## Stopping Forky
 
-Press `Ctrl+C` to gracefully stop Devin.
+Press `Ctrl+C` to gracefully stop Forky.
 
 The processed tasks cache is saved automatically on exit.
 
@@ -286,13 +286,13 @@ The processed tasks cache is saved automatically on exit.
 ### Using nohup
 
 ```bash
-nohup node devin.js > devin.log 2>&1 &
+nohup node forky.js > forky.log 2>&1 &
 
 # View logs
-tail -f devin.log
+tail -f forky.log
 
 # Stop
-pkill -f "node devin.js"
+pkill -f "node forky.js"
 ```
 
 ### Using pm2
@@ -300,7 +300,7 @@ pkill -f "node devin.js"
 ```bash
 npm install -g pm2
 
-pm2 start devin.js --name devin
+pm2 start forky.js --name devin
 pm2 logs devin
 pm2 stop devin
 pm2 restart devin
@@ -311,7 +311,7 @@ pm2 restart devin
 ### Limitations
 
 - **macOS only** - Uses `osascript` to launch Terminal windows (macOS specific)
-- **Computer must stay running** - Devin is a local process (polls ClickUp)
+- **Computer must stay running** - Forky is a local process (polls ClickUp)
 - **Multiple Terminal windows** - Each task opens a new window (can get cluttered)
 - **Interactive when needed** - Claude Code may ask questions for complex tasks
 - **Sequential processing** - Tasks processed one at a time (60s poll interval)
@@ -322,19 +322,19 @@ pm2 restart devin
 2. **Watch Terminal windows** - Claude Code will open in new windows, keep an eye on them
 3. **Respond to questions** - If Claude asks for clarification, respond in the new Terminal
 4. **Review PRs before merging** - Always verify the implementation before merging
-5. **Keep Devin running** - Use `pm2` or `nohup` for background execution
+5. **Keep Forky running** - Use `pm2` or `nohup` for background execution
 6. **Manage Terminal clutter** - Close completed Terminal windows to stay organized
 
 ### Status Workflow
 
 - `"to do"` → Your backlog (ignored)
 - `"in progress"` → Your manual work (ignored)
-- `"bot in progress"` → Devin processes (automated)
-- `"can be checked"` → Ready for review (set by Devin)
+- `"bot in progress"` → Forky processes (automated)
+- `"can be checked"` → Ready for review (set by Forky)
 
 ## Comparison with Other Modes
 
-| Feature | Devin (local) | local-poll.js | Vercel Server |
+| Feature | Forky (local) | local-poll.js | Vercel Server |
 |---------|--------------|---------------|---------------|
 | Runs where | Your computer | Your computer | Cloud (Vercel) |
 | AI implementation | Claude Code | Claude Code | No AI (mock) |
@@ -346,7 +346,7 @@ pm2 restart devin
 | Manual trigger needed | No (fully automatic) | Yes (copy prompt) | No |
 | macOS required | Yes | No | No |
 
-**Use Devin when:** You want fully automated task detection + Claude Code implementation on macOS.
+**Use Forky when:** You want fully automated task detection + Claude Code implementation on macOS.
 
 **Advantages:**
 - ✅ Fully automated - no manual triggers

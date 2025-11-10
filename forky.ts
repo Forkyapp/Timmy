@@ -17,7 +17,7 @@ dotenv.config();
 
 import fs from 'fs';
 import config from './lib/config';
-import { jarvis, colors } from './lib/ui';
+import { forky, colors } from './lib/ui';
 import * as storage from './lib/storage';
 import * as clickup from './lib/clickup';
 import * as claude from './lib/claude';
@@ -54,7 +54,7 @@ async function checkTaskCommands(): Promise<void> {
         const command = clickup.parseCommand(comment.comment_text);
 
         if (command) {
-          console.log(jarvis.ai(`Command detected in task ${colors.bright}${task.id}${colors.reset}: ${command.type}`));
+          console.log(forky.ai(`Command detected in task ${colors.bright}${task.id}${colors.reset}: ${command.type}`));
           storage.processedComments.add(comment.id);
 
           // Post immediate acknowledgment
@@ -81,7 +81,7 @@ async function checkTaskCommands(): Promise<void> {
             }
           } catch (error) {
             const err = error as Error;
-            console.log(jarvis.error(`Command execution failed: ${err.message}`));
+            console.log(forky.error(`Command execution failed: ${err.message}`));
             await clickup.addComment(
               task.id,
               `❌ **Command Failed**\n\n` +
@@ -94,14 +94,14 @@ async function checkTaskCommands(): Promise<void> {
     }
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Comment checking error: ${err.message}`));
+    console.log(forky.error(`Comment checking error: ${err.message}`));
   }
 }
 
 async function pollAndProcess(): Promise<void> {
   try {
-    console.log(jarvis.divider());
-    console.log(jarvis.info(`🔄 Polling for tasks... (${new Date().toLocaleTimeString()})`));
+    console.log(forky.divider());
+    console.log(forky.info(`🔄 Polling for tasks... (${new Date().toLocaleTimeString()})`));
 
     // First, check for command comments
     await checkTaskCommands();
@@ -110,14 +110,14 @@ async function pollAndProcess(): Promise<void> {
     const tasks = await clickup.getAssignedTasks();
 
     if (tasks.length === 0) {
-      console.log(jarvis.info('No tasks with "bot in progress" status found'));
+      console.log(forky.info('No tasks with "bot in progress" status found'));
     } else {
-      console.log(jarvis.success(`Found ${colors.bright}${tasks.length}${colors.reset} task(s) to process`));
+      console.log(forky.success(`Found ${colors.bright}${tasks.length}${colors.reset} task(s) to process`));
     }
 
     for (const task of tasks) {
       if (storage.cache.has(task.id)) {
-        console.log(jarvis.info(`Skipping task ${colors.bright}${task.id}${colors.reset} - already in cache`));
+        console.log(forky.info(`Skipping task ${colors.bright}${task.id}${colors.reset} - already in cache`));
         continue;
       }
 
@@ -129,28 +129,28 @@ async function pollAndProcess(): Promise<void> {
         const result: ProcessTaskResult = await orchestrator.processTask(task);
 
         if (!result.success) {
-          console.log(jarvis.warning(`Task ${task.id} queued for manual processing`));
+          console.log(forky.warning(`Task ${task.id} queued for manual processing`));
         }
       } catch (error) {
         const err = error as Error;
-        console.log(jarvis.error(`Failed: ${err.message}`));
+        console.log(forky.error(`Failed: ${err.message}`));
       }
     }
 
   } catch (error) {
     const err = error as Error;
-    console.log(jarvis.error(`Polling error: ${err.message}`));
+    console.log(forky.error(`Polling error: ${err.message}`));
     if (err.stack) {
-      console.log(jarvis.error(`Stack trace: ${err.stack}`));
+      console.log(forky.error(`Stack trace: ${err.stack}`));
     }
   }
 }
 
 function gracefulShutdown(): void {
-  console.log('\n' + jarvis.ai('Shutting down...'));
+  console.log('\n' + forky.ai('Shutting down...'));
   storage.cache.save();
   storage.processedComments.save();
-  console.log(jarvis.success('State saved. Goodbye!') + '\n');
+  console.log(forky.success('State saved. Goodbye!') + '\n');
   process.exit(0);
 }
 
@@ -165,33 +165,33 @@ if (require.main === module) {
   storage.processedComments.init();
 
   console.clear();
-  console.log('\n' + jarvis.header('J.A.R.V.I.S'));
-  console.log(jarvis.ai('Autonomous Task System'));
-  console.log(jarvis.divider());
+  console.log('\n' + forky.header('FORKY'));
+  console.log(forky.ai('Autonomous Task System'));
+  console.log(forky.divider());
 
   // Show configuration
-  console.log(jarvis.info('Configuration:'));
-  console.log(jarvis.info(`  ClickUp Workspace ID: ${colors.bright}${config.clickup.workspaceId}${colors.reset}`));
-  console.log(jarvis.info(`  GitHub Repo: ${colors.bright}${config.github.owner}/${config.github.repo}${colors.reset}`));
-  console.log(jarvis.info(`  GitHub Repo Path: ${colors.bright}${config.github.repoPath}${colors.reset}`));
-  console.log(jarvis.info(`  Poll Interval: ${colors.bright}${config.system.pollIntervalMs / 1000}s${colors.reset}`));
-  console.log(jarvis.divider());
+  console.log(forky.info('Configuration:'));
+  console.log(forky.info(`  ClickUp Workspace ID: ${colors.bright}${config.clickup.workspaceId}${colors.reset}`));
+  console.log(forky.info(`  GitHub Repo: ${colors.bright}${config.github.owner}/${config.github.repo}${colors.reset}`));
+  console.log(forky.info(`  GitHub Repo Path: ${colors.bright}${config.github.repoPath}${colors.reset}`));
+  console.log(forky.info(`  Poll Interval: ${colors.bright}${config.system.pollIntervalMs / 1000}s${colors.reset}`));
+  console.log(forky.divider());
 
   if (!config.github.repoPath || !fs.existsSync(config.github.repoPath)) {
-    console.log(jarvis.error('Repository path not configured in .env'));
+    console.log(forky.error('Repository path not configured in .env'));
     process.exit(1);
   }
 
   claude.ensureClaudeSettings();
-  console.log(jarvis.success('Systems online'));
-  console.log(jarvis.info(`Monitoring workspace • ${config.system.pollIntervalMs / 1000}s intervals`));
-  console.log(jarvis.ai('✨ Synchronous Multi-AI Workflow:'));
-  console.log(jarvis.info('   1. Gemini Analysis'));
-  console.log(jarvis.info('   2. Claude Implementation'));
-  console.log(jarvis.info('   3. Codex Code Review'));
-  console.log(jarvis.info('   4. Claude Fixes'));
-  console.log(jarvis.info('   All in ONE terminal, sequential execution'));
-  console.log(jarvis.divider() + '\n');
+  console.log(forky.success('Systems online'));
+  console.log(forky.info(`Monitoring workspace • ${config.system.pollIntervalMs / 1000}s intervals`));
+  console.log(forky.ai('✨ Synchronous Multi-AI Workflow:'));
+  console.log(forky.info('   1. Gemini Analysis'));
+  console.log(forky.info('   2. Claude Implementation'));
+  console.log(forky.info('   3. Codex Code Review'));
+  console.log(forky.info('   4. Claude Fixes'));
+  console.log(forky.info('   All in ONE terminal, sequential execution'));
+  console.log(forky.divider() + '\n');
 
   // Start polling for new tasks
   pollAndProcess();

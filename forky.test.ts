@@ -79,16 +79,16 @@ const mockedFs = fs as jest.Mocked<typeof fs>;
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 // Don't actually run the startup code
-// Note: When devin.js is required in tests, require.main !== module,
+// Note: When forky.js is required in tests, require.main !== module,
 // so the startup code won't run automatically
 
 // Load the module once with mocks in place
 // Note: This test file may be for an older version of the module
-// The actual exports from devin.js are: pollAndProcess, gracefulShutdown,
+// The actual exports from forky.js are: pollAndProcess, gracefulShutdown,
 // load, save, add, getPending, getCompleted, getAssignedTasks, updateStatus,
 // addComment, getTaskComments, parseCommand, detectRepository,
 // ensureClaudeSettings, launchClaude, fixTodoComments, config
-const devin = require('./devin.js') as {
+const forky = require('./forky.js') as {
   CACHE_FILE?: string;
   QUEUE_FILE?: string;
   processedTasksData?: ProcessedTask[];
@@ -113,7 +113,7 @@ const devin = require('./devin.js') as {
   config?: any;
 };
 
-describe('JARVIS Task Automation System', () => {
+describe('Forky Task Automation System', () => {
   beforeEach(() => {
     // Just clear mock call history, don't reload the module
     jest.clearAllMocks();
@@ -130,9 +130,9 @@ describe('JARVIS Task Automation System', () => {
     mockedAxios.put.mockResolvedValue({} as any);
 
     // Reset state for tests
-    devin.processedTasksData = [];
-    devin.processedTaskIds = new Set<string>();
-    devin.prTracking = [];
+    forky.processedTasksData = [];
+    forky.processedTaskIds = new Set<string>();
+    forky.prTracking = [];
   });
 
   describe('Cache Management', () => {
@@ -140,7 +140,7 @@ describe('JARVIS Task Automation System', () => {
       it('should return empty array when cache file does not exist', () => {
         mockedFs.existsSync.mockReturnValue(false);
 
-        const result: ProcessedTask[] | undefined = devin.loadProcessedTasks?.();
+        const result: ProcessedTask[] | undefined = forky.loadProcessedTasks?.();
 
         expect(result).toEqual([]);
       });
@@ -155,10 +155,10 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.existsSync.mockReturnValue(true);
         mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockTasks));
 
-        const result: ProcessedTask[] | undefined = devin.loadProcessedTasks?.();
+        const result: ProcessedTask[] | undefined = forky.loadProcessedTasks?.();
 
         expect(result).toEqual(mockTasks);
-        expect(mockedFs.readFileSync).toHaveBeenCalledWith(devin.CACHE_FILE, 'utf8');
+        expect(mockedFs.readFileSync).toHaveBeenCalledWith(forky.CACHE_FILE, 'utf8');
       });
 
       it('should convert old format (array of IDs) to new format', () => {
@@ -167,7 +167,7 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.existsSync.mockReturnValue(true);
         mockedFs.readFileSync.mockReturnValue(JSON.stringify(oldFormat));
 
-        const result: ProcessedTask[] | undefined = devin.loadProcessedTasks?.();
+        const result: ProcessedTask[] | undefined = forky.loadProcessedTasks?.();
 
         expect(result).toHaveLength(3);
         expect(result?.[0]).toHaveProperty('id', 'task-1');
@@ -181,7 +181,7 @@ describe('JARVIS Task Automation System', () => {
         });
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'error').mockImplementation();
-        const result: ProcessedTask[] | undefined = devin.loadProcessedTasks?.();
+        const result: ProcessedTask[] | undefined = forky.loadProcessedTasks?.();
 
         expect(result).toEqual([]);
         expect(consoleSpy).toHaveBeenCalled();
@@ -191,10 +191,10 @@ describe('JARVIS Task Automation System', () => {
 
     describe('saveProcessedTasks', () => {
       it('should write tasks to cache file', () => {
-        devin.saveProcessedTasks?.();
+        forky.saveProcessedTasks?.();
 
         expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-          devin.CACHE_FILE,
+          forky.CACHE_FILE,
           expect.any(String)
         );
       });
@@ -205,7 +205,7 @@ describe('JARVIS Task Automation System', () => {
         });
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'error').mockImplementation();
-        devin.saveProcessedTasks?.();
+        forky.saveProcessedTasks?.();
 
         expect(consoleSpy).toHaveBeenCalled();
         consoleSpy.mockRestore();
@@ -220,13 +220,13 @@ describe('JARVIS Task Automation System', () => {
           description: 'Test Description'
         };
 
-        devin.addToProcessed?.(task);
+        forky.addToProcessed?.(task);
 
-        const taskData: ProcessedTask[] | undefined = devin.processedTasksData;
+        const taskData: ProcessedTask[] | undefined = forky.processedTasksData;
         expect(taskData).toHaveLength(1);
         expect(taskData?.[0].id).toBe('task-123');
         expect(taskData?.[0].title).toBe('Test Task');
-        expect(devin.processedTaskIds?.has('task-123')).toBe(true);
+        expect(forky.processedTaskIds?.has('task-123')).toBe(true);
       });
 
       it('should not add duplicate tasks', () => {
@@ -235,10 +235,10 @@ describe('JARVIS Task Automation System', () => {
           name: 'Test Task'
         };
 
-        devin.addToProcessed?.(task);
-        devin.addToProcessed?.(task); // Try to add again
+        forky.addToProcessed?.(task);
+        forky.addToProcessed?.(task); // Try to add again
 
-        expect(devin.processedTasksData).toHaveLength(1);
+        expect(forky.processedTasksData).toHaveLength(1);
       });
     });
   });
@@ -258,7 +258,7 @@ describe('JARVIS Task Automation System', () => {
 
         mockedAxios.get.mockResolvedValue(mockResponse as any);
 
-        const result: ClickUpTask[] = await devin.getAssignedTasks();
+        const result: ClickUpTask[] = await forky.getAssignedTasks();
 
         expect(result).toHaveLength(2);
         expect(result[0].id).toBe('1');
@@ -277,7 +277,7 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.get.mockRejectedValue(new Error('API Error'));
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log').mockImplementation();
-        const result: ClickUpTask[] = await devin.getAssignedTasks();
+        const result: ClickUpTask[] = await forky.getAssignedTasks();
 
         expect(result).toEqual([]);
         consoleSpy.mockRestore();
@@ -289,7 +289,7 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.put.mockResolvedValue({} as any);
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log').mockImplementation();
-        await devin.updateTaskStatus?.('task-123', 'completed');
+        await forky.updateTaskStatus?.('task-123', 'completed');
 
         expect(mockedAxios.put).toHaveBeenCalledWith(
           'https://api.clickup.com/api/v2/task/task-123',
@@ -307,7 +307,7 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.put.mockRejectedValue(new Error('Update failed'));
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log').mockImplementation();
-        await devin.updateTaskStatus?.('task-123', 'completed');
+        await forky.updateTaskStatus?.('task-123', 'completed');
 
         expect(consoleSpy).toHaveBeenCalled();
         consoleSpy.mockRestore();
@@ -319,7 +319,7 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.post.mockResolvedValue({} as any);
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log').mockImplementation();
-        await devin.addClickUpComment?.('task-123', 'Test comment');
+        await forky.addClickUpComment?.('task-123', 'Test comment');
 
         expect(mockedAxios.post).toHaveBeenCalledWith(
           'https://api.clickup.com/api/v2/task/task-123/comment',
@@ -336,7 +336,7 @@ describe('JARVIS Task Automation System', () => {
       it('should return default queue when file does not exist', () => {
         mockedFs.existsSync.mockReturnValue(false);
 
-        const result: QueueData | undefined = devin.loadQueue?.();
+        const result: QueueData | undefined = forky.loadQueue?.();
 
         expect(result).toEqual({ pending: [], completed: [] });
       });
@@ -350,7 +350,7 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.existsSync.mockReturnValue(true);
         mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockQueue));
 
-        const result: QueueData | undefined = devin.loadQueue?.();
+        const result: QueueData | undefined = forky.loadQueue?.();
 
         expect(result).toEqual(mockQueue);
       });
@@ -360,10 +360,10 @@ describe('JARVIS Task Automation System', () => {
       it('should save queue to file', () => {
         const mockQueue: QueueData = { pending: [], completed: [] };
 
-        devin.saveQueue?.(mockQueue);
+        forky.saveQueue?.(mockQueue);
 
         expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-          devin.QUEUE_FILE,
+          forky.QUEUE_FILE,
           expect.any(String)
         );
       });
@@ -383,7 +383,7 @@ describe('JARVIS Task Automation System', () => {
           url: 'https://app.clickup.com/t/task-123'
         };
 
-        const result: QueueResult | undefined = await devin.queueTask?.(mockTask);
+        const result: QueueResult | undefined = await forky.queueTask?.(mockTask);
 
         expect(result).toEqual({ success: true });
         expect(mockedFs.writeFileSync).toHaveBeenCalled();
@@ -407,7 +407,7 @@ describe('JARVIS Task Automation System', () => {
           name: 'Test Task'
         };
 
-        const result: QueueResult | undefined = await devin.queueTask?.(mockTask);
+        const result: QueueResult | undefined = await forky.queueTask?.(mockTask);
 
         expect(result).toEqual({ alreadyQueued: true });
         consoleSpy.mockRestore();
@@ -420,7 +420,7 @@ describe('JARVIS Task Automation System', () => {
       it('should return empty array when file does not exist', () => {
         mockedFs.existsSync.mockReturnValue(false);
 
-        const result: TrackingEntry[] | undefined = devin.loadPRTracking?.();
+        const result: TrackingEntry[] | undefined = forky.loadPRTracking?.();
 
         expect(result).toEqual([]);
       });
@@ -433,7 +433,7 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.existsSync.mockReturnValue(true);
         mockedFs.readFileSync.mockReturnValue(JSON.stringify(mockTracking));
 
-        const result: TrackingEntry[] | undefined = devin.loadPRTracking?.();
+        const result: TrackingEntry[] | undefined = forky.loadPRTracking?.();
 
         expect(result).toEqual(mockTracking);
       });
@@ -456,7 +456,7 @@ describe('JARVIS Task Automation System', () => {
 
         mockedAxios.get.mockResolvedValue({ data: [mockPR] } as any);
 
-        const result: PRCheckResult | undefined = await devin.checkForPR?.(mockTracking);
+        const result: PRCheckResult | undefined = await forky.checkForPR?.(mockTracking);
 
         expect(result).toEqual({
           found: true,
@@ -476,7 +476,7 @@ describe('JARVIS Task Automation System', () => {
 
         mockedAxios.get.mockResolvedValue({ data: [] } as any);
 
-        const result: PRCheckResult | undefined = await devin.checkForPR?.(mockTracking);
+        const result: PRCheckResult | undefined = await forky.checkForPR?.(mockTracking);
 
         expect(result).toEqual({ found: false });
       });
@@ -492,7 +492,7 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.get.mockRejectedValue(new Error('GitHub API Error'));
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'error').mockImplementation();
-        const result: PRCheckResult | undefined = await devin.checkForPR?.(mockTracking);
+        const result: PRCheckResult | undefined = await forky.checkForPR?.(mockTracking);
 
         expect(result).toEqual({ found: false });
         consoleSpy.mockRestore();
@@ -507,7 +507,7 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.mkdirSync.mockReturnValue(undefined);
         mockedFs.writeFileSync.mockReturnValue(undefined);
 
-        devin.ensureClaudeSettings();
+        forky.ensureClaudeSettings();
 
         expect(mockedFs.mkdirSync).toHaveBeenCalledWith(
           expect.stringContaining('.claude'),
@@ -519,7 +519,7 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.existsSync.mockReturnValue(true);
         mockedFs.writeFileSync.mockReturnValue(undefined);
 
-        devin.ensureClaudeSettings();
+        forky.ensureClaudeSettings();
 
         expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
           expect.stringContaining('settings.json'),
@@ -532,7 +532,7 @@ describe('JARVIS Task Automation System', () => {
         mockedFs.mkdirSync.mockReturnValue(undefined);
         mockedFs.writeFileSync.mockReturnValue(undefined);
 
-        devin.ensureClaudeSettings();
+        forky.ensureClaudeSettings();
 
         expect(mockedFs.mkdirSync).not.toHaveBeenCalled();
       });
@@ -549,10 +549,10 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.get.mockResolvedValue({ data: { tasks: mockTasks } } as any);
 
         // Simulate task already processed
-        devin.processedTaskIds.add('task-1');
+        forky.processedTaskIds.add('task-1');
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log').mockImplementation();
-        await devin.pollAndProcess();
+        await forky.pollAndProcess();
 
         // Should not log "TARGET ACQUIRED" since task is already processed
         const logs: string = consoleSpy.mock.calls.flat().join(' ');
@@ -565,7 +565,7 @@ describe('JARVIS Task Automation System', () => {
         mockedAxios.get.mockRejectedValue(new Error('Network error'));
 
         const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log').mockImplementation();
-        await devin.pollAndProcess();
+        await forky.pollAndProcess();
 
         expect(consoleSpy).toHaveBeenCalled();
         consoleSpy.mockRestore();

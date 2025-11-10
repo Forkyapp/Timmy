@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import config, { resolveRepoConfig } from './config';
-import { jarvis, colors } from './ui';
+import { forky, colors } from './ui';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -270,11 +270,11 @@ const queue = {
     const queueData = this.load();
 
     if (queueData.pending.find(t => t.id === taskId)) {
-      console.log(jarvis.warning(`Task ${taskId} already queued`));
+      console.log(forky.warning(`Task ${taskId} already queued`));
       return { alreadyQueued: true };
     }
 
-    console.log(jarvis.info(`Queued task ${colors.bright}${taskId}${colors.reset}`));
+    console.log(forky.info(`Queued task ${colors.bright}${taskId}${colors.reset}`));
 
     queueData.pending.push({
       id: taskId,
@@ -288,7 +288,7 @@ const queue = {
       branch: `task-${taskId}`,
       commitMessage: `feat: ${taskTitle} (#${taskId})`,
       prTitle: `[ClickUp #${taskId}] ${taskTitle}`,
-      prBody: `## ClickUp Task\n\n**Task:** ${taskTitle}\n**ID:** ${taskId}\n**URL:** ${task.url}\n\n## Description\n\n${taskDescription}\n\n---\n\n🤖 Queued by Devin for processing`
+      prBody: `## ClickUp Task\n\n**Task:** ${taskTitle}\n**ID:** ${taskId}\n**URL:** ${task.url}\n\n## Description\n\n${taskDescription}\n\n---\n\n🤖 Queued by Forky for processing`
     });
 
     this.save(queueData);
@@ -343,7 +343,7 @@ const tracking = {
 
     prTrackingData.push(trackingEntry);
     this.save(prTrackingData);
-    console.log(jarvis.info(`Started PR tracking for task ${task.id}`));
+    console.log(forky.info(`Started PR tracking for task ${task.id}`));
   },
 
   async checkForPR(trackingEntry: TrackingEntry): Promise<PRCheckResult> {
@@ -392,7 +392,7 @@ const tracking = {
       const elapsed = now.getTime() - startedAt.getTime();
 
       if (elapsed > config.prTracking.timeoutMs) {
-        console.log(jarvis.warning(`Task ${colors.bright}${trackingEntry.taskId}${colors.reset} timeout (30min)`));
+        console.log(forky.warning(`Task ${colors.bright}${trackingEntry.taskId}${colors.reset} timeout (30min)`));
 
         await clickupModule.addComment(
           trackingEntry.taskId,
@@ -409,8 +409,8 @@ const tracking = {
       const result = await this.checkForPR(trackingEntry);
 
       if (result.found) {
-        console.log(jarvis.success(`Task ${colors.bright}${trackingEntry.taskId}${colors.reset} → PR #${result.number}`));
-        console.log(jarvis.info(result.url!));
+        console.log(forky.success(`Task ${colors.bright}${trackingEntry.taskId}${colors.reset} → PR #${result.number}`));
+        console.log(forky.info(result.url!));
 
         try {
           await clickupModule.addComment(
@@ -488,7 +488,7 @@ const reviewTracking = {
     // Check if review cycle already exists for this task
     const existing = reviewTrackingData.find(r => r.taskId === task.id);
     if (existing) {
-      console.log(jarvis.warning(`Review cycle already exists for task ${task.id}`));
+      console.log(forky.warning(`Review cycle already exists for task ${task.id}`));
       return false;
     }
 
@@ -516,7 +516,7 @@ const reviewTracking = {
 
     reviewTrackingData.push(reviewEntry);
     this.save(reviewTrackingData);
-    console.log(jarvis.info(`Started review cycle for task ${task.id} (repo: ${repoName})`));
+    console.log(forky.info(`Started review cycle for task ${task.id} (repo: ${repoName})`));
     return true;
   },
 
@@ -589,8 +589,8 @@ const reviewTracking = {
 
       if (reviewEntry.stage === 'waiting_for_codex_review' && commitResult.isReview) {
         // Codex review commit detected!
-        console.log(jarvis.success(`Codex review complete for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
-        console.log(jarvis.info(`Commit: ${commitResult.message}`));
+        console.log(forky.success(`Codex review complete for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
+        console.log(forky.info(`Commit: ${commitResult.message}`));
 
         await clickupModule.addComment(
           reviewEntry.taskId,
@@ -604,7 +604,7 @@ const reviewTracking = {
         reviewEntry.iteration++;
         this.save(reviewTrackingData);
 
-        console.log(jarvis.ai(`Triggering Claude to fix TODOs for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
+        console.log(forky.ai(`Triggering Claude to fix TODOs for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
         const task = { id: reviewEntry.taskId, name: reviewEntry.taskName };
         const repoConfig = {
           owner: reviewEntry.owner!,
@@ -615,8 +615,8 @@ const reviewTracking = {
 
       } else if (reviewEntry.stage === 'waiting_for_claude_fixes' && commitResult.isFix) {
         // Claude fixes commit detected!
-        console.log(jarvis.success(`Claude fixes complete for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
-        console.log(jarvis.info(`Commit: ${commitResult.message}`));
+        console.log(forky.success(`Claude fixes complete for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
+        console.log(forky.info(`Commit: ${commitResult.message}`));
 
         await clickupModule.addComment(
           reviewEntry.taskId,
@@ -631,7 +631,7 @@ const reviewTracking = {
           reviewEntry.stage = 'waiting_for_codex_review';
           this.save(reviewTrackingData);
 
-          console.log(jarvis.ai(`Starting review iteration ${reviewEntry.iteration + 1} for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
+          console.log(forky.ai(`Starting review iteration ${reviewEntry.iteration + 1} for ${colors.bright}${reviewEntry.taskId}${colors.reset}`));
           const task = { id: reviewEntry.taskId, name: reviewEntry.taskName };
           const repoConfig = {
             owner: reviewEntry.owner!,
@@ -641,7 +641,7 @@ const reviewTracking = {
           await codexModule.reviewClaudeChanges(task, { repoConfig });
         } else {
           // Review cycle complete
-          console.log(jarvis.success(`Review cycle complete for ${colors.bright}${reviewEntry.taskId}${colors.reset} (${reviewEntry.iteration} iterations)`));
+          console.log(forky.success(`Review cycle complete for ${colors.bright}${reviewEntry.taskId}${colors.reset} (${reviewEntry.iteration} iterations)`));
 
           await clickupModule.addComment(
             reviewEntry.taskId,

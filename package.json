@@ -1,12 +1,12 @@
 {
-  "name": "jarvis-task-automation",
+  "name": "forky-task-automation",
   "version": "1.0.0",
-  "description": "JARVIS-style autonomous task automation system",
-  "main": "dist/devin.js",
+  "description": "Forky autonomous task automation system",
+  "main": "dist/forky.js",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/devin.js",
-    "dev": "ts-node devin.ts",
+    "start": "npm run build && node dist/forky.js",
+    "dev": "ts-node forky.ts",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "clean": "rm -rf dist"
