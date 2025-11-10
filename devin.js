@@ -7,8 +7,70 @@ const clickup = require('./lib/clickup');
 const claude = require('./lib/claude');
 const orchestrator = require('./lib/orchestrator');
 
+async function checkTaskCommands() {
+  try {
+    const tasks = await clickup.getAssignedTasks();
+
+    for (const task of tasks) {
+      // Check for command comments on all assigned tasks
+      const comments = await clickup.getTaskComments(task.id);
+
+      for (const comment of comments) {
+        // Skip if already processed
+        if (storage.processedComments.has(comment.id)) continue;
+
+        // Parse command from comment
+        const command = clickup.parseCommand(comment.comment_text);
+
+        if (command) {
+          console.log(jarvis.ai(`Command detected in task ${colors.bright}${task.id}${colors.reset}: ${command.type}`));
+          storage.processedComments.add(comment.id);
+
+          // Post immediate acknowledgment
+          let ackMessage = '';
+          if (command.type === 'rerun-codex-review') {
+            ackMessage = `🤖 **Command Received: Re-run Codex Review**\n\n` +
+              `I'm starting the Codex code review now...\n` +
+              `This may take a few minutes. I'll post an update when it's done.`;
+          } else if (command.type === 'rerun-claude-fixes') {
+            ackMessage = `🤖 **Command Received: Re-run Claude Fixes**\n\n` +
+              `I'm starting to fix all TODO/FIXME comments now...\n` +
+              `This may take a few minutes. I'll post an update when it's done.`;
+          }
+
+          if (ackMessage) {
+            await clickup.addComment(task.id, ackMessage);
+          }
+
+          try {
+            if (command.type === 'rerun-codex-review') {
+              await orchestrator.rerunCodexReview(task.id);
+            } else if (command.type === 'rerun-claude-fixes') {
+              await orchestrator.rerunClaudeFixes(task.id);
+            }
+          } catch (error) {
+            console.log(jarvis.error(`Command execution failed: ${error.message}`));
+            await clickup.addComment(
+              task.id,
+              `❌ **Command Failed**\n\n` +
+              `Command: \`${command.type}\`\n` +
+              `Error: ${error.message}`
+            );
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.log(jarvis.error(`Comment checking error: ${error.message}`));
+  }
+}
+
 async function pollAndProcess() {
   try {
+    // First, check for command comments
+    await checkTaskCommands();
+
+    // Then process new tasks
     const tasks = await clickup.getAssignedTasks();
 
     for (const task of tasks) {
@@ -38,6 +100,7 @@ async function pollAndProcess() {
 if (require.main === module) {
   // Initialize data on startup
   storage.cache.init();
+  storage.processedComments.init();
 
   console.clear();
   console.log('\n' + jarvis.header('J.A.R.V.I.S'));
@@ -72,6 +135,7 @@ if (require.main === module) {
 function gracefulShutdown() {
   console.log('\n' + jarvis.ai('Shutting down...'));
   storage.cache.save();
+  storage.processedComments.save();
   console.log(jarvis.success('State saved. Goodbye!') + '\n');
   process.exit(0);
 }
