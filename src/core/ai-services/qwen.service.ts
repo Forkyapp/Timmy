@@ -73,7 +73,6 @@ async function writeTests(task: ClickUpTask, options: QwenWriteTestsOptions = {}
   const smartContext = await loadSmartContext({
     model: 'qwen',
     taskDescription: `Writing unit tests for: ${taskTitle}`,
-    maxTokens: 4000,
     includeProject: true
   });
 

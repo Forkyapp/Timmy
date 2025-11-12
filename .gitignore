@@ -54,13 +54,18 @@ repos.json
 projects.json
 workspace.json
 
-# AI Context files (user writes these based on their codebase)
+# Context files - user-specific content (should not be committed)
 .context/models/*.md
 .context/shared/*.md
 .context/projects/*.md
+.context/examples/**/*.md
+.context/examples/**/*.ts
+.context/examples/**/*.js
+.context/cache/
 
-# Template context test files
-templates/context/project/test.md
+# Template context files (examples for users to copy)
+templates/context/**/*.md
+!templates/context/**/*.example.md
 
 # Old folders
 local/

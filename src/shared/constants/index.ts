@@ -12,6 +12,8 @@ export const PIPELINE_STAGES = {
   IMPLEMENTED: 'implemented',
   CODEX_REVIEWING: 'codex_reviewing',
   CODEX_REVIEWED: 'codex_reviewed',
+  QWEN_TESTING: 'qwen_testing',
+  QWEN_TESTED: 'qwen_tested',
   CLAUDE_FIXING: 'claude_fixing',
   CLAUDE_FIXED: 'claude_fixed',
   MERGING: 'merging',
@@ -70,6 +72,7 @@ export const CLI_COMMANDS = {
   CLAUDE: 'claude',
   GEMINI: 'gemini',
   CODEX: 'codex',
+  QWEN: 'qwen',
   GIT: 'git',
   GH: 'gh',
 } as const;
@@ -151,6 +154,7 @@ export const AI_AGENTS = {
   CLAUDE: 'claude',
   GEMINI: 'gemini',
   CODEX: 'codex',
+  QWEN: 'qwen',
 } as const;
 
 // Review cycle configuration
@@ -191,6 +195,7 @@ export const ENV_KEYS = {
   CLAUDE_CLI_PATH: 'CLAUDE_CLI_PATH',
   GEMINI_CLI_PATH: 'GEMINI_CLI_PATH',
   CODEX_CLI_PATH: 'CODEX_CLI_PATH',
+  QWEN_CLI_PATH: 'QWEN_CLI_PATH',
 
   // Auto-create repos
   AUTO_CREATE_REPO: 'AUTO_CREATE_REPO',

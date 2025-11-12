@@ -11,10 +11,11 @@ import crypto from 'crypto';
 import { workspace } from '../workspace/workspace.service';
 
 interface SmartContextOptions {
-  model: 'claude' | 'gemini' | 'codex';
+  model: 'claude' | 'gemini' | 'codex' | 'qwen';
   taskDescription: string;
   maxTokens?: number;
   includeProject?: boolean;
+  includeExamples?: boolean;
 }
 
 interface ContextChunk {
@@ -38,8 +39,9 @@ export class SmartContextLoader {
   private cache: Map<string, CachedEmbedding> = new Map();
 
   constructor() {
-    this.contextDir = path.join(__dirname, '..', '.context');
-    this.cacheDir = path.join(__dirname, '..', 'data', 'cache', 'embeddings');
+    // Use project root .context directory instead of relative path
+    this.contextDir = path.join(process.cwd(), '.context');
+    this.cacheDir = path.join(process.cwd(), '.context', 'cache', 'embeddings');
 
     if (!fs.existsSync(this.cacheDir)) {
       fs.mkdirSync(this.cacheDir, { recursive: true });
@@ -54,17 +56,18 @@ export class SmartContextLoader {
       model,
       taskDescription,
       maxTokens = 4000,
-      includeProject = true
+      includeProject = true,
+      includeExamples = true
     } = options;
 
     try {
       // Get or build cache
-      const cacheKey = this.getCacheKey(model, includeProject);
+      const cacheKey = this.getCacheKey(model, includeProject, includeExamples);
       let cached = this.loadCache(cacheKey);
 
-      if (!cached || cached.hash !== this.getContextHash(model, includeProject)) {
+      if (!cached || cached.hash !== this.getContextHash(model, includeProject, includeExamples)) {
         // Build new cache
-        cached = await this.buildCache(model, includeProject);
+        cached = await this.buildCache(model, includeProject, includeExamples);
         this.saveCache(cacheKey, cached);
       }
 
@@ -86,11 +89,11 @@ export class SmartContextLoader {
   /**
    * Build cache of embedded context chunks
    */
-  private async buildCache(model: string, includeProject: boolean): Promise<CachedEmbedding> {
+  private async buildCache(model: string, includeProject: boolean, includeExamples: boolean): Promise<CachedEmbedding> {
     const chunks: Array<{ content: string; source: string; embedding: number[] }> = [];
 
     // Load all context
-    const contexts = this.loadAllContext(model, includeProject);
+    const contexts = this.loadAllContext(model, includeProject, includeExamples);
 
     // Split into chunks and embed
     for (const { content, source } of contexts) {
@@ -107,14 +110,14 @@ export class SmartContextLoader {
 
     return {
       chunks,
-      hash: this.getContextHash(model, includeProject)
+      hash: this.getContextHash(model, includeProject, includeExamples)
     };
   }
 
   /**
    * Load all context files
    */
-  private loadAllContext(model: string, includeProject: boolean): Array<{ content: string; source: string }> {
+  private loadAllContext(model: string, includeProject: boolean, includeExamples: boolean): Array<{ content: string; source: string }> {
     const contexts: Array<{ content: string; source: string }> = [];
 
     // 1. Model-specific
@@ -142,7 +145,32 @@ export class SmartContextLoader {
         });
     }
 
-    // 3. Project-specific
+    // 3. Examples (code, tests, patterns)
+    if (includeExamples) {
+      const examplesDir = path.join(this.contextDir, 'examples');
+      if (fs.existsSync(examplesDir)) {
+        const subdirs = ['code', 'tests', 'patterns'];
+
+        for (const subdir of subdirs) {
+          const subdirPath = path.join(examplesDir, subdir);
+          if (fs.existsSync(subdirPath)) {
+            fs.readdirSync(subdirPath)
+              .filter(f => f.endsWith('.md') || f.endsWith('.ts') || f.endsWith('.js'))
+              .forEach(file => {
+                const filePath = path.join(subdirPath, file);
+                if (fs.statSync(filePath).size > 0) {
+                  contexts.push({
+                    content: fs.readFileSync(filePath, 'utf8'),
+                    source: `examples/${subdir}/${file}`
+                  });
+                }
+              });
+          }
+        }
+      }
+    }
+
+    // 4. Project-specific
     if (includeProject) {
       const activeProject = workspace.getActiveProject();
       if (activeProject) {
@@ -340,16 +368,17 @@ export class SmartContextLoader {
   /**
    * Get cache key
    */
-  private getCacheKey(model: string, includeProject: boolean): string {
+  private getCacheKey(model: string, includeProject: boolean, includeExamples: boolean): string {
     const activeProject = workspace.getActiveProject();
     const projectName = includeProject && activeProject ? activeProject.github.repo : 'none';
-    return `${model}-${projectName}`;
+    const examplesFlag = includeExamples ? 'ex' : 'noex';
+    return `${model}-${projectName}-${examplesFlag}`;
   }
 
   /**
    * Get hash of all context files
    */
-  private getContextHash(model: string, includeProject: boolean): string {
+  private getContextHash(model: string, includeProject: boolean, includeExamples: boolean): string {
     const files: string[] = [];
 
     const modelPath = path.join(this.contextDir, 'models', `${model}.md`);
@@ -364,6 +393,23 @@ export class SmartContextLoader {
         .forEach(f => {
           files.push(fs.readFileSync(path.join(sharedDir, f), 'utf8'));
         });
+    }
+
+    if (includeExamples) {
+      const examplesDir = path.join(this.contextDir, 'examples');
+      if (fs.existsSync(examplesDir)) {
+        const subdirs = ['code', 'tests', 'patterns'];
+        for (const subdir of subdirs) {
+          const subdirPath = path.join(examplesDir, subdir);
+          if (fs.existsSync(subdirPath)) {
+            fs.readdirSync(subdirPath)
+              .filter(f => f.endsWith('.md') || f.endsWith('.ts') || f.endsWith('.js'))
+              .forEach(f => {
+                files.push(fs.readFileSync(path.join(subdirPath, f), 'utf8'));
+              });
+          }
+        }
+      }
     }
 
     if (includeProject) {

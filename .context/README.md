@@ -9,7 +9,16 @@ This directory contains context files that are automatically loaded into AI mode
 ├── models/              # Model-specific guidelines
 │   ├── claude.md       # Claude coding patterns & preferences
 │   ├── gemini.md       # Gemini documentation guidelines
-│   └── codex.md        # Codex review checklist
+│   ├── codex.md        # Codex review checklist
+│   └── qwen.md         # Qwen test writing guidelines
+│
+├── examples/           # Code examples & templates (CACHED & ALWAYS LOADED)
+│   ├── code/          # Code implementation examples
+│   │   └── typescript-patterns.md
+│   ├── tests/         # Test writing examples
+│   │   └── unit-test-example.md
+│   └── patterns/      # Design patterns & best practices
+│       └── error-handling.md
 │
 ├── projects/           # Project-specific context (per target repo)
 │   ├── {project-name}.md
@@ -25,10 +34,21 @@ This directory contains context files that are automatically loaded into AI mode
 
 When an AI agent is launched for a task:
 
-1. **Global context** is loaded from `.context/models/{agent-name}.md`
-2. **Project-specific context** is loaded from `.context/projects/{project-name}.md`
-3. **Shared guidelines** are loaded from `.context/shared/*.md`
-4. All context is prepended to the task prompt
+1. **Model-specific guidelines** are loaded from `.context/models/{agent-name}.md`
+2. **Shared guidelines** are loaded from `.context/shared/*.md`
+3. **Code examples & templates** are loaded from `.context/examples/**/*.md` **(CACHED & ALWAYS INCLUDED)**
+4. **Project-specific context** is loaded from `.context/projects/{project-name}.md`
+5. All context is intelligently embedded and cached for performance
+6. Relevant chunks are selected based on task description using semantic search
+
+### Caching System
+
+The smart context loader:
+- **Caches** all examples and templates for fast retrieval
+- **Embeds** content using TF-IDF-like vectors
+- **Ranks** by relevance using cosine similarity
+- **Refreshes** cache when files are modified (via MD5 hash check)
+- **Selects** most relevant chunks within token limits
 
 ## File Format
 
@@ -66,6 +86,38 @@ Context files use Markdown format with clear sections:
 - **Purpose:** Review checklist, code quality standards
 - **When:** Before reviewing code
 - **File:** `.context/models/codex.md`
+
+### For Qwen (Testing):
+- **Purpose:** Test writing guidelines, testing patterns
+- **When:** Before writing unit tests
+- **File:** `.context/models/qwen.md`
+
+## Examples Directory
+
+The `.context/examples/` directory contains **real, working code examples** that AI agents reference when writing code or tests:
+
+### `/examples/code/`
+- TypeScript patterns
+- Service implementations
+- Repository patterns
+- Utility functions
+- **Format:** Markdown with code blocks or `.ts` files
+
+### `/examples/tests/`
+- Unit test examples
+- Integration test patterns
+- Mocking strategies
+- Test organization
+- **Format:** Markdown with test examples
+
+### `/examples/patterns/`
+- Error handling patterns
+- Async patterns
+- Design patterns
+- Best practices
+- **Format:** Markdown with explanations + code
+
+**These examples are ALWAYS loaded and cached** - AI agents will automatically reference them when writing similar code.
 
 ## Project-Specific Context
 

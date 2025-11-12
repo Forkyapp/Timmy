@@ -3,7 +3,7 @@ import { forky, colors } from '../../shared/ui';
 import * as storage from '../../../lib/storage';
 import * as gemini from '../ai-services/gemini.service';
 import * as claude from '../ai-services/claude.service';
-import * as qwen from '../ai-services/qwen.service';
+// import * as qwen from '../ai-services/qwen.service'; // TODO: Enable when implemented
 import * as codex from '../monitoring/codex.service';
 import { RepositoryConfig, resolveRepoConfig } from '../../shared/config';
 import * as clickup from '../../../lib/clickup';
@@ -45,11 +45,12 @@ interface ReviewResult {
   error?: string;
 }
 
-interface WriteTestsResult {
-  success: boolean;
-  branch?: string;
-  error?: string;
-}
+// TODO: Enable when qwen service is implemented
+// interface WriteTestsResult {
+//   success: boolean;
+//   branch?: string;
+//   error?: string;
+// }
 
 interface FixTodoResult {
   success: boolean;
@@ -234,7 +235,11 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
       console.log(forky.warning(`Continuing without Codex review`));
     }
 
-    // Stage 4: Claude Fixes TODO/FIXME Comments
+    // Stage 4: Qwen Unit Test Writing (DISABLED)
+    // TODO: Enable when qwen.service is implemented
+    // storage.pipeline.updateStage(taskId, storage.pipeline.STAGES.QWEN_TESTING, { name: 'Qwen Test Writing' });
+
+    // Stage 5: Claude Fixes TODO/FIXME Comments
     storage.pipeline.updateStage(taskId, storage.pipeline.STAGES.CLAUDE_FIXING, { name: 'Claude Fixes' });
 
     try {
@@ -258,7 +263,7 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
       console.log(forky.warning(`Continuing without Claude fixes`));
     }
 
-    // Stage 5: Complete
+    // Stage 6: Complete
     storage.pipeline.complete(taskId, {
       branch: `task-${taskId}`,
       completedAt: new Date().toISOString()

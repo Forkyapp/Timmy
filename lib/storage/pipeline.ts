@@ -14,6 +14,8 @@ const STAGES = {
   IMPLEMENTED: 'implemented',
   CODEX_REVIEWING: 'codex_reviewing',
   CODEX_REVIEWED: 'codex_reviewed',
+  QWEN_TESTING: 'qwen_testing',
+  QWEN_TESTED: 'qwen_tested',
   CLAUDE_FIXING: 'claude_fixing',
   CLAUDE_FIXED: 'claude_fixed',
   MERGING: 'merging',

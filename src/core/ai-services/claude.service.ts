@@ -74,7 +74,6 @@ async function launchClaude(task: ClickUpTask, options: LaunchOptions = {}): Pro
   const smartContext = await loadSmartContext({
     model: 'claude',
     taskDescription: `${taskTitle}\n\n${taskDescription}`,
-    maxTokens: 4000,
     includeProject: true
   });
 

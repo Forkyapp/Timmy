@@ -140,7 +140,6 @@ async function launchCodex(task: ClickUpTask, options: LaunchOptions = {}): Prom
   const smartContext = await loadSmartContext({
     model: 'codex',
     taskDescription: `${taskTitle}\n\n${taskDescription}`,
-    maxTokens: 4000,
     includeProject: true
   });
 
@@ -380,7 +379,6 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
   const smartContext = await loadSmartContext({
     model: 'codex',
     taskDescription: `Code review for: ${taskTitle}\n\nReviewing implementation changes`,
-    maxTokens: 4000,
     includeProject: true
   });
 

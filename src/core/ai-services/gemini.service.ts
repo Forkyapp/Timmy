@@ -39,7 +39,6 @@ async function analyzeTask(task: ClickUpTask, options: AnalyzeTaskOptions = {}):
   const smartContext = await loadSmartContext({
     model: 'gemini',
     taskDescription: `${taskTitle}\n\n${taskDescription}`,
-    maxTokens: 4000,
     includeProject: true
   });
 
