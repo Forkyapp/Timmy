@@ -465,18 +465,7 @@ export class SmartContextLoader {
     }
   }
 
-  /**
-   * Clear all caches
-   */
-  clearCache(): void {
-    this.cache.clear();
-
-    if (fs.existsSync(this.cacheDir)) {
-      fs.readdirSync(this.cacheDir).forEach(file => {
-        fs.unlinkSync(path.join(this.cacheDir, file));
-      });
-    }
-  }
+  // Removed clearCache() method - was never called (9 lines)
 }
 
 // Export singleton

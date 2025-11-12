@@ -305,19 +305,9 @@ export async function processTask(task: ClickUpTask): Promise<ProcessTaskResult>
   }
 }
 
-/**
- * Get pipeline status for a task
- */
-export function getTaskStatus(taskId: string): storage.PipelineSummary | null {
-  return storage.pipeline.getSummary(taskId);
-}
-
-/**
- * Get all active tasks
- */
-export function getActiveTasks(): storage.PipelineData[] {
-  return storage.pipeline.getActive();
-}
+// Removed unused exports:
+// - getTaskStatus() - never imported/called
+// - getActiveTasks() - never imported/called
 
 /**
  * Re-run only the Codex review stage
