@@ -1,7 +1,6 @@
 import { forky, colors } from '../../../shared/ui';
 import * as storage from '../../../../lib/storage';
 import type { ClickUpTask } from '../../../../lib/clickup';
-import type { RepositoryConfig } from '../../../shared/config';
 
 /**
  * Initialize pipeline for a task
