@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
-import { exec, spawn, ChildProcess } from 'child_process';
+import { exec } from 'child_process';
+// Removed unused: spawn, ChildProcess (were used by removed execWithPTY function)
 import config from '../../shared/config';
 import { forky, colors } from '../../shared/ui';
 import { loadSmartContext } from '../context/smart-context-loader.service';
@@ -9,13 +10,12 @@ import * as clickup from '../../../lib/clickup';
 import * as storage from '../../../lib/storage';
 import type { ClickUpTask } from '../../../src/types/clickup';
 import type {
-  ExecWithPTYOptions,
   LaunchOptions,
   ReviewOptions,
   LaunchResult,
   ReviewResult,
-  Settings,
-  ErrorWithCode
+  Settings
+  // Removed unused: ExecWithPTYOptions, ErrorWithCode
 } from '../../../src/types/ai';
 import type { ExecResult } from '../../../src/types/common';
 
@@ -285,12 +285,11 @@ export {
   // Removed unused: launchCodex, execWithPTY
   // Types
   ClickUpTask,
-  ExecWithPTYOptions,
+  // Removed unused type exports: ExecWithPTYOptions, ErrorWithCode
   ExecResult,
   LaunchOptions,
   ReviewOptions,
   LaunchResult,
   ReviewResult,
-  Settings,
-  ErrorWithCode
+  Settings
 };

@@ -65,32 +65,7 @@ describe('Repository Integration', () => {
     });
   });
 
-  describe('Storage layer integration', () => {
-    it('should work with custom storage layer', async () => {
-      const storage = new JSONStorage(`${tempDir}/custom.json`, { tasks: [], processed: [] });
-
-      // Write some data
-      await storage.write({ tasks: [], processed: [] });
-
-      // Read it back
-      const data = await storage.read();
-      expect(data).toEqual({ tasks: [], processed: [] });
-    });
-
-    it('should handle multiple storage instances', async () => {
-      const storage1 = new JSONStorage(`${tempDir}/data1.json`, { source: 'storage1' });
-      const storage2 = new JSONStorage(`${tempDir}/data2.json`, { source: 'storage2' });
-
-      await storage1.write({ source: 'storage1' });
-      await storage2.write({ source: 'storage2' });
-
-      const data1 = await storage1.read();
-      const data2 = await storage2.read();
-
-      expect(data1).toEqual({ source: 'storage1' });
-      expect(data2).toEqual({ source: 'storage2' });
-    });
-  });
+  // Removed 'Storage layer integration' tests - referenced removed JSONStorage class
 
   describe('Cross-repository operations', () => {
     it('should support bulk operations across repositories', async () => {

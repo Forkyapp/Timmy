@@ -16,12 +16,7 @@ export interface AIProgress {
   readonly lastUpdate: string;
 }
 
-export interface AIExecutionInfo {
-  readonly startedAt: string;
-  readonly logFile?: string;
-  readonly progressFile?: string;
-  readonly [key: string]: any;
-}
+// Removed AIExecutionInfo - never used
 
 // Claude types
 export interface ClaudeSettings {
@@ -40,7 +35,7 @@ export interface ClaudeLaunchOptions {
     readonly featureDir?: string;
     readonly featureSpecFile?: string;
   };
-  readonly subtask?: any;
+  // Removed subtask property - never accessed
   readonly branch?: string;
   readonly repoConfig?: RepositoryConfig;
 }
@@ -64,9 +59,7 @@ export interface ClaudeFixTodoResult {
 }
 
 // Gemini types
-export interface GeminiAnalyzeTaskOptions {
-  readonly repoConfig?: RepositoryConfig;
-}
+// Removed GeminiAnalyzeTaskOptions - never imported (gemini.service.ts uses its own local type)
 
 export interface GeminiAnalysisResult {
   readonly success: boolean;
@@ -95,15 +88,7 @@ export interface CodexReviewResult {
   readonly error?: string;
 }
 
-export interface CodexLaunchOptions {
-  readonly repoConfig?: RepositoryConfig;
-}
-
-export interface CodexLaunchResult {
-  readonly success: boolean;
-  readonly branch?: string;
-  readonly error?: string;
-}
+// Removed CodexLaunchOptions and CodexLaunchResult - related to removed launchCodex() function
 
 // Qwen types
 export interface QwenWriteTestsOptions {
@@ -116,19 +101,8 @@ export interface QwenWriteTestsResult {
   readonly error?: string;
 }
 
-// Execution types
-export interface ExecWithPTYOptions {
-  cwd?: string;
-  env?: Record<string, string>;
-  timeout?: number;
-  stdinFile?: string;
-}
-
-export interface ErrorWithCode extends Error {
-  code?: string | number;
-  stdout?: string;
-  stderr?: string;
-}
+// Removed ExecWithPTYOptions - related to removed execWithPTY() function
+// Removed ErrorWithCode - duplicate of same interface in retry.util.ts
 
 // Backwards compatibility aliases
 export type Settings = ClaudeSettings;

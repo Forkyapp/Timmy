@@ -258,9 +258,7 @@ export {
   analyzeTask,
   readFeatureSpec,
   hasFeatureSpec,
-  // Backwards compatibility
-  readFeatureSpec as readAnalysis,
-  hasFeatureSpec as hasAnalysis,
+  // Removed unused backwards compatibility aliases: readAnalysis, hasAnalysis
   // Types
   ClickUpTask,
   AnalyzeTaskOptions,

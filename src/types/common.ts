@@ -3,25 +3,16 @@
  * Reusable types used across multiple domains
  */
 
-export interface SuccessResult {
-  readonly success: true;
-}
-
-export interface ErrorResult {
-  readonly success: false;
-  readonly error: string;
-}
-
-export type Result<T = void> = (T extends void ? SuccessResult : SuccessResult & T) | ErrorResult;
+// Removed unused generic result types:
+// - SuccessResult, ErrorResult, Result<T>
+// Services use specific result types instead (LaunchResult, ReviewResult, etc.)
 
 export interface ExecResult {
   readonly stdout: string;
   readonly stderr: string;
 }
 
-export interface RetryableOperation<T> {
-  (): Promise<T>;
-}
+// Removed RetryableOperation<T> - never used (retry.util uses inline function types)
 
 export interface RetryOptions {
   readonly maxAttempts?: number;
@@ -31,12 +22,5 @@ export interface RetryOptions {
   readonly onRetry?: (attempt: number, error: Error) => void;
 }
 
-export interface ValidationError {
-  readonly field: string;
-  readonly message: string;
-}
-
-export interface ValidationResult {
-  readonly valid: boolean;
-  readonly errors: readonly ValidationError[];
-}
+// Removed ValidationError and ValidationResult interfaces
+// These are orphaned - there's a different ValidationError CLASS in shared/errors/ that's actually used
