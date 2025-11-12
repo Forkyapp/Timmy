@@ -54,7 +54,7 @@ async function checkTaskCommands(): Promise<void> {
         const command = clickup.parseCommand(comment.comment_text);
 
         if (command) {
-          console.log(forky.ai(`Command detected in task ${colors.bright}${task.id}${colors.reset}: ${command.type}`));
+          console.log('\n' + forky.ai(`Command detected: ${colors.bright}${command.type}${colors.reset} (Task ${task.id})`));
           storage.processedComments.add(comment.id);
 
           // Post immediate acknowledgment
@@ -100,28 +100,23 @@ async function checkTaskCommands(): Promise<void> {
 
 async function pollAndProcess(): Promise<void> {
   try {
-    console.log(forky.divider());
-    console.log(forky.info(`🔄 Polling for tasks... (${new Date().toLocaleTimeString()})`));
-
     // First, check for command comments
     await checkTaskCommands();
 
     // Then process new tasks
     const tasks = await clickup.getAssignedTasks();
 
-    if (tasks.length === 0) {
-      console.log(forky.info('No tasks with "bot in progress" status found'));
-    } else {
-      console.log(forky.success(`Found ${colors.bright}${tasks.length}${colors.reset} task(s) to process`));
-    }
-
     for (const task of tasks) {
       if (storage.cache.has(task.id)) {
-        console.log(forky.info(`Skipping task ${colors.bright}${task.id}${colors.reset} - already in cache`));
         continue;
       }
 
-      console.log(`\n${colors.bright}${colors.green}🎯 ${task.id}${colors.reset} • ${task.name}`);
+      // Enhanced task header - only show when processing
+      console.log('\n' + forky.doubleDivider());
+      console.log(forky.section(`🎯 Task: ${task.id}`));
+      console.log(`  ${forky.label('Name', task.name)}`);
+      console.log(forky.divider());
+
       storage.cache.add(task);
 
       try {
@@ -129,11 +124,11 @@ async function pollAndProcess(): Promise<void> {
         const result: ProcessTaskResult = await orchestrator.processTask(task);
 
         if (!result.success) {
-          console.log(forky.warning(`Task ${task.id} queued for manual processing`));
+          console.log(forky.warning(`Task queued for manual processing`));
         }
       } catch (error) {
         const err = error as Error;
-        console.log(forky.error(`Failed: ${err.message}`));
+        console.log(forky.error(`Task processing failed: ${err.message}`));
       }
     }
 
@@ -147,10 +142,17 @@ async function pollAndProcess(): Promise<void> {
 }
 
 function gracefulShutdown(): void {
-  console.log('\n' + forky.ai('Shutting down...'));
+  console.log('\n' + forky.doubleDivider());
+  console.log(forky.warning('Shutting down gracefully...'));
+  console.log(forky.divider());
+
   storage.cache.save();
   storage.processedComments.save();
-  console.log(forky.success('State saved. Goodbye!') + '\n');
+
+  console.log(forky.success('State saved successfully'));
+  console.log(forky.ai('Goodbye! 👋'));
+  console.log(forky.doubleDivider() + '\n');
+
   process.exit(0);
 }
 
@@ -165,17 +167,15 @@ if (require.main === module) {
   storage.processedComments.init();
 
   console.clear();
-  console.log('\n' + forky.header('FORKY'));
-  console.log(forky.ai('Autonomous Task System'));
-  console.log(forky.divider());
+  console.log(forky.banner());
 
-  // Show configuration
-  console.log(forky.info('Configuration:'));
-  console.log(forky.info(`  ClickUp Workspace ID: ${colors.bright}${config.clickup.workspaceId}${colors.reset}`));
-  console.log(forky.info(`  GitHub Repo: ${colors.bright}${config.github.owner}/${config.github.repo}${colors.reset}`));
-  console.log(forky.info(`  GitHub Repo Path: ${colors.bright}${config.github.repoPath}${colors.reset}`));
-  console.log(forky.info(`  Poll Interval: ${colors.bright}${config.system.pollIntervalMs / 1000}s${colors.reset}`));
-  console.log(forky.divider());
+  // Show configuration with sections
+  console.log(forky.section('⚙️  System Configuration'));
+  console.log(forky.label('  ClickUp Workspace', config.clickup.workspaceId || 'Not configured'));
+  console.log(forky.label('  GitHub Repository', `${config.github.owner}/${config.github.repo}`));
+  console.log(forky.label('  Repository Path', config.github.repoPath || 'Not configured'));
+  console.log(forky.label('  Poll Interval', `${config.system.pollIntervalMs / 1000}s`));
+  console.log('');
 
   if (!config.github.repoPath || !fs.existsSync(config.github.repoPath)) {
     console.log(forky.error('Repository path not configured in .env'));
@@ -183,15 +183,18 @@ if (require.main === module) {
   }
 
   claude.ensureClaudeSettings();
-  console.log(forky.success('Systems online'));
-  console.log(forky.info(`Monitoring workspace • ${config.system.pollIntervalMs / 1000}s intervals`));
-  console.log(forky.ai('✨ Synchronous Multi-AI Workflow:'));
-  console.log(forky.info('   1. Gemini Analysis'));
-  console.log(forky.info('   2. Claude Implementation'));
-  console.log(forky.info('   3. Codex Code Review'));
-  console.log(forky.info('   4. Claude Fixes'));
-  console.log(forky.info('   All in ONE terminal, sequential execution'));
-  console.log(forky.divider() + '\n');
+
+  // Status indicators
+  console.log(forky.section('🚀 System Status'));
+  console.log(`  ${forky.badge('ONLINE', 'green')} ${colors.gray}Monitoring workspace${colors.reset}`);
+  console.log(`  ${forky.badge('QUIET', 'cyan')} ${colors.gray}Silent polling every ${config.system.pollIntervalMs / 1000}s${colors.reset}`);
+  console.log('');
+
+  // Workflow overview
+  console.log(forky.section('🤖 Multi-AI Pipeline'));
+  console.log(`  ${colors.cyan}1${colors.reset} ${colors.gray}→${colors.reset} ${colors.magenta}Gemini Analysis${colors.reset} ${colors.gray}→${colors.reset} ${colors.cyan}2${colors.reset} ${colors.gray}→${colors.reset} ${colors.blue}Claude Implementation${colors.reset} ${colors.gray}→${colors.reset} ${colors.cyan}3${colors.reset} ${colors.gray}→${colors.reset} ${colors.yellow}Codex Review${colors.reset} ${colors.gray}→${colors.reset} ${colors.cyan}4${colors.reset} ${colors.gray}→${colors.reset} ${colors.green}Claude Fixes${colors.reset}`);
+  console.log(forky.doubleDivider() + '\n');
+  console.log(`${colors.dim}${colors.gray}Waiting for tasks...${colors.reset}\n`);
 
   // Start polling for new tasks
   pollAndProcess();

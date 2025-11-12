@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import config from '../src/shared/config';
-import { forky, colors } from '../src/shared/ui';
+import { forky } from '../src/shared/ui';
 import type { ClickUpTask, CommentResponse, Command, Comment } from '../src/types';
 
 async function getAssignedTasks(): Promise<ClickUpTask[]> {
@@ -28,14 +28,6 @@ async function getAssignedTasks(): Promise<ClickUpTask[]> {
     );
 
     const tasks = response.data.tasks || [];
-
-    if (tasks.length > 0) {
-      console.log(forky.success(`Found ${colors.bright}${tasks.length}${colors.reset} task(s) with "bot in progress" status`));
-      tasks.forEach(task => {
-        console.log(forky.info(`  ${colors.bright}${task.id}${colors.reset} - ${task.name}`));
-      });
-    }
-
     return tasks;
   } catch (error) {
     const axiosError = error as AxiosError;
