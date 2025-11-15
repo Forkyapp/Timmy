@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Register tsconfig paths for runtime
+import 'tsconfig-paths/register';
+
 // Unset any system environment variables that might override .env file
 delete process.env.CLICKUP_WORKSPACE_ID;
 delete process.env.CLICKUP_API_KEY;
@@ -23,6 +26,7 @@ import * as storage from './lib/storage';
 import * as clickup from './lib/clickup';
 import * as claude from './src/core/ai-services/claude.service';
 import * as orchestrator from './src/core/orchestrator/orchestrator.service';
+import { discordService } from './src/core/discord/discord.service';
 
 // ============================================
 // INTERFACES
@@ -176,6 +180,11 @@ function gracefulShutdown(): void {
   console.log(timmy.warning('Shutting down gracefully...'));
   console.log(timmy.divider());
 
+  // Stop Discord polling
+  if (config.discord.enabled) {
+    discordService.stopPolling();
+  }
+
   storage.cache.save();
   storage.processedComments.save();
 
@@ -192,12 +201,13 @@ function gracefulShutdown(): void {
 
 // Only run if this file is executed directly (not imported for testing)
 if (require.main === module) {
-  // Initialize data on startup
-  storage.cache.init();
-  storage.processedComments.init();
+  (async () => {
+    // Initialize data on startup
+    storage.cache.init();
+    storage.processedComments.init();
 
-  console.clear();
-  console.log(timmy.banner());
+    console.clear();
+    console.log(timmy.banner());
 
   // Show configuration with sections
   console.log(timmy.section('⚙️  System Configuration'));
@@ -214,10 +224,24 @@ if (require.main === module) {
 
   claude.ensureClaudeSettings();
 
+  // Initialize Discord if enabled
+  if (config.discord.enabled) {
+    try {
+      await discordService.init();
+      discordService.startPolling();
+    } catch (error) {
+      const err = error as Error;
+      console.log(timmy.error(`Failed to initialize Discord: ${err.message}`));
+    }
+  }
+
   // Status indicators
   console.log(timmy.section('🚀 System Status'));
   console.log(`  ${timmy.badge('ONLINE', 'green')} ${colors.gray}Monitoring workspace${colors.reset}`);
   console.log(`  ${timmy.badge('QUIET', 'cyan')} ${colors.gray}Silent polling every ${config.system.pollIntervalMs / 1000}s${colors.reset}`);
+  if (config.discord.enabled) {
+    console.log(`  ${timmy.badge('DISCORD', 'blue')} ${colors.gray}Monitoring ${config.discord.channelIds.length} channel(s) every ${config.discord.pollIntervalMs / 1000}s${colors.reset}`);
+  }
   console.log('');
 
   // Workflow overview
@@ -246,6 +270,10 @@ if (require.main === module) {
   // Set up shutdown handlers
   process.on('SIGINT', gracefulShutdown);
   process.on('SIGTERM', gracefulShutdown);
+  })().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
 }
 
 // Export for testing

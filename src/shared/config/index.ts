@@ -34,6 +34,9 @@ interface Config {
     keywords: string[];
     pollIntervalMs: number;
   };
+  openai: {
+    apiKey: string | undefined;
+  };
   system: {
     pollIntervalMs: number;
     claudeCliPath: string;
@@ -85,6 +88,9 @@ const config: Config = {
     channelIds: process.env.DISCORD_CHANNEL_IDS?.split(',').map(id => id.trim()) || [],
     keywords: process.env.DISCORD_KEYWORDS?.split(',').map(kw => kw.trim().toLowerCase()) || ['bug', 'issue', 'error', 'problem', 'broken', 'crash', 'fix'],
     pollIntervalMs: parseInt(process.env.DISCORD_POLL_INTERVAL_MS || '600000'), // Default: 10 minutes
+  },
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY,
   },
   system: {
     pollIntervalMs: parseInt(process.env.POLL_INTERVAL_MS || '15000'),

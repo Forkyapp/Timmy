@@ -6,16 +6,17 @@
 import config from '@/shared/config';
 import { DiscordClient } from '@/infrastructure/api/discord.client';
 import { DiscordMessageRepository } from '@/core/repositories/discord-message.repository';
+import { aiBrainService } from '@/core/ai-services/ai-brain.service';
 import type {
   DiscordMessage,
   AnalyzedMessage,
   KeywordMatch,
-  MessagePriority,
   ProcessedMessage,
   DiscordServiceEvents,
 } from '@/types/discord';
+import { MessagePriority } from '@/types/discord';
 import { logger } from '@/shared/utils/logger.util';
-import { forky } from '@/shared/ui';
+import { timmy } from '@/shared/ui';
 
 export class DiscordService {
   private client: DiscordClient | null = null;
@@ -52,10 +53,16 @@ export class DiscordService {
     // Initialize message repository
     await this.messageRepository.init();
 
-    // Initialize Discord client
+    // Initialize Discord client with real-time message handler
     this.client = new DiscordClient({
       token: config.discord.token,
       guildId: config.discord.guildId,
+      onMessage: async (message) => {
+        // Only handle mentions in real-time
+        if (message.mentions.has(message.client.user!.id)) {
+          await this.handleMention(message);
+        }
+      },
     });
 
     // Connect to Discord
@@ -69,6 +76,83 @@ export class DiscordService {
 
     if (this.events.onReady) {
       this.events.onReady();
+    }
+  }
+
+  /**
+   * Send a test message to the first configured channel
+   */
+  async sendTestMessage(): Promise<void> {
+    if (!this.client || config.discord.channelIds.length === 0) {
+      return;
+    }
+
+    try {
+      const testChannelId = config.discord.channelIds[0];
+      const timestamp = new Date().toLocaleString();
+      const message = `🤖 **Timmy Bot Connected!**\n\nBot is online and monitoring for keywords: ${config.discord.keywords.join(', ')}\n\nTest message sent at: ${timestamp}`;
+
+      await this.client.sendMessage(testChannelId, message);
+      logger.info('Test message sent successfully', { channelId: testChannelId });
+      console.log(timmy.success(`✓ Test message sent to channel ${testChannelId}`));
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Failed to send test message', err);
+      console.log(timmy.warning('Could not send test message - check bot permissions (Send Messages)'));
+    }
+  }
+
+  /**
+   * Handle real-time mentions (when bot is @mentioned)
+   */
+  private async handleMention(discordMessage: any): Promise<void> {
+    try {
+      // Skip bot messages
+      if (discordMessage.author.bot) {
+        return;
+      }
+
+      // Convert Discord.js message to our format
+      const message: DiscordMessage = {
+        id: discordMessage.id,
+        channelId: discordMessage.channelId,
+        guildId: discordMessage.guildId || '',
+        content: discordMessage.content,
+        author: {
+          id: discordMessage.author.id,
+          username: discordMessage.author.username,
+          bot: discordMessage.author.bot,
+        },
+        timestamp: discordMessage.createdAt,
+        mentions: Array.from(discordMessage.mentions.users.values()).map((u: any) => u.id),
+        attachments: [],
+      };
+
+      // Check if already processed
+      const isProcessed = await this.messageRepository.has(message.id);
+      if (isProcessed) {
+        return;
+      }
+
+      // Silent - no logging for mentions
+
+      // Use AI brain to generate response
+      const response = await aiBrainService.chat(
+        message.author.id,
+        message.channelId,
+        message.content
+      );
+
+      // Send response back to Discord
+      if (this.client) {
+        await this.client.sendMessage(message.channelId, response);
+      }
+
+      // Mark as processed
+      await this.markAsProcessed(message, [{ keyword: '@mention', position: 0, context: message.content }]);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Failed to handle real-time mention', err);
     }
   }
 
@@ -135,10 +219,6 @@ export class DiscordService {
       return;
     }
 
-    logger.info('Polling Discord messages', {
-      channels: config.discord.channelIds.length,
-    });
-
     const messageMap = await this.client.fetchMessagesFromChannels({
       channelIds: config.discord.channelIds,
       limit: 50, // Fetch last 50 messages per channel
@@ -149,6 +229,7 @@ export class DiscordService {
     let matchedMessages = 0;
 
     for (const [channelId, messages] of messageMap.entries()) {
+
       totalMessages += messages.length;
 
       for (const message of messages) {
@@ -163,7 +244,80 @@ export class DiscordService {
           continue;
         }
 
+        // Check if bot is mentioned - these are high priority requests
+        const botUserId = this.client?.getBotUserId();
+        const isBotMentioned = botUserId && message.mentions.includes(botUserId);
+
+        // Debug logging (disabled - too verbose)
+        // logger.debug('Processing message', {
+        //   messageId: message.id,
+        //   author: message.author.username,
+        // });
+
         newMessages++;
+
+        // If bot is mentioned, use AI brain to chat with the user
+        if (isBotMentioned) {
+          matchedMessages++;
+
+          logger.info('Bot mentioned in Discord message - using AI brain', {
+            messageId: message.id,
+            channelId: message.channelId,
+            author: message.author.username,
+          });
+
+          console.log(
+            timmy.success(
+              `🔔 Bot mentioned by ${message.author.username} - responding with AI`
+            )
+          );
+
+          try {
+            // Use AI brain to generate response
+            const response = await aiBrainService.chat(
+              message.author.id,
+              message.channelId,
+              message.content
+            );
+
+            // Send response back to Discord
+            if (this.client) {
+              await this.client.sendMessage(message.channelId, response);
+              logger.info('AI response sent to Discord', {
+                messageId: message.id,
+                responseLength: response.length,
+              });
+            }
+
+            // Create analyzed message for event
+            const analyzed: AnalyzedMessage = {
+              message,
+              matches: [{ keyword: '@mention', position: 0, context: message.content }],
+              priority: MessagePriority.HIGH,
+              extractedContext: message.content,
+            };
+
+            // Emit event
+            if (this.events.onMessageDetected) {
+              await this.events.onMessageDetected(analyzed);
+            }
+          } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to respond with AI brain', err);
+
+            // Try to send error message to user
+            if (this.client) {
+              await this.client.sendMessage(
+                message.channelId,
+                'Sorry, I encountered an error processing your message. Please try again.'
+              );
+            }
+          }
+
+          // Mark as processed
+          await this.markAsProcessed(message, [{ keyword: '@mention', position: 0, context: message.content }]);
+          continue;
+        }
 
         // Analyze message for keywords
         const analyzed = this.analyzeMessage(message);
@@ -189,18 +343,14 @@ export class DiscordService {
           if (this.events.onMessageDetected) {
             await this.events.onMessageDetected(analyzed);
           }
-        }
 
-        // Mark message as processed
-        await this.markAsProcessed(message, analyzed.matches);
+          // Mark message as processed
+          await this.markAsProcessed(message, analyzed.matches);
+        }
       }
     }
 
-    logger.info('Discord poll completed', {
-      totalMessages,
-      newMessages,
-      matchedMessages,
-    });
+    
 
     // Clean up old processed messages (older than 30 days)
     await this.messageRepository.cleanup(30);

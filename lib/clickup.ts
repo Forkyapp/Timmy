@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import config from '../src/shared/config';
-import { forky } from '../src/shared/ui';
+import { timmy } from '../src/shared/ui';
 import type { ClickUpTask, CommentResponse, Command, Comment } from '../src/types';
 
 async function getAssignedTasks(): Promise<ClickUpTask[]> {

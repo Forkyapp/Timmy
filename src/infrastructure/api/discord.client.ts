@@ -25,6 +25,7 @@ import { logger } from '@/shared/utils/logger.util';
 export interface DiscordClientConfig {
   readonly token: string;
   readonly guildId: string;
+  readonly onMessage?: (message: Message<boolean>) => void | Promise<void>;
 }
 
 export class DiscordClient {
@@ -47,11 +48,11 @@ export class DiscordClient {
       ],
     });
 
-    // Set up ready event
+    // Set up ready event (use clientReady to avoid deprecation warning)
     this.readyPromise = new Promise((resolve) => {
       this.client.once('ready', () => {
         this.isReady = true;
-        logger.info('Discord bot connected successfully', {
+        logger.debug('Discord bot connected', {
           username: this.client.user?.tag,
         });
         resolve();
@@ -59,9 +60,22 @@ export class DiscordClient {
     });
 
     // Set up error handler
-    this.client.on('error', (error) => {
+    this.client.on('error', (error: Error) => {
       logger.error('Discord client error', error);
     });
+
+    // Set up message event listener for real-time responses
+    if (config.onMessage) {
+      this.client.on('messageCreate', async (message) => {
+        if (config.onMessage) {
+          try {
+            await config.onMessage(message);
+          } catch (error) {
+            logger.error('Error in message handler', error instanceof Error ? error : new Error(String(error)));
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -259,12 +273,12 @@ export class DiscordClient {
         id: guild.id,
         name: guild.name,
         channels: Array.from(channels.values())
-          .filter((ch) => ch !== null)
+          .filter((ch): ch is NonNullable<typeof ch> => ch !== null && 'id' in ch && 'name' in ch)
           .map((ch) => ({
-            id: ch!.id,
-            name: ch!.name,
-            guildId: ch!.guildId,
-            type: this.mapChannelType(ch!.type),
+            id: ch.id,
+            name: ch.name,
+            guildId: ch.guildId,
+            type: this.mapChannelType(ch.type),
           })),
       };
     } catch (error) {
@@ -327,9 +341,64 @@ export class DiscordClient {
   }
 
   /**
+   * Send a message to a specific channel
+   */
+  async sendMessage(channelId: string, content: string): Promise<void> {
+    this.ensureReady();
+
+    try {
+      const guild = await this.getGuild();
+      const channel = await guild.channels.fetch(channelId);
+
+      if (!channel) {
+        throw new APIError(
+          `Channel not found: ${channelId}`,
+          'DISCORD_CHANNEL_NOT_FOUND',
+          404
+        );
+      }
+
+      if (!channel.isTextBased()) {
+        throw new APIError(
+          `Channel ${channelId} is not a text channel`,
+          'DISCORD_INVALID_CHANNEL_TYPE',
+          400
+        );
+      }
+
+      await (channel as TextChannel).send(content);
+    } catch (error) {
+      if (error instanceof APIError) {
+        throw error;
+      }
+
+      throw new APIError(
+        `Failed to send message to channel ${channelId}`,
+        'DISCORD_SEND_ERROR',
+        500,
+        { originalError: error }
+      );
+    }
+  }
+
+  /**
    * Check if client is connected and ready
    */
   isConnected(): boolean {
     return this.isReady;
+  }
+
+  /**
+   * Get the Discord client instance
+   */
+  getClient(): Client {
+    return this.client;
+  }
+
+  /**
+   * Get bot user ID
+   */
+  getBotUserId(): string | undefined {
+    return this.client.user?.id;
   }
 }
