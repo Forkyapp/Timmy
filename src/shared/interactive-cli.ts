@@ -1,4 +1,6 @@
 import readline from 'readline';
+import fs from 'fs';
+import path from 'path';
 import { timmy, colors } from './ui';
 import * as storage from '../../lib/storage';
 import { discordService } from '@/core/discord/discord.service';
@@ -127,7 +129,6 @@ export function handleCommand(
     }
 
     case 'cache clear': {
-      const fs = require('fs');
       const count = storage.cache.getIds().size;
 
       try {
@@ -205,8 +206,6 @@ export function handleCommand(
     }
 
     case 'context clear': {
-      const fs = require('fs');
-      const path = require('path');
       const cachePath = path.join(process.cwd(), 'data', 'cache', 'embeddings-cache.json');
 
       try {
