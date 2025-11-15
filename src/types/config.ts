@@ -38,6 +38,15 @@ export interface SystemConfig {
   readonly codexCliPath: string;
 }
 
+export interface DiscordConfig {
+  readonly enabled: boolean;
+  readonly token: string | undefined;
+  readonly guildId: string | undefined;
+  readonly channelIds: string[];
+  readonly keywords: string[];
+  readonly pollIntervalMs: number;
+}
+
 export interface AutoRepoConfig {
   readonly enabled: boolean;
   readonly isPrivate: boolean;
@@ -62,6 +71,7 @@ export interface PRTrackingConfig {
 export interface AppConfig {
   readonly clickup: ClickUpConfig;
   readonly github: GitHubConfig;
+  readonly discord: DiscordConfig;
   readonly system: SystemConfig;
   readonly autoRepo: AutoRepoConfig;
   readonly files: FilesConfig;
