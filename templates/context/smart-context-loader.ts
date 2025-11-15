@@ -37,7 +37,7 @@ function parseFrontmatter(content: string): FrontmatterData {
 
   if (!match) return {};
 
-  const frontmatter: Record<string, any> = {};
+  const frontmatter: Record<string, unknown> = {};
   const lines = match[1].split('\n');
   let currentKey = '';
   let currentArray: string[] = [];
@@ -102,7 +102,7 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
         }
       }
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore errors for non-existent directories
   }
 
@@ -205,7 +205,7 @@ export async function loadContext(
           relevanceScore: score,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       // Skip files that can't be read
     }
   }
@@ -266,7 +266,7 @@ export async function loadByCategory(
           relevanceScore: 100,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       // Skip files that can't be read
     }
   }
@@ -298,7 +298,7 @@ export async function loadByTag(
           relevanceScore: 100,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       // Skip files that can't be read
     }
   }
