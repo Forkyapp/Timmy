@@ -1,10 +1,10 @@
-# Timmy - Autonomous AI Task Automation System
+# Timmy - Your AI Junior Developer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 
-An autonomous task automation system that bridges ClickUp task management with AI-powered code implementation. Timmy orchestrates multiple AI services (Gemini, Claude, Codex) to analyze, implement, review, and fix code automatically, with Discord bot integration for interactive monitoring.
+Your autonomous AI junior developer that handles tasks from ClickUp and Discord, with GitHub issue support coming soon! Timmy orchestrates multiple AI services (Gemini, Claude, Codex) to analyze, implement, review, and fix code automatically - just like a real junior developer on your team!
 
 ## How It Works
 
@@ -12,32 +12,34 @@ An autonomous task automation system that bridges ClickUp task management with A
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ 1. YOU: Create Task                                 │
-│    - ClickUp: Set "bot in progress"                 │
-│    - Discord: Post message in monitored channel     │
+│ 1. YOU: Assign Work to Timmy                        │
+│    - ClickUp: Set task to "bot in progress"         │
+│    - Discord: Ask questions or assign tasks (NEW!)  │
+│    - GitHub: Label issue (coming soon)              │
 └──────────────────────────────────────────────────────┘
                         ↓
 ┌──────────────────────────────────────────────────────┐
-│ 2. TIMMY: Detects & Analyzes                        │
-│    - Polls every 60 seconds                         │
-│    - AI analyzes requirements (Gemini)              │
+│ 2. TIMMY: Your AI Junior Dev                        │
+│    - Detects tasks/issues automatically (60s poll)  │
+│    - AI Brain analyzes requirements (Gemini)        │
 │    - Loads smart context from codebase              │
+│    - Understands the work like a junior developer   │
 └──────────────────────────────────────────────────────┘
                         ↓
 ┌──────────────────────────────────────────────────────┐
-│ 3. AI BRAIN: Implements & Reviews                   │
-│    - Claude implements features                     │
-│    - Codex reviews code quality                     │
-│    - Claude fixes issues                            │
-│    - All automated - no human input needed          │
+│ 3. TIMMY: Implements & Self-Reviews                 │
+│    - Claude implements features autonomously        │
+│    - Codex reviews own code (self-QA)               │
+│    - Claude fixes issues found in review            │
+│    - All automated - works independently!           │
 └──────────────────────────────────────────────────────┘
                         ↓
 ┌──────────────────────────────────────────────────────┐
-│ 4. RESULT: PR Ready                                 │
-│    - GitHub PR created automatically                │
-│    - ClickUp task updated with link                 │
-│    - Discord notification (optional)                │
-│    - Ready for your review & merge                  │
+│ 4. RESULT: Ready for Senior Review                  │
+│    - GitHub PR created with full context            │
+│    - Original issue/task updated with PR link       │
+│    - Discord/ClickUp notification sent              │
+│    - Waiting for your approval to merge             │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -47,7 +49,8 @@ An autonomous task automation system that bridges ClickUp task management with A
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. Task Detection (Every 60s)                               │
 │    - Polls ClickUp for "bot in progress" tasks              │
-│    - Monitors Discord channels for messages                 │
+│    - Monitors Discord channels with AI Brain (NEW!)         │
+│    - GitHub issue monitoring (coming soon)                  │
 │    - Deduplicates using cache                               │
 └─────────────────────────────────────────────────────────────┘
                             ↓
@@ -80,10 +83,12 @@ An autonomous task automation system that bridges ClickUp task management with A
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ 6. Pull Request Creation                                    │
+│ 6. Pull Request Creation & Updates                         │
 │    - Creates GitHub PR automatically                        │
+│    - Links PR to original GitHub issue (if applicable)      │
 │    - Posts PR link to ClickUp task                          │
-│    - Updates task status                                    │
+│    - Updates task/issue status                              │
+│    - Notifies via Discord (optional)                        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -93,14 +98,20 @@ An autonomous task automation system that bridges ClickUp task management with A
 
 - **Multi-AI Orchestration Pipeline**: Coordinated workflow using Gemini (analysis) → Claude (implementation) → Codex (review) → Claude (fixes)
 - **Automated ClickUp Integration**: Polls for tasks every 60s, processes "bot in progress" status automatically
-- **Discord Bot Integration**: Monitor Discord channels, respond to messages with AI brain, track conversations
+- **Discord Bot with AI Brain** ✨ NEW: Monitor Discord channels, respond intelligently to messages, track conversations with context-aware AI
+- **GitHub Automation**: Automatic branch creation, commits, pull request generation, and issue linking
 - **Smart Context Loading**: Intelligent codebase analysis and context preparation for AI services
-- **GitHub Automation**: Automatic branch creation, commits, and pull request generation
 - **Multi-Project Support**: Manage multiple projects with easy switching via workspace system
 - **Interactive Terminal UI**: Real-time monitoring and control through interactive CLI
 - **State Persistence**: Pipeline state tracking, task queue management, and PR tracking
 - **Retry Logic**: Automatic retry with exponential backoff for network operations
 - **TypeScript**: Full type safety with strict mode enabled
+
+### Planned Features 🚀
+
+- **GitHub Issue Bot**: Auto-detect labeled issues, analyze with AI brain, implement fixes (coming Q1 2025)
+- **PR Review Bot**: Automatically review incoming PRs with AI feedback
+- **Slack Integration**: Extend Discord bot capabilities to Slack workspaces
 
 ### AI Services Integration
 
@@ -109,13 +120,26 @@ An autonomous task automation system that bridges ClickUp task management with A
 - **Codex CLI**: Code quality review and improvement suggestions
 - **AI Brain**: Discord message processing with context-aware responses (powered by Claude)
 
-### Discord Bot Features
+### Discord Bot Features ✨ (Live Now!)
 
-- Message monitoring and logging
-- Thread tracking and conversation history
-- AI-powered responses via AI Brain service
-- Channel-specific configuration
-- Rate limiting and error handling
+- **AI Brain Integration**: Powered by Claude for intelligent, context-aware responses
+- **Message Monitoring**: Real-time monitoring and logging of configured channels
+- **Thread Tracking**: Maintains conversation history and context across threads
+- **Smart Responses**: Understands questions and provides helpful answers using codebase context
+- **Channel Configuration**: Flexible channel-specific settings
+- **Rate Limiting**: Built-in protection against API rate limits
+- **Error Handling**: Robust error recovery and retry logic
+
+### GitHub Bot Features 🚀 (Coming Soon)
+
+- **Issue Detection**: Automatically detects issues labeled with "timmy" or "bot"
+- **AI Analysis**: Uses AI Brain to understand issue context and requirements
+- **Bug Fixing**: Analyzes stack traces, error messages, and reproduces bugs
+- **Feature Implementation**: Implements feature requests from GitHub issues
+- **Auto-PR Creation**: Creates pull requests linked to original issues
+- **Issue Updates**: Comments on issues with progress and PR links
+- **Smart Labeling**: Automatically categorizes issues (bug, feature, enhancement)
+- **Context-Aware**: Loads relevant codebase context for better understanding
 
 ## Prerequisites
 
@@ -198,16 +222,31 @@ The interactive terminal provides:
    - Review changes and merge when ready
    - ClickUp task is updated with PR link
 
-### Discord Bot Usage
+### Discord Bot Usage ✨ (Live Now!)
 
 **Setup:**
 See [DISCORD_SETUP.md](DISCORD_SETUP.md) for detailed configuration.
 
-**Features:**
-- Monitor specific Discord channels
-- AI responds to messages using context
-- Track conversation threads
-- Store message history
+**How to Use:**
+1. **Add Timmy to Your Discord Server**
+   - Invite the bot using the Discord app
+   - Configure monitored channels in `.env`
+   - Enable AI Brain for intelligent responses
+
+2. **Interact with Timmy:**
+   - Ask questions in monitored channels
+   - Timmy responds with context-aware answers
+   - Can discuss code, explain features, help debug
+   - Maintains conversation context across threads
+
+3. **Example Interactions:**
+   ```
+   You: "How does the orchestrator pipeline work?"
+   Timmy: *Analyzes codebase and explains the 4-stage pipeline*
+
+   You: "Can you help me understand the Discord integration?"
+   Timmy: *Provides detailed explanation with code references*
+   ```
 
 **Configuration:**
 ```bash
@@ -215,8 +254,36 @@ See [DISCORD_SETUP.md](DISCORD_SETUP.md) for detailed configuration.
 DISCORD_BOT_TOKEN=your_bot_token
 DISCORD_GUILD_ID=your_server_id
 DISCORD_CHANNEL_IDS=channel1,channel2
-DISCORD_AI_ENABLED=true
+DISCORD_AI_ENABLED=true  # Enable AI Brain
 ```
+
+### GitHub Issue Workflow 🚀 (Coming Soon)
+
+1. **Create or Label a GitHub Issue:**
+   - Create a new issue describing the bug or feature
+   - Add label "timmy" or "bot" to assign it to Timmy
+   - Include details: description, steps to reproduce, expected behavior
+
+2. **Automated Processing:**
+   - Timmy detects labeled issue within 60s
+   - **Stage 1**: AI Brain analyzes issue and context
+   - **Stage 2**: Claude implements fix or feature
+   - **Stage 3**: Codex reviews the implementation
+   - **Stage 4**: Claude addresses review feedback
+   - **Stage 5**: PR is created and linked to issue
+
+3. **Review & Merge:**
+   - GitHub PR is linked to original issue
+   - Timmy comments on issue with PR link and summary
+   - Review changes and approve
+   - Issue auto-closes when PR is merged
+
+**Supported Issue Types:**
+- 🐛 **Bug Reports**: Analyzes stack traces, reproduces bugs, implements fixes
+- ✨ **Feature Requests**: Understands requirements, implements new features
+- 🔧 **Enhancements**: Improves existing functionality
+- 📝 **Documentation**: Updates docs, adds comments, creates guides
+- ♻️ **Refactoring**: Restructures code while maintaining functionality
 
 ### Project Management
 
@@ -373,11 +440,13 @@ nohup npm start > timmy.log 2>&1 &
 
 ### Current Capabilities
 
-- **Multi-AI Pipeline**: Fully autonomous task processing through 4 AI stages
-- **Discord Integration**: Real-time monitoring and AI-powered responses
-- **Smart Context**: Intelligent codebase context loading for better AI performance
+- **Multi-AI Pipeline**: Fully autonomous task processing through 4 AI stages (Analysis → Implementation → Review → Fixes)
+- **Discord Bot with AI Brain** ✨: Real-time monitoring, intelligent Q&A, context-aware responses - like having a junior dev in your Discord!
+- **ClickUp Automation**: Polls and processes ClickUp tasks automatically every 60s
+- **Smart Context Loading**: Intelligent codebase analysis and context preparation for AI services
 - **State Management**: Persistent pipeline state with resume capability
-- **Interactive Terminal**: Real-time monitoring and control
+- **Interactive Terminal**: Real-time monitoring and control of all operations
+- **Multi-Project Support**: Seamlessly switch between multiple projects
 
 ### Limitations
 
