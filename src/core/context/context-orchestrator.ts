@@ -44,7 +44,7 @@ export class ContextOrchestrator {
         logger.info('RAG system initialized successfully');
       } catch (error) {
         logger.warn('RAG initialization failed, will use Smart Loader only', {
-          error: (error as Error).message
+          message: (error as Error).message
         });
         this.ragService = null;
       }
@@ -101,7 +101,7 @@ export class ContextOrchestrator {
           logger.debug('RAG returned empty context, falling back to Smart Loader');
         } catch (ragError) {
           logger.warn('RAG context loading failed, falling back to Smart Loader', {
-            error: (ragError as Error).message
+            message: (ragError as Error).message
           });
         }
       }
@@ -137,9 +137,7 @@ export class ContextOrchestrator {
       return context;
 
     } catch (error) {
-      logger.error('All context loading methods failed', {
-        error: (error as Error).message
-      });
+      logger.error('All context loading methods failed', error as Error);
 
       // Last resort: return empty context (allow AI to work without context)
       return '';
@@ -195,7 +193,7 @@ export class ContextOrchestrator {
       this.metrics = this.metrics.slice(-100);
     }
 
-    logger.debug('Context load metrics', metrics);
+    logger.debug('Context load metrics', metrics as unknown as Record<string, unknown>);
   }
 
   /**

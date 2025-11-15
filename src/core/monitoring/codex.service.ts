@@ -375,12 +375,13 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
   console.log(timmy.ai(`${colors.bright}Codex${colors.reset} reviewing Claude's changes for ${colors.bright}${taskId}${colors.reset}`));
   ensureCodexSettings(repoPath);
 
-  // Load smart context for review
+  // Load context for review (uses RAG if available, falls back to Smart Loader)
   console.log(timmy.info('Loading relevant review guidelines...'));
-  const smartContext = await loadSmartContext({
+  const smartContext = await loadContextForModel({
     model: 'codex',
     taskDescription: `Code review for: ${taskTitle}\n\nReviewing implementation changes`,
-    includeProject: true
+    topK: 5,
+    minRelevance: 0.7
   });
 
   const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}You are a senior code reviewer. Your job is to review the changes made by Claude and add constructive TODO comments for improvements.
