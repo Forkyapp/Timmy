@@ -4,43 +4,59 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 
-Your autonomous AI junior developer that handles tasks from ClickUp and Discord, with GitHub issue support coming soon! Timmy orchestrates multiple AI services (Gemini, Claude, Codex) to analyze, implement, review, and fix code automatically - just like a real junior developer on your team!
+Your autonomous AI junior developer that you can chat with on Discord or assign tasks via ClickUp! Mention @Timmy in Discord to discuss bugs/features - he'll ask questions, understand the context, and automatically create tasks. Or create ClickUp tasks manually. Either way, Timmy orchestrates multiple AI services (Gemini, Claude, Codex) to analyze, implement, review, and fix code automatically - just like a real junior developer on your team!
 
 ## How It Works
 
 ### Simple Overview
 
+**Two Ways to Assign Work to Timmy:**
+
 ```
-┌──────────────────────────────────────────────────────┐
-│ 1. YOU: Assign Work to Timmy                        │
-│    - ClickUp: Set task to "bot in progress"         │
-│    - Discord: Ask questions or assign tasks (NEW!)  │
-│    - GitHub: Label issue (coming soon)              │
-└──────────────────────────────────────────────────────┘
-                        ↓
-┌──────────────────────────────────────────────────────┐
-│ 2. TIMMY: Your AI Junior Dev                        │
-│    - Detects tasks/issues automatically (60s poll)  │
-│    - AI Brain analyzes requirements (Gemini)        │
-│    - Loads smart context from codebase              │
-│    - Understands the work like a junior developer   │
-└──────────────────────────────────────────────────────┘
-                        ↓
-┌──────────────────────────────────────────────────────┐
-│ 3. TIMMY: Implements & Self-Reviews                 │
-│    - Claude implements features autonomously        │
-│    - Codex reviews own code (self-QA)               │
-│    - Claude fixes issues found in review            │
-│    - All automated - works independently!           │
-└──────────────────────────────────────────────────────┘
-                        ↓
-┌──────────────────────────────────────────────────────┐
-│ 4. RESULT: Ready for Senior Review                  │
-│    - GitHub PR created with full context            │
-│    - Original issue/task updated with PR link       │
-│    - Discord/ClickUp notification sent              │
-│    - Waiting for your approval to merge             │
-└──────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ PATH 1: Discord Bot (Primary) ✨                                │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. YOU: Mention @Timmy in Discord                               │
+│    - Describe bug/feature in conversation                       │
+│    - Timmy's AI Brain asks clarifying questions                 │
+│    - Discussion happens naturally                               │
+│                                                                  │
+│ 2. TIMMY: Analyzes & Creates ClickUp Task                       │
+│    - AI Brain understands the requirement                       │
+│    - Automatically creates ClickUp task                         │
+│    - Sets status to "bot in progress"                           │
+│    - Task includes full context from Discord                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+                    [ClickUp Task Created]
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ PATH 2: Manual ClickUp Task                                     │
+├─────────────────────────────────────────────────────────────────┤
+│ YOU: Create ClickUp task manually                               │
+│    - Write title and description                                │
+│    - Set status to "bot in progress"                            │
+│    - Timmy detects it within 60s                                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+                    [Both Paths Merge Here]
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. TIMMY: Automated Implementation Pipeline                     │
+│    - Stage 1: Gemini analyzes requirements                      │
+│    - Stage 2: Claude implements features                        │
+│    - Stage 3: Codex reviews code (self-QA)                      │
+│    - Stage 4: Claude fixes review issues                        │
+│    - All automated - works independently!                       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. RESULT: Ready for Senior Review                              │
+│    - GitHub PR created with full implementation                 │
+│    - ClickUp task updated with PR link                          │
+│    - Discord notification (if started from Discord)             │
+│    - Waiting for your approval to merge                         │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Multi-AI Orchestration Pipeline
@@ -96,16 +112,13 @@ Your autonomous AI junior developer that handles tasks from ClickUp and Discord,
 
 ### Core Capabilities
 
-- **Multi-AI Orchestration Pipeline**: Coordinated workflow using Gemini (analysis) → Claude (implementation) → Codex (review) → Claude (fixes)
-- **Automated ClickUp Integration**: Polls for tasks every 60s, processes "bot in progress" status automatically
-- **Discord Bot with AI Brain** ✨ NEW: Monitor Discord channels, respond intelligently to messages, track conversations with context-aware AI
-- **GitHub Automation**: Automatic branch creation, commits, pull request generation, and issue linking
-- **Smart Context Loading**: Intelligent codebase analysis and context preparation for AI services
-- **Multi-Project Support**: Manage multiple projects with easy switching via workspace system
-- **Interactive Terminal UI**: Real-time monitoring and control through interactive CLI
-- **State Persistence**: Pipeline state tracking, task queue management, and PR tracking
-- **Retry Logic**: Automatic retry with exponential backoff for network operations
-- **TypeScript**: Full type safety with strict mode enabled
+- **Discord Bot with AI Brain** ✨: Chat naturally with Timmy, discuss bugs/features, and he creates ClickUp tasks automatically!
+- **Two-Way Task Assignment**: Start from Discord (interactive) or ClickUp (manual) - both trigger the same automated pipeline
+- **Multi-AI Orchestration Pipeline**: Gemini (analysis) → Claude (implementation) → Codex (review) → Claude (fixes)
+- **Fully Autonomous**: From task creation to PR - works independently like a real junior developer
+- **Smart Context Loading**: Intelligent codebase analysis for better AI understanding
+- **Interactive Terminal UI**: Real-time monitoring and control of all operations
+- **Multi-Project Support**: Seamlessly switch between different projects
 
 ### Planned Features 🚀
 
@@ -123,9 +136,11 @@ Your autonomous AI junior developer that handles tasks from ClickUp and Discord,
 ### Discord Bot Features ✨ (Live Now!)
 
 - **AI Brain Integration**: Powered by Claude for intelligent, context-aware responses
+- **Interactive Task Creation**: Mention @Timmy to discuss bugs/features - he asks clarifying questions and creates ClickUp tasks automatically!
+- **Natural Conversations**: Discusses requirements, asks questions, understands context like a real junior developer
 - **Message Monitoring**: Real-time monitoring and logging of configured channels
 - **Thread Tracking**: Maintains conversation history and context across threads
-- **Smart Responses**: Understands questions and provides helpful answers using codebase context
+- **Smart Responses**: Provides helpful answers using codebase context
 - **Channel Configuration**: Flexible channel-specific settings
 - **Rate Limiting**: Built-in protection against API rate limits
 - **Error Handling**: Robust error recovery and retry logic
@@ -234,18 +249,22 @@ See [DISCORD_SETUP.md](DISCORD_SETUP.md) for detailed configuration.
    - Enable AI Brain for intelligent responses
 
 2. **Interact with Timmy:**
-   - Ask questions in monitored channels
-   - Timmy responds with context-aware answers
-   - Can discuss code, explain features, help debug
-   - Maintains conversation context across threads
+   - Mention @Timmy and describe your bug or feature request
+   - Timmy asks clarifying questions in the conversation
+   - Once clear, Timmy creates a ClickUp task automatically
+   - The automated pipeline starts working on it!
 
-3. **Example Interactions:**
+3. **Example Interaction:**
    ```
-   You: "How does the orchestrator pipeline work?"
-   Timmy: *Analyzes codebase and explains the 4-stage pipeline*
+   You: "@Timmy we need to add user authentication to the app"
+   Timmy: "I can help with that! A few questions:
+          - What auth method? (JWT, OAuth, session-based?)
+          - Do you need social login (Google, GitHub)?
+          - Any specific security requirements?"
 
-   You: "Can you help me understand the Discord integration?"
-   Timmy: *Provides detailed explanation with code references*
+   You: "JWT with email/password, no social login for now"
+   Timmy: "Got it! Creating ClickUp task and starting implementation..."
+          *Creates task and begins automated pipeline*
    ```
 
 **Configuration:**
@@ -302,116 +321,6 @@ When running in interactive mode:
 - `h` - Show help
 - `Ctrl+C` - Graceful shutdown
 
-## Data Storage
-
-All state stored in `data/` directory:
-
-```
-data/
-├── cache/              # Processed tasks/comments
-├── state/              # Task queue, pipeline state
-└── tracking/           # PR and review tracking
-```
-
-**Initialize:**
-```bash
-for f in data/**/*.example; do cp "$f" "${f%.example}"; done
-```
-
-## Architecture
-
-### Directory Structure
-
-```
-timmy/
-├── src/                          # Modern refactored codebase
-│   ├── types/                   # TypeScript type definitions
-│   │   ├── clickup.ts           # ClickUp domain types
-│   │   ├── github.ts            # GitHub domain types
-│   │   ├── discord.ts           # Discord domain types
-│   │   ├── ai.ts                # AI service types
-│   │   └── storage.ts           # Storage/pipeline types
-│   │
-│   ├── shared/                  # Shared utilities and infrastructure
-│   │   ├── config/              # Configuration management
-│   │   ├── errors/              # Custom error classes
-│   │   ├── utils/               # Utility functions
-│   │   ├── ui/                  # Terminal UI formatting
-│   │   └── interactive-cli.ts   # Interactive mode handler
-│   │
-│   ├── core/                    # Core business logic
-│   │   ├── orchestrator/        # Main workflow orchestration
-│   │   │   ├── stages/          # Pipeline stages (4 stages)
-│   │   │   └── utils/           # Pipeline utilities
-│   │   │
-│   │   ├── ai-services/         # AI model integrations
-│   │   │   ├── claude.service.ts
-│   │   │   ├── gemini.service.ts
-│   │   │   ├── ai-brain.service.ts
-│   │   │   └── qwen.service.ts
-│   │   │
-│   │   ├── discord/             # Discord bot service
-│   │   │   └── discord.service.ts
-│   │   │
-│   │   ├── repositories/        # Data access layer
-│   │   │   ├── cache.repository.ts
-│   │   │   ├── pipeline.repository.ts
-│   │   │   └── discord-message.repository.ts
-│   │   │
-│   │   ├── monitoring/          # Code review and monitoring
-│   │   │   └── codex.service.ts
-│   │   │
-│   │   └── context/             # Smart context loading
-│   │       └── smart-context-loader.service.ts
-│   │
-│   └── infrastructure/          # External integrations
-│       ├── api/                 # API clients
-│       │   ├── clickup.client.ts
-│       │   ├── github.client.ts
-│       │   └── discord.client.ts
-│       │
-│       └── storage/             # Storage implementations
-│
-├── data/                         # Runtime state (gitignored)
-│   ├── cache/                   # Processed tasks cache
-│   ├── state/                   # Task queue and pipeline state
-│   └── tracking/                # PR and review tracking
-│
-├── lib/                          # Legacy code (being migrated)
-├── timmy.ts                      # Main entry point
-└── package.json                  # Dependencies and scripts
-```
-
-### Key Technologies
-
-- **Runtime**: Node.js 18+ with TypeScript 5.9+
-- **AI Integration**: Claude Code CLI, Gemini CLI, Codex CLI
-- **APIs**: ClickUp REST API v2, GitHub REST API v3, Discord API
-- **Testing**: Jest with ts-jest
-- **Storage**: JSON file-based persistence
-- **HTTP**: Axios with retry logic
-
-### Commands
-
-```bash
-# Development
-npm run build          # Compile TypeScript
-npm run dev            # Run with ts-node
-npm start              # Build and run production
-
-# Testing
-npm test               # Run all tests
-npm run test:watch     # Run tests in watch mode
-
-# Project Management
-npm run projects       # List all projects
-npm run switch <name>  # Switch active project
-npm run current        # Show current project
-
-# Cleanup
-npm run clean          # Clean build artifacts
-```
-
 ## Troubleshooting
 
 **Tasks not detected:**
@@ -440,13 +349,12 @@ nohup npm start > timmy.log 2>&1 &
 
 ### Current Capabilities
 
-- **Multi-AI Pipeline**: Fully autonomous task processing through 4 AI stages (Analysis → Implementation → Review → Fixes)
-- **Discord Bot with AI Brain** ✨: Real-time monitoring, intelligent Q&A, context-aware responses - like having a junior dev in your Discord!
-- **ClickUp Automation**: Polls and processes ClickUp tasks automatically every 60s
-- **Smart Context Loading**: Intelligent codebase analysis and context preparation for AI services
-- **State Management**: Persistent pipeline state with resume capability
-- **Interactive Terminal**: Real-time monitoring and control of all operations
-- **Multi-Project Support**: Seamlessly switch between multiple projects
+- **Discord-First Workflow** ✨: Mention @Timmy, discuss requirements naturally, he asks questions and creates tasks automatically!
+- **Two Entry Points**: Discord (interactive + auto task creation) or ClickUp (manual task creation) - both work seamlessly
+- **Multi-AI Pipeline**: Fully autonomous through 4 stages (Analysis → Implementation → Review → Fixes)
+- **Real Junior Developer Behavior**: Asks clarifying questions, understands context, works independently
+- **End-to-End Automation**: From Discord conversation → ClickUp task → Implementation → PR
+- **Multi-Project Support**: Manage multiple projects with easy switching
 
 ### Limitations
 
