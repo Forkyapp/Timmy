@@ -68,11 +68,6 @@ export class DiscordService {
     // Connect to Discord
     await this.client.connect();
 
-    logger.info('Discord service initialized', {
-      guildId: config.discord.guildId,
-      channels: config.discord.channelIds.length,
-      keywords: config.discord.keywords.length,
-    });
 
     if (this.events.onReady) {
       this.events.onReady();

@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import { exec, spawn, ChildProcess } from 'child_process';
 import config from '../../shared/config';
 import { timmy, colors } from '../../shared/ui';
-import { loadSmartContext } from '../context/smart-context-loader.service';
+import { loadContextForModel } from '../context/context-orchestrator';
 import * as clickup from '../../../lib/clickup';
 import * as storage from '../../../lib/storage';
 import type { ClickUpTask } from '../../../src/types/clickup';
@@ -135,12 +135,13 @@ async function launchCodex(task: ClickUpTask, options: LaunchOptions = {}): Prom
   console.log(timmy.ai(`Deploying ${colors.bright}Codex${colors.reset} for ${colors.bright}${taskId}${colors.reset}: "${taskTitle}"`));
   ensureCodexSettings(repoPath);
 
-  // Load smart context based on task
+  // Load context based on task (uses RAG if available, falls back to Smart Loader)
   console.log(timmy.info('Loading relevant coding guidelines...'));
-  const smartContext = await loadSmartContext({
+  const smartContext = await loadContextForModel({
     model: 'codex',
     taskDescription: `${taskTitle}\n\n${taskDescription}`,
-    includeProject: true
+    topK: 5,
+    minRelevance: 0.7
   });
 
   // Build prompt with optional Gemini analysis
@@ -374,12 +375,13 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
   console.log(timmy.ai(`${colors.bright}Codex${colors.reset} reviewing Claude's changes for ${colors.bright}${taskId}${colors.reset}`));
   ensureCodexSettings(repoPath);
 
-  // Load smart context for review
+  // Load context for review (uses RAG if available, falls back to Smart Loader)
   console.log(timmy.info('Loading relevant review guidelines...'));
-  const smartContext = await loadSmartContext({
+  const smartContext = await loadContextForModel({
     model: 'codex',
     taskDescription: `Code review for: ${taskTitle}\n\nReviewing implementation changes`,
-    includeProject: true
+    topK: 5,
+    minRelevance: 0.7
   });
 
   const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}You are a senior code reviewer. Your job is to review the changes made by Claude and add constructive TODO comments for improvements.

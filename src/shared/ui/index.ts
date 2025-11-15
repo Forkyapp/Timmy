@@ -17,6 +17,7 @@ interface Colors {
   bgCyan: string;
   bgMagenta: string;
   bgBlack: string;
+  [key: string]: string;
 }
 
 const colors: Colors = {
@@ -56,6 +57,7 @@ interface Timmy {
   divider: () => string;
   doubleDivider: () => string;
   label: (key: string, value: string) => string;
+  dim: (text: string) => string;
   timestamp: () => string;
   spinner: {
     start: (text: string) => SpinnerInstance;
@@ -63,6 +65,9 @@ interface Timmy {
   progressBar: (current: number, total: number, width?: number) => string;
   badge: (text: string, color: 'green' | 'blue' | 'yellow' | 'red' | 'magenta' | 'cyan') => string;
   section: (title: string) => string;
+  card: (title: string, items: Array<{ key: string; value: string; icon?: string }>) => string;
+  statusIndicator: (label: string, status: 'online' | 'offline' | 'idle' | 'processing', description?: string) => string;
+  pipeline: (stages: Array<{ label: string; color: string }>) => string;
 }
 
 interface SpinnerInstance {
@@ -115,6 +120,8 @@ ${colors.dim}${colors.gray}    ━━━━━━━━━━━━━━━━�
   doubleDivider: (): string => `${colors.bright}${colors.cyan}${'═'.repeat(70)}${colors.reset}`,
 
   label: (key: string, value: string): string => `${colors.dim}${key}:${colors.reset} ${colors.bright}${colors.white}${value}${colors.reset}`,
+
+  dim: (text: string): string => `${colors.dim}${colors.gray}${text}${colors.reset}`,
 
   timestamp: (): string => {
     const now = new Date();
@@ -182,6 +189,51 @@ ${colors.dim}${colors.gray}    ━━━━━━━━━━━━━━━━�
 
   section: (title: string): string => {
     return `\n${colors.bright}${colors.cyan}▌${colors.reset} ${colors.bright}${colors.white}${title}${colors.reset}\n${colors.dim}${colors.gray}${'─'.repeat(70)}${colors.reset}`;
+  },
+
+  card: (title: string, items: Array<{ key: string; value: string; icon?: string }>): string => {
+    const width = 68;
+    const topBorder = `${colors.cyan}╭${'─'.repeat(width)}╮${colors.reset}`;
+    const bottomBorder = `${colors.cyan}╰${'─'.repeat(width)}╯${colors.reset}`;
+    const titleLine = `${colors.cyan}│${colors.reset} ${colors.bright}${colors.white}${title}${colors.reset}${' '.repeat(width - title.length - 1)}${colors.cyan}│${colors.reset}`;
+    const dividerLine = `${colors.cyan}│${colors.reset}${colors.dim}${colors.gray}${'─'.repeat(width)}${colors.reset}${colors.cyan}│${colors.reset}`;
+
+    const itemLines = items.map(item => {
+      const icon = item.icon || '  ';
+      const content = `${icon} ${colors.dim}${item.key}:${colors.reset} ${colors.bright}${colors.white}${item.value}${colors.reset}`;
+      const contentLength = item.key.length + item.value.length + icon.length + 3;
+      const padding = ' '.repeat(Math.max(0, width - contentLength));
+      return `${colors.cyan}│${colors.reset} ${content}${padding}${colors.cyan}│${colors.reset}`;
+    });
+
+    return [topBorder, titleLine, dividerLine, ...itemLines, bottomBorder].join('\n');
+  },
+
+  statusIndicator: (label: string, status: 'online' | 'offline' | 'idle' | 'processing', description?: string): string => {
+    const statusIcons = {
+      online: { icon: '●', color: colors.green },
+      offline: { icon: '●', color: colors.red },
+      idle: { icon: '○', color: colors.yellow },
+      processing: { icon: '◐', color: colors.blue }
+    };
+
+    const { icon, color } = statusIcons[status];
+    const statusText = `${color}${icon}${colors.reset} ${colors.bright}${label}${colors.reset}`;
+    const desc = description ? `${colors.dim}${colors.gray}${description}${colors.reset}` : '';
+
+    return `  ${statusText}${desc ? '  ' + desc : ''}`;
+  },
+
+  pipeline: (stages: Array<{ label: string; color: string }>): string => {
+    const stageElements = stages.map((stage, index) => {
+      const colorCode = (colors as Record<string, string>)[stage.color] || colors.white;
+      const num = `${colors.dim}${colors.gray}${index + 1}${colors.reset}`;
+      const label = `${colorCode}${stage.label}${colors.reset}`;
+      const arrow = index < stages.length - 1 ? `${colors.dim}${colors.gray} → ${colors.reset}` : '';
+      return `${num} ${label}${arrow}`;
+    });
+
+    return `  ${stageElements.join('')}`;
   }
 };
 
