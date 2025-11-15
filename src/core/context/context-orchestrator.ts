@@ -242,10 +242,18 @@ export function getContextOrchestrator(): ContextOrchestrator {
 
 /**
  * Convenience function to load context (initializes if needed)
+ * Lazy initialization - only initializes when first context load is requested
  */
 export async function loadContextForModel(options: LoadContextOptions): Promise<string> {
   if (!orchestratorInstance) {
+    logger.info('Lazy initializing context orchestrator on first use...');
     await initializeContextOrchestrator(process.env.OPENAI_API_KEY);
   }
-  return orchestratorInstance!.loadContext(options);
+
+  // Safe to assert non-null after initialization
+  if (!orchestratorInstance) {
+    throw new Error('Failed to initialize context orchestrator');
+  }
+
+  return orchestratorInstance.loadContext(options);
 }

@@ -27,7 +27,6 @@ import * as clickup from './lib/clickup';
 import * as claude from './src/core/ai-services/claude.service';
 import * as orchestrator from './src/core/orchestrator/orchestrator.service';
 import { discordService } from './src/core/discord/discord.service';
-import { initializeContextOrchestrator } from './src/core/context/context-orchestrator';
 
 // ============================================
 // INTERFACES
@@ -207,56 +206,71 @@ if (require.main === module) {
     storage.cache.init();
     storage.processedComments.init();
 
-    // Initialize context orchestrator (RAG + Smart Loader)
-    console.log(timmy.info('Initializing context loading system...'));
-    await initializeContextOrchestrator(config.context.openaiApiKey);
+    // Context orchestrator will be lazy-initialized on first use
+    // (no need to initialize at startup, saves 5-10 seconds!)
 
     console.clear();
     console.log(timmy.banner());
+    console.log('');
 
-  // Show configuration with sections
-  console.log(timmy.section('⚙️  System Configuration'));
-  console.log(timmy.label('  ClickUp Workspace', config.clickup.workspaceId || 'Not configured'));
-  console.log(timmy.label('  GitHub Repository', `${config.github.owner}/${config.github.repo}`));
-  console.log(timmy.label('  Repository Path', config.github.repoPath || 'Not configured'));
-  console.log(timmy.label('  Poll Interval', `${config.system.pollIntervalMs / 1000}s`));
-  console.log(timmy.label('  Context Mode', config.context.mode + (config.context.openaiApiKey ? ' (RAG enabled)' : ' (Smart Loader only)')));
-  console.log('');
-
-  if (!config.github.repoPath || !fs.existsSync(config.github.repoPath)) {
-    console.log(timmy.error('Repository path not configured in .env'));
-    process.exit(1);
-  }
-
-  claude.ensureClaudeSettings();
-
-  // Initialize Discord if enabled
-  if (config.discord.enabled) {
-    try {
-      await discordService.init();
-      discordService.startPolling();
-    } catch (error) {
-      const err = error as Error;
-      console.log(timmy.error(`Failed to initialize Discord: ${err.message}`));
+    // Validate configuration
+    if (!config.github.repoPath || !fs.existsSync(config.github.repoPath)) {
+      console.log(timmy.error('Repository path not configured in .env'));
+      process.exit(1);
     }
-  }
 
-  // Status indicators
-  console.log(timmy.section('🚀 System Status'));
-  console.log(`  ${timmy.badge('ONLINE', 'green')} ${colors.gray}Monitoring workspace${colors.reset}`);
-  console.log(`  ${timmy.badge('QUIET', 'cyan')} ${colors.gray}Silent polling every ${config.system.pollIntervalMs / 1000}s${colors.reset}`);
-  if (config.discord.enabled) {
-    console.log(`  ${timmy.badge('DISCORD', 'blue')} ${colors.gray}Monitoring ${config.discord.channelIds.length} channel(s) every ${config.discord.pollIntervalMs / 1000}s${colors.reset}`);
-  }
-  console.log('');
+    claude.ensureClaudeSettings();
 
-  // Workflow overview
-  console.log(timmy.section('🤖 Multi-AI Pipeline'));
-  console.log(`  ${colors.cyan}1${colors.reset} ${colors.gray}→${colors.reset} ${colors.magenta}Gemini Analysis${colors.reset} ${colors.gray}→${colors.reset} ${colors.cyan}2${colors.reset} ${colors.gray}→${colors.reset} ${colors.blue}Claude Implementation${colors.reset} ${colors.gray}→${colors.reset} ${colors.cyan}3${colors.reset} ${colors.gray}→${colors.reset} ${colors.yellow}Codex Review${colors.reset} ${colors.gray}→${colors.reset} ${colors.cyan}4${colors.reset} ${colors.gray}→${colors.reset} ${colors.green}Claude Fixes${colors.reset}`);
-  console.log(timmy.doubleDivider() + '\n');
+    // Initialize Discord asynchronously (non-blocking)
+    let discordStatus: 'online' | 'offline' | 'idle' = 'offline';
+    if (config.discord.enabled) {
+      discordStatus = 'idle'; // Connecting in background
 
-  // Interactive mode hint
-  console.log(timmy.info('Type "help" for available commands\n'));
+      // Start Discord initialization in the background (don't await)
+      discordService.init()
+        .then(() => {
+          discordService.startPolling();
+          // Update status display after connection
+          console.log(timmy.success('✓ Discord bot connected and monitoring'));
+        })
+        .catch((error: Error) => {
+          console.log(timmy.error(`✗ Discord connection failed: ${error.message}`));
+        });
+    }
+
+    // System Configuration Card
+    console.log(timmy.card('⚙️  System Configuration', [
+      { key: 'ClickUp Workspace', value: config.clickup.workspaceId || 'Not configured', icon: '📋' },
+      { key: 'GitHub Repository', value: `${config.github.owner}/${config.github.repo}`, icon: '📦' },
+      { key: 'Repository Path', value: config.github.repoPath.replace(/^\/Users\/[^/]+/, '~'), icon: '📁' },
+      { key: 'Poll Interval', value: `${config.system.pollIntervalMs / 1000}s`, icon: '⏱️' },
+      { key: 'Context Mode', value: config.context.mode + (config.context.openaiApiKey ? ' (RAG enabled)' : ' (Smart Loader)'), icon: '🧠' }
+    ]));
+    console.log('');
+
+    // System Status Section
+    console.log(timmy.section('🚀 System Status'));
+    console.log(timmy.statusIndicator('MONITORING', 'online', `Polling workspace every ${config.system.pollIntervalMs / 1000}s`));
+    console.log(timmy.statusIndicator('TASK QUEUE', 'idle', 'Waiting for tasks marked "bot in progress"'));
+    if (config.discord.enabled) {
+      console.log(timmy.statusIndicator('DISCORD BOT', discordStatus, discordStatus === 'idle' ? 'Connecting in background...' : 'Disabled'));
+    }
+    console.log('');
+
+    // Multi-AI Pipeline
+    console.log(timmy.section('🤖 Multi-AI Pipeline'));
+    console.log(timmy.pipeline([
+      { label: 'Gemini Analysis', color: 'magenta' },
+      { label: 'Claude Implementation', color: 'blue' },
+      { label: 'Codex Review', color: 'yellow' },
+      { label: 'Claude Fixes', color: 'green' }
+    ]));
+    console.log('');
+
+    console.log(timmy.doubleDivider());
+    console.log('');
+    console.log(timmy.info('Type "help" for available commands'));
+    console.log('');
 
   // Set up interactive command interface
   const rl = setupInteractiveMode(

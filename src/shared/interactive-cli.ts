@@ -1,6 +1,9 @@
 import readline from 'readline';
 import { timmy, colors } from './ui';
 import * as storage from '../../lib/storage';
+import { discordService } from '@/core/discord/discord.service';
+import { getContextOrchestrator } from '@/core/context/context-orchestrator';
+import config from './config';
 
 // ============================================
 // INTERFACES
@@ -30,13 +33,24 @@ export function handleCommand(
     case 'help':
     case 'h':
       console.log('\n' + timmy.section('📖 Available Commands'));
-      console.log(`  ${timmy.label('help, h', 'Show this help message')}`);
-      console.log(`  ${timmy.label('status, s', 'Show current status')}`);
+      console.log('\n' + `${colors.bright}${colors.cyan}System Control${colors.reset}`);
+      console.log(`  ${timmy.label('status, s', 'Show overall system status')}`);
       console.log(`  ${timmy.label('stop', 'Stop polling (keeps app running)')}`);
       console.log(`  ${timmy.label('start', 'Resume polling')}`);
-      console.log(`  ${timmy.label('quit, q, exit', 'Exit application')}`);
       console.log(`  ${timmy.label('clear, cls', 'Clear terminal screen')}`);
+      console.log(`  ${timmy.label('quit, q, exit', 'Exit application')}`);
+
+      console.log('\n' + `${colors.bright}${colors.cyan}Information${colors.reset}`);
+      console.log(`  ${timmy.label('discord', 'Show Discord bot status and stats')}`);
+      console.log(`  ${timmy.label('context', 'Show context loading statistics')}`);
       console.log(`  ${timmy.label('cache', 'Show cached tasks')}`);
+      console.log(`  ${timmy.label('stats', 'Show detailed system statistics')}`);
+
+      console.log('\n' + `${colors.bright}${colors.cyan}Management${colors.reset}`);
+      console.log(`  ${timmy.label('cache clear', 'Clear task cache')}`);
+      console.log(`  ${timmy.label('context clear', 'Clear embeddings cache')}`);
+      console.log(`  ${timmy.label('discord test', 'Send test message to Discord')}`);
+
       console.log(timmy.divider() + '\n');
       break;
 
@@ -103,10 +117,140 @@ export function handleCommand(
       if (cachedTasks.length === 0) {
         console.log(timmy.info('No cached tasks'));
       } else {
-        cachedTasks.forEach((task: storage.ProcessedTask) => {
-          console.log(`  ${colors.cyan}${task.id}${colors.reset}`);
+        cachedTasks.forEach((task) => {
+          console.log(`  ${colors.cyan}${task.id}${colors.reset} - ${colors.dim}${task.title}${colors.reset}`);
         });
+        console.log(`\n  ${timmy.label('Total', cachedTasks.length.toString())}`);
       }
+      console.log(timmy.divider() + '\n');
+      break;
+    }
+
+    case 'cache clear': {
+      const fs = require('fs');
+      const count = storage.cache.getIds().size;
+
+      try {
+        // Clear in-memory cache and delete file
+        if (fs.existsSync(config.files.cacheFile)) {
+          fs.unlinkSync(config.files.cacheFile);
+        }
+        console.log(timmy.success(`✓ Cleared ${count} cached tasks`));
+        console.log(timmy.info('Restart the app to reset the cache'));
+      } catch (error) {
+        console.log(timmy.error(`Failed to clear cache: ${(error as Error).message}`));
+      }
+      break;
+    }
+
+    case 'discord': {
+      console.log('\n' + timmy.section('💬 Discord Bot Status'));
+
+      if (!config.discord.enabled) {
+        console.log(timmy.info('Discord integration is disabled'));
+        console.log(timmy.divider() + '\n');
+        break;
+      }
+
+      discordService.getStats().then(stats => {
+        console.log(`  ${timmy.label('Total Messages Processed', stats.totalProcessed.toString())}`);
+        console.log(`  ${timmy.label('Processed Today', stats.processedToday.toString())}`);
+        console.log(`  ${timmy.label('Matched Today', stats.matchedToday.toString())}`);
+        console.log(`  ${timmy.label('Channels Monitoring', config.discord.channelIds.length.toString())}`);
+        console.log(`  ${timmy.label('Poll Interval', `${config.discord.pollIntervalMs / 1000}s`)}`);
+        console.log(`  ${timmy.label('Keywords', config.discord.keywords.join(', '))}`);
+        console.log(timmy.divider() + '\n');
+      }).catch(() => {
+        console.log(timmy.error('Failed to get Discord stats'));
+        console.log(timmy.divider() + '\n');
+      });
+      break;
+    }
+
+    case 'discord test': {
+      if (!config.discord.enabled) {
+        console.log(timmy.warning('Discord integration is disabled'));
+        break;
+      }
+
+      console.log(timmy.processing('Sending test message to Discord...'));
+      discordService.sendTestMessage().then(() => {
+        console.log(timmy.success('✓ Test message sent'));
+      }).catch((error: Error) => {
+        console.log(timmy.error(`Failed to send test message: ${error.message}`));
+      });
+      break;
+    }
+
+    case 'context': {
+      console.log('\n' + timmy.section('🧠 Context Loading Statistics'));
+
+      try {
+        const orchestrator = getContextOrchestrator();
+        const stats = orchestrator.getStats();
+
+        console.log(`  ${timmy.label('Total Loads', stats.totalLoads.toString())}`);
+        console.log(`  ${timmy.label('RAG Loads', `${stats.ragLoads} (${stats.ragPercentage.toFixed(1)}%)`)}`);
+        console.log(`  ${timmy.label('Smart Loader Loads', `${stats.smartLoads} (${(100 - stats.ragPercentage).toFixed(1)}%)`)}`);
+        console.log(`  ${timmy.label('Avg Load Time', `${stats.avgLoadTimeMs}ms`)}`);
+        console.log(`  ${timmy.label('Cache Hit Rate', `${stats.cacheHitRate}%`)}`);
+        console.log(`  ${timmy.label('Avg Chunks Returned', stats.avgChunksReturned.toString())}`);
+      } catch {
+        console.log(timmy.info('Context orchestrator not initialized yet'));
+        console.log(timmy.dim('(Will initialize on first context load)'));
+      }
+
+      console.log(timmy.divider() + '\n');
+      break;
+    }
+
+    case 'context clear': {
+      const fs = require('fs');
+      const path = require('path');
+      const cachePath = path.join(process.cwd(), 'data', 'cache', 'embeddings-cache.json');
+
+      try {
+        if (fs.existsSync(cachePath)) {
+          fs.unlinkSync(cachePath);
+          console.log(timmy.success('✓ Cleared embeddings cache'));
+          console.log(timmy.info('Next context load will regenerate embeddings'));
+        } else {
+          console.log(timmy.info('No embeddings cache found'));
+        }
+      } catch (error) {
+        console.log(timmy.error(`Failed to clear cache: ${(error as Error).message}`));
+      }
+      break;
+    }
+
+    case 'stats': {
+      console.log('\n' + timmy.section('📊 Detailed System Statistics'));
+
+      // Task statistics
+      const cachedTaskCount = storage.cache.getIds().size;
+      const pendingTasks = storage.queue.getPending();
+      const completedTasks = storage.queue.getCompleted();
+
+      console.log(`\n${colors.bright}${colors.cyan}Tasks${colors.reset}`);
+      console.log(`  ${timmy.label('Cached Tasks', cachedTaskCount.toString())}`);
+      console.log(`  ${timmy.label('Queue Pending', pendingTasks.length.toString())}`);
+      console.log(`  ${timmy.label('Queue Completed', completedTasks.length.toString())}`);
+
+      // System configuration
+      console.log(`\n${colors.bright}${colors.cyan}Configuration${colors.reset}`);
+      console.log(`  ${timmy.label('Poll Interval', `${config.system.pollIntervalMs / 1000}s`)}`);
+      console.log(`  ${timmy.label('Context Mode', config.context.mode)}`);
+      console.log(`  ${timmy.label('RAG Enabled', config.context.openaiApiKey ? 'Yes' : 'No')}`);
+      console.log(`  ${timmy.label('Discord Enabled', config.discord.enabled ? 'Yes' : 'No')}`);
+
+      // Runtime statistics
+      console.log(`\n${colors.bright}${colors.cyan}Runtime${colors.reset}`);
+      console.log(`  ${timmy.label('Polling', appState.isRunning ? 'Active' : 'Stopped')}`);
+      console.log(`  ${timmy.label('Processing', appState.isProcessing ? 'Yes' : 'No')}`);
+      if (appState.currentTask) {
+        console.log(`  ${timmy.label('Current Task', appState.currentTask)}`);
+      }
+
       console.log(timmy.divider() + '\n');
       break;
     }
@@ -133,7 +277,7 @@ export function setupInteractiveMode(
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: `${colors.dim}${colors.gray}forky>${colors.reset} `
+    prompt: `${colors.dim}${colors.magenta}timmy${colors.reset}${colors.dim}>${colors.reset} `
   });
 
   rl.on('line', (line: string) => {

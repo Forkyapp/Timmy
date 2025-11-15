@@ -48,6 +48,7 @@ export class RagService {
   private embeddings: EmbeddingCache = {};
   private isInitialized = false;
   private readonly contextBasePath: string;
+  private readonly embeddingsCachePath: string;
   private readonly openAIApiKey: string | undefined;
   private readonly textSplitter: RecursiveCharacterTextSplitter;
 
@@ -57,6 +58,12 @@ export class RagService {
       process.cwd(),
       'templates',
       'context',
+    );
+    this.embeddingsCachePath = path.join(
+      process.cwd(),
+      'data',
+      'cache',
+      'embeddings-cache.json',
     );
 
     // Initialize text splitter with markdown-aware settings
@@ -83,9 +90,17 @@ export class RagService {
       // Chunk documents semantically
       this.chunks = this.chunkDocuments(documents);
 
-      // Create embeddings if OpenAI key is available
+      // Try to load embeddings from cache first
       if (this.openAIApiKey) {
-        await this.createEmbeddings();
+        const cacheLoaded = await this.loadEmbeddingsFromCache();
+
+        if (cacheLoaded) {
+          console.log(`✓ Loaded ${Object.keys(this.embeddings).length} embeddings from cache`);
+        } else {
+          // Create and cache embeddings if cache miss
+          await this.createEmbeddings();
+          await this.saveEmbeddingsToCache();
+        }
       }
 
       this.isInitialized = true;
@@ -444,6 +459,74 @@ export class RagService {
 
     const precedingContent = fullContent.substring(0, index);
     return precedingContent.split('\n').length;
+  }
+
+  /**
+   * Load embeddings from persistent cache
+   */
+  private async loadEmbeddingsFromCache(): Promise<boolean> {
+    try {
+      // Check if cache file exists
+      await fs.access(this.embeddingsCachePath);
+
+      const cacheData = await fs.readFile(this.embeddingsCachePath, 'utf-8');
+      const cache = JSON.parse(cacheData) as EmbeddingCache;
+
+      // Validate cache against current chunks
+      const expectedKeys = new Set(
+        this.chunks.map(
+          (chunk) =>
+            `${chunk.metadata.category}-${chunk.metadata.source}-${chunk.metadata.lineStart}`
+        )
+      );
+
+      const cachedKeys = new Set(Object.keys(cache));
+
+      // Check if cache is complete and valid
+      if (expectedKeys.size === cachedKeys.size) {
+        let allKeysMatch = true;
+        for (const key of expectedKeys) {
+          if (!cachedKeys.has(key)) {
+            allKeysMatch = false;
+            break;
+          }
+        }
+
+        if (allKeysMatch) {
+          this.embeddings = cache;
+          return true;
+        }
+      }
+
+      console.log('Cache invalid or incomplete, regenerating embeddings...');
+      return false;
+    } catch (_error) {
+      // Cache file doesn't exist or is corrupt
+      return false;
+    }
+  }
+
+  /**
+   * Save embeddings to persistent cache
+   */
+  private async saveEmbeddingsToCache(): Promise<void> {
+    try {
+      // Ensure cache directory exists
+      const cacheDir = path.dirname(this.embeddingsCachePath);
+      await fs.mkdir(cacheDir, { recursive: true });
+
+      // Save embeddings to file
+      await fs.writeFile(
+        this.embeddingsCachePath,
+        JSON.stringify(this.embeddings, null, 2),
+        'utf-8'
+      );
+
+      console.log(`✓ Saved ${Object.keys(this.embeddings).length} embeddings to cache`);
+    } catch (error) {
+      console.error('Failed to save embeddings cache:', error);
+      // Non-fatal error, continue without cache
+    }
   }
 
   /**
