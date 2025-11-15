@@ -9,6 +9,9 @@ export * from './clickup';
 // GitHub types
 export * from './github';
 
+// Discord types
+export * from './discord';
+
 // Configuration types
 export * from './config';
 

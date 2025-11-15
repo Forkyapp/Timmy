@@ -26,6 +26,14 @@ interface Config {
     repo: string | undefined;
     token: string | undefined;
   };
+  discord: {
+    enabled: boolean;
+    token: string | undefined;
+    guildId: string | undefined;
+    channelIds: string[];
+    keywords: string[];
+    pollIntervalMs: number;
+  };
   system: {
     pollIntervalMs: number;
     claudeCliPath: string;
@@ -45,6 +53,7 @@ interface Config {
     prTrackingFile: string;
     pipelineFile: string;
     featuresDir: string;
+    discordMessagesFile: string;
   };
   prTracking: {
     checkIntervalMs: number;
@@ -69,6 +78,14 @@ const config: Config = {
     repo: activeProject?.github.repo || process.env.GITHUB_REPO,
     token: process.env.GITHUB_TOKEN,
   },
+  discord: {
+    enabled: process.env.DISCORD_ENABLED === 'true',
+    token: process.env.DISCORD_BOT_TOKEN,
+    guildId: process.env.DISCORD_GUILD_ID,
+    channelIds: process.env.DISCORD_CHANNEL_IDS?.split(',').map(id => id.trim()) || [],
+    keywords: process.env.DISCORD_KEYWORDS?.split(',').map(kw => kw.trim().toLowerCase()) || ['bug', 'issue', 'error', 'problem', 'broken', 'crash', 'fix'],
+    pollIntervalMs: parseInt(process.env.DISCORD_POLL_INTERVAL_MS || '600000'), // Default: 10 minutes
+  },
   system: {
     pollIntervalMs: parseInt(process.env.POLL_INTERVAL_MS || '15000'),
     claudeCliPath: process.env.CLAUDE_CLI_PATH || 'claude',
@@ -88,6 +105,7 @@ const config: Config = {
     prTrackingFile: path.join(__dirname, '..', '..', '..', 'data', 'tracking', 'pr-tracking.json'),
     pipelineFile: path.join(__dirname, '..', '..', '..', 'data', 'state', 'pipeline-state.json'),
     featuresDir: path.join(__dirname, '..', '..', '..', 'docs', 'features'),
+    discordMessagesFile: path.join(__dirname, '..', '..', '..', 'data', 'discord', 'processed-messages.json'),
   },
   prTracking: {
     checkIntervalMs: 30000,

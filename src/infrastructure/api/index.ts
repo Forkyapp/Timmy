@@ -6,3 +6,4 @@
 export * from './base.client';
 export * from './clickup.client';
 export * from './github.client';
+export * from './discord.client';
