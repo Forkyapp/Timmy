@@ -2,9 +2,46 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { workspace as workspaceManager } from '../../core/workspace/workspace.service';
 import type { ProjectConfig } from '../../core/workspace/workspace.service';
+import { ValidationError } from '../errors';
 
 // Load .env file for global credentials
 dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env') });
+
+/**
+ * Validates that all required environment variables are present and non-empty.
+ * This function should be called at application startup to fail fast if critical
+ * configuration is missing.
+ *
+ * @throws {ValidationError} If any required environment variables are missing or empty
+ */
+function validateRequiredEnvVars(): void {
+  const requiredVars = [
+    'CLICKUP_API_KEY',
+    'GITHUB_TOKEN',
+    'GITHUB_REPO_PATH'
+  ];
+
+  const issues: Array<{ field: string; message: string }> = [];
+
+  for (const varName of requiredVars) {
+    const value = process.env[varName];
+    if (!value || value.trim() === '') {
+      issues.push({
+        field: varName,
+        message: `${varName} is required but not set or is empty`
+      });
+    }
+  }
+
+  if (issues.length > 0) {
+    const missingVarNames = issues.map(issue => issue.field).join(', ');
+    const errorMessage =
+      `Missing required environment variables: ${missingVarNames}\n` +
+      `Please ensure these variables are set in your .env file or environment.`;
+
+    throw new ValidationError(errorMessage, issues);
+  }
+}
 
 interface RepositoryConfig {
   owner: string;
@@ -166,4 +203,4 @@ function resolveRepoConfig(): RepositoryConfig {
 }
 
 export default config;
-export { resolveRepoConfig, Config, RepositoryConfig };
+export { resolveRepoConfig, validateRequiredEnvVars, Config, RepositoryConfig };
