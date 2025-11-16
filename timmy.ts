@@ -28,6 +28,8 @@ import * as clickup from './lib/clickup';
 import * as claude from './src/core/ai-services/claude.service';
 import * as orchestrator from './src/core/orchestrator/orchestrator.service';
 import { discordService } from './src/core/discord/discord.service';
+import { WatchdogService } from './src/core/watchdog';
+import { PipelineRepository } from './src/core/repositories/pipeline.repository';
 
 // ============================================
 // INTERFACES
@@ -50,6 +52,9 @@ const appState: AppState = {
   isProcessing: false,
   currentTask: null
 };
+
+// Initialize watchdog service
+let watchdogService: WatchdogService | null = null;
 
 // ============================================
 // FUNCTIONS
@@ -181,6 +186,11 @@ async function gracefulShutdown(): Promise<void> {
   console.log(timmy.warning('Shutting down gracefully...'));
   console.log(timmy.divider());
 
+  // Stop watchdog service
+  if (watchdogService) {
+    watchdogService.stop();
+  }
+
   // Stop Discord polling and disconnect client
   if (config.discord.enabled) {
     try {
@@ -227,6 +237,11 @@ if (require.main === module) {
     // Initialize data on startup
     storage.cache.init();
     storage.processedComments.init();
+
+    // Initialize watchdog service to monitor for stale tasks
+    const pipelineRepository = new PipelineRepository(config.files.pipelineFile);
+    watchdogService = new WatchdogService(pipelineRepository);
+    watchdogService.start();
 
     // Context orchestrator will be lazy-initialized on first use
     // (no need to initialize at startup, saves 5-10 seconds!)

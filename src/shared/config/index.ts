@@ -72,6 +72,12 @@ interface Config {
       ttl: number;
     };
   };
+  watchdog: {
+    enabled: boolean;
+    checkIntervalMs: number;
+    staleThresholdMs: number;
+    heartbeatIntervalMs: number;
+  };
 }
 
 // Load active project from workspace
@@ -136,6 +142,12 @@ const config: Config = {
       enabled: process.env.CONTEXT_CACHE_ENABLED !== 'false', // Default: true
       ttl: parseInt(process.env.CONTEXT_CACHE_TTL || '3600'), // Default: 1 hour
     },
+  },
+  watchdog: {
+    enabled: process.env.WATCHDOG_ENABLED !== 'false', // Default: true
+    checkIntervalMs: parseInt(process.env.WATCHDOG_CHECK_INTERVAL_MS || '300000'), // Default: 5 minutes
+    staleThresholdMs: parseInt(process.env.WATCHDOG_STALE_THRESHOLD_MS || '900000'), // Default: 15 minutes
+    heartbeatIntervalMs: parseInt(process.env.WATCHDOG_HEARTBEAT_INTERVAL_MS || '30000'), // Default: 30 seconds
   },
 };
 

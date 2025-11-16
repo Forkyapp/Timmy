@@ -24,9 +24,11 @@ export interface IPipelineRepository {
   failStage(taskId: string, stage: PipelineStage, error: Error | string): Promise<PipelineData>;
   updateMetadata(taskId: string, metadata: Record<string, unknown>): Promise<PipelineData>;
   complete(taskId: string, result?: Record<string, unknown>): Promise<PipelineData>;
-  fail(taskId: string, error: Error | string): Promise<PipelineData>;
+  fail(taskId: string, error: Error | string, reason?: string): Promise<PipelineData>;
   getActive(): Promise<PipelineData[]>;
   getSummary(taskId: string): Promise<PipelineSummary | null>;
+  updateHeartbeat(taskId: string): Promise<PipelineData | null>;
+  findStaleTasks(staleThresholdMs: number): Promise<PipelineData[]>;
 }
 
 export class PipelineRepository implements IPipelineRepository {
@@ -80,6 +82,7 @@ export class PipelineRepository implements IPipelineRepository {
       status: PIPELINE_STATUS.IN_PROGRESS,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      lastHeartbeat: new Date().toISOString(),
       stages: [
         {
           name: 'detection',
@@ -268,7 +271,7 @@ export class PipelineRepository implements IPipelineRepository {
   /**
    * Mark pipeline as failed
    */
-  async fail(taskId: string, error: Error | string): Promise<PipelineData> {
+  async fail(taskId: string, error: Error | string, reason?: string): Promise<PipelineData> {
     const pipelines = await this.load();
     const pipeline = pipelines[taskId];
 
@@ -276,12 +279,15 @@ export class PipelineRepository implements IPipelineRepository {
       throw new PipelineNotFoundError(taskId);
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const fullError = reason ? `${reason}: ${errorMessage}` : errorMessage;
+
     pipeline.status = PIPELINE_STATUS.FAILED;
     pipeline.currentStage = PIPELINE_STAGES.FAILED;
     pipeline.failedAt = new Date().toISOString();
     pipeline.errors.push({
       stage: pipeline.currentStage,
-      error: error instanceof Error ? error.message : String(error),
+      error: fullError,
       timestamp: new Date().toISOString(),
     });
 
@@ -324,5 +330,53 @@ export class PipelineRepository implements IPipelineRepository {
       reviewIterations: pipeline.metadata.reviewIterations || 0,
       hasErrors: pipeline.errors.length > 0,
     };
+  }
+
+  /**
+   * Update heartbeat timestamp for a task
+   * Used by the orchestrator to indicate the task is still actively being processed
+   */
+  async updateHeartbeat(taskId: string): Promise<PipelineData | null> {
+    const pipelines = await this.load();
+    const pipeline = pipelines[taskId];
+
+    if (!pipeline) {
+      return null;
+    }
+
+    pipeline.lastHeartbeat = new Date().toISOString();
+    pipeline.updatedAt = new Date().toISOString();
+
+    await this.save(pipelines);
+    return pipeline;
+  }
+
+  /**
+   * Find stale tasks that haven't sent a heartbeat within the threshold
+   * Returns tasks that are in_progress but appear to be stuck/crashed
+   */
+  async findStaleTasks(staleThresholdMs: number): Promise<PipelineData[]> {
+    const pipelines = await this.load();
+    const now = Date.now();
+    const staleTasks: PipelineData[] = [];
+
+    for (const pipeline of Object.values(pipelines)) {
+      if (pipeline.status !== PIPELINE_STATUS.IN_PROGRESS) {
+        continue;
+      }
+
+      if (!pipeline.lastHeartbeat) {
+        continue;
+      }
+
+      const lastHeartbeatTime = Date.parse(pipeline.lastHeartbeat);
+      const timeSinceHeartbeat = now - lastHeartbeatTime;
+
+      if (timeSinceHeartbeat > staleThresholdMs) {
+        staleTasks.push(pipeline);
+      }
+    }
+
+    return staleTasks;
   }
 }

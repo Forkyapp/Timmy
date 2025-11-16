@@ -131,6 +131,7 @@ export interface PipelineData {
   updatedAt: string;
   completedAt?: string;
   failedAt?: string;
+  lastHeartbeat?: string;
   totalDuration?: number;
   stages: StageEntry[];
   metadata: PipelineMetadata;

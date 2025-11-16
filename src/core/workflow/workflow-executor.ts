@@ -5,11 +5,13 @@
  * managing stage transitions and error handling.
  */
 
+import config from '@/shared/config';
 import { timmy, colors } from '@/shared/ui';
 import { logger } from '@/shared/utils/logger.util';
 import { resolveRepoConfig } from '@/shared/config';
 import { promptStageFailure } from '@/shared/utils/stage-prompt.util';
 import { getWorktreeManager } from '../workspace/worktree-manager.service';
+import { PipelineRepository } from '../repositories/pipeline.repository';
 import type { ClickUpTask } from '@/types/clickup';
 import type { RepositoryConfig } from '@/shared/config';
 import {
@@ -35,14 +37,18 @@ export class WorkflowExecutor {
   private readonly implementationStage: ImplementationStage;
   private readonly reviewStage: ReviewStage;
   private readonly fixesStage: FixesStage;
+  private readonly pipelineRepository: PipelineRepository;
 
-  constructor() {
+  constructor(pipelineRepository?: PipelineRepository) {
     // Initialize all stages
     this.investigationStage = new InvestigationStage();
     this.analysisStage = new AnalysisStage();
     this.implementationStage = new ImplementationStage();
     this.reviewStage = new ReviewStage();
     this.fixesStage = new FixesStage();
+
+    // Initialize pipeline repository (for heartbeat updates)
+    this.pipelineRepository = pipelineRepository || new PipelineRepository(config.files.pipelineFile);
   }
 
   /**
@@ -63,6 +69,7 @@ export class WorkflowExecutor {
     let analysis: AnalysisResult | null = null;
     let worktreePath: string | undefined;
     let worktreeManager: ReturnType<typeof getWorktreeManager> | null = null;
+    let heartbeatInterval: NodeJS.Timeout | null = null;
 
     try {
       // Resolve repository configuration
@@ -96,6 +103,20 @@ export class WorkflowExecutor {
         error: `Repository configuration error: ${err.message}`,
       };
     }
+
+    // Start heartbeat mechanism to prevent watchdog from marking task as stale
+    // This sends periodic updates to indicate the task is still actively being processed
+    heartbeatInterval = setInterval(async () => {
+      try {
+        await this.pipelineRepository.updateHeartbeat(taskId);
+        logger.debug('Heartbeat sent', { taskId });
+      } catch (error) {
+        logger.error('Failed to send heartbeat', error instanceof Error ? error : new Error(String(error)), { taskId });
+      }
+    }, config.watchdog.heartbeatIntervalMs);
+
+    // Send initial heartbeat
+    await this.pipelineRepository.updateHeartbeat(taskId);
 
     // Create base stage context (includes worktree path if available)
     const baseContext: StageContext = {
@@ -190,6 +211,12 @@ export class WorkflowExecutor {
         error: err.message,
       };
     } finally {
+      // Stop heartbeat mechanism
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        logger.debug('Heartbeat stopped', { taskId });
+      }
+
       // Clean up worktree (success or failure)
       if (worktreePath && worktreeManager) {
         try {
