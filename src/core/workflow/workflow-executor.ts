@@ -191,22 +191,37 @@ export class WorkflowExecutor {
       };
     } finally {
       // Clean up worktree (success or failure)
+      // This MUST always run to prevent orphaned worktrees
       if (worktreePath && worktreeManager) {
         try {
           console.log(timmy.info('Cleaning up worktree...'));
+          logger.info('Starting worktree cleanup in finally block', { taskId, worktreePath });
+
           await worktreeManager.removeWorktree({
             taskId,
             repoPath: repoConfig.path,
             force: true, // Force removal even if there are uncommitted changes
           });
-          console.log(timmy.success('Worktree cleaned up'));
-          logger.info('Worktree removed', { taskId, worktreePath });
+
+          console.log(timmy.success('✓ Worktree cleaned up successfully'));
+          logger.info('Worktree cleanup completed successfully', { taskId, worktreePath });
         } catch (error) {
           const err = error as Error;
-          console.log(timmy.warning(`Failed to clean up worktree: ${err.message}`));
-          logger.warn('Worktree cleanup failed', { taskId, error: err.message });
-          // Don't fail the whole workflow if cleanup fails
+          console.log(timmy.warning(`⚠ Failed to clean up worktree: ${err.message}`));
+          console.log(timmy.warning(`Orphaned worktree may remain at: ${worktreePath}`));
+          logger.error('Worktree cleanup failed - orphaned worktree may remain', err, {
+            taskId,
+            worktreePath,
+            error: err.message,
+          });
+          // Don't fail the whole workflow if cleanup fails, but ensure it's logged prominently
         }
+      } else if (worktreePath) {
+        // Worktree path exists but no manager - this shouldn't happen, but log it
+        logger.warn('Worktree path exists but no manager available for cleanup', {
+          taskId,
+          worktreePath,
+        });
       }
     }
   }

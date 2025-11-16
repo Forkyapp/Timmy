@@ -129,18 +129,22 @@ export class WorktreeManager {
 
     try {
       console.log(timmy.info(`Removing worktree for ${colors.bright}${taskId}${colors.reset}...`));
+      logger.info('Worktree cleanup initiated', { taskId, path: worktreePath, force });
 
       // Check if worktree exists
       const exists = await this.worktreeExists(worktreePath);
 
       if (!exists) {
         console.log(timmy.warning(`Worktree for ${taskId} not found, may already be removed`));
+        logger.info('Worktree does not exist, skipping removal', { taskId, path: worktreePath });
         this.activeWorktrees.delete(taskId);
         return;
       }
 
-      // Remove worktree
+      // Remove worktree with force flag if specified
       const forceFlag = force ? '--force' : '';
+      logger.info('Executing git worktree remove', { taskId, force, command: `git worktree remove ${forceFlag}` });
+
       await execAsync(
         `cd "${repoPath}" && git worktree remove ${forceFlag} "${worktreePath}"`,
         { timeout: 30000 }
@@ -150,20 +154,71 @@ export class WorktreeManager {
       this.activeWorktrees.delete(taskId);
 
       console.log(timmy.success(`✓ Worktree removed for ${taskId}`));
-      logger.info('Worktree removed', { taskId, path: worktreePath });
+      logger.info('Worktree successfully removed', { taskId, path: worktreePath, force });
 
     } catch (error) {
       const err = error as Error;
       console.log(timmy.error(`Failed to remove worktree: ${err.message}`));
-      logger.error('Worktree removal failed', err, { taskId });
+      logger.error('Worktree removal failed', err, { taskId, force, path: worktreePath });
 
       // Try force removal if initial removal failed
       if (!force) {
         console.log(timmy.warning('Attempting force removal...'));
+        logger.info('Retrying with force flag', { taskId });
         await this.removeWorktree({ taskId, repoPath, force: true });
       } else {
-        throw new Error(`Failed to remove worktree for task ${taskId}: ${err.message}`);
+        // Even with force, cleanup failed - try manual directory removal as last resort
+        logger.error('Force removal failed, attempting manual directory cleanup', err, { taskId, path: worktreePath });
+        try {
+          await this.manualCleanup(worktreePath, repoPath, branchName);
+          console.log(timmy.success(`✓ Manual cleanup succeeded for ${taskId}`));
+          logger.info('Manual cleanup successful', { taskId, path: worktreePath });
+          this.activeWorktrees.delete(taskId);
+        } catch (cleanupErr) {
+          const cleanupError = cleanupErr as Error;
+          logger.error('Manual cleanup also failed', cleanupError, { taskId, path: worktreePath });
+          throw new Error(`Failed to remove worktree for task ${taskId}: ${err.message}. Manual cleanup also failed: ${cleanupError.message}`);
+        }
       }
+    }
+  }
+
+  /**
+   * Manual cleanup of a worktree when git worktree remove fails
+   * This is a last-resort cleanup method that:
+   * 1. Prunes the worktree from git's registry
+   * 2. Manually removes the directory
+   *
+   * @param worktreePath - Path to the worktree directory
+   * @param repoPath - Path to the main repository
+   * @param branchName - Name of the branch to clean up
+   */
+  private async manualCleanup(worktreePath: string, repoPath: string, branchName: string): Promise<void> {
+    logger.info('Starting manual cleanup', { worktreePath, branchName });
+
+    // Step 1: Try to prune the worktree from git's registry
+    try {
+      await execAsync(`cd "${repoPath}" && git worktree prune`, { timeout: 10000 });
+      logger.info('Git worktree prune completed', { repoPath });
+    } catch (error) {
+      logger.warn('Git worktree prune failed, continuing with directory removal', { error: (error as Error).message });
+    }
+
+    // Step 2: Manually remove the directory
+    try {
+      await fs.rm(worktreePath, { recursive: true, force: true });
+      logger.info('Directory manually removed', { worktreePath });
+    } catch (error) {
+      logger.error('Failed to manually remove directory', error as Error, { worktreePath });
+      throw error;
+    }
+
+    // Step 3: Remove from git's worktree list if still present
+    try {
+      await execAsync(`cd "${repoPath}" && git worktree prune`, { timeout: 10000 });
+      logger.info('Final git worktree prune completed', { repoPath });
+    } catch (error) {
+      logger.warn('Final git worktree prune failed', { error: (error as Error).message });
     }
   }
 

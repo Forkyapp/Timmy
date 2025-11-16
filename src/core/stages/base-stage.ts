@@ -171,6 +171,13 @@ export abstract class BaseStage<TResult extends BaseStageResult = BaseStageResul
    * @returns The stage result
    */
   async run(context: StageContext): Promise<TResult> {
+    const startTime = Date.now();
+    logger.info(`Starting stage execution`, {
+      stage: this.stageName,
+      taskId: context.taskId,
+      taskName: context.taskName,
+    });
+
     try {
       // Validate dependencies
       await this.validateDependencies(context);
@@ -178,21 +185,42 @@ export abstract class BaseStage<TResult extends BaseStageResult = BaseStageResul
       // Execute the stage
       const result = await this.execute(context);
 
+      const duration = Date.now() - startTime;
+
       // Log success if stage succeeded
       if (result.success) {
-        this.logSuccess('Stage completed successfully', {
+        this.logSuccess(`Stage completed successfully in ${duration}ms`, {
           taskId: context.taskId,
+          duration,
         });
       } else {
-        this.logWarning('Stage completed with warnings', {
+        this.logWarning(`Stage completed with warnings in ${duration}ms`, {
           taskId: context.taskId,
           error: result.error,
+          duration,
         });
       }
 
       return result;
     } catch (error) {
-      return this.handleError(error as Error, context);
+      const duration = Date.now() - startTime;
+      const err = error as Error;
+
+      // Log detailed error information
+      logger.error(
+        `Stage execution failed after ${duration}ms`,
+        err,
+        {
+          stage: this.stageName,
+          taskId: context.taskId,
+          taskName: context.taskName,
+          duration,
+          errorMessage: err.message,
+          errorStack: err.stack,
+        }
+      );
+
+      return this.handleError(err, context);
     }
   }
 }
