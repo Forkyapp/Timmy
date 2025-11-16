@@ -171,7 +171,37 @@ export class DiscordService {
         return;
       }
 
-      // Silent - no logging for mentions
+      logger.info('📩 Mention received', {
+        messageId: message.id,
+        author: message.author.username,
+        content: message.content.substring(0, 100),
+      });
+
+      // Check for keywords in the message
+      const analyzed = this.analyzeMessage(message);
+      let taskCreated = false;
+      let taskUrl = '';
+
+      // If keywords detected, create ClickUp task
+      if (analyzed.matches.length > 0) {
+        logger.info('🎯 Keywords detected in mention', {
+          keywords: analyzed.matches.map((m) => m.keyword),
+          priority: analyzed.priority,
+        });
+
+        // Emit event to create task
+        if (this.events.onMessageDetected) {
+          try {
+            await this.events.onMessageDetected(analyzed);
+            taskCreated = true;
+            logger.info('✅ Task creation triggered from mention');
+          } catch (eventError) {
+            logger.error('❌ Task creation failed from mention', {
+              error: eventError instanceof Error ? eventError.message : String(eventError),
+            });
+          }
+        }
+      }
 
       // Use AI brain to generate response
       const response = await aiBrainService.chat(
@@ -186,7 +216,7 @@ export class DiscordService {
       }
 
       // Mark as processed
-      this.markAsProcessed(message, [{ keyword: '@mention', position: 0, context: message.content }]);
+      this.markAsProcessed(message, analyzed.matches.length > 0 ? analyzed.matches : [{ keyword: '@mention', position: 0, context: message.content }]);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error('Failed to handle real-time mention', err);
