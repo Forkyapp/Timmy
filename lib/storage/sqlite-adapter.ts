@@ -286,7 +286,7 @@ export const tracking = {
     return prRepo.get(taskId) as any;
   },
 
-  checkForPR(taskId: string, currentPRNumber: number | null): any {
+  checkForPR(taskId: string, _currentPRNumber: number | null): any {
     const entry = prRepo.get(taskId);
     if (!entry) {
       return { hasPR: false };
