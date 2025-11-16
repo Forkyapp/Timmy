@@ -62,7 +62,7 @@ function readJSON(filePath: string): any {
 /**
  * Migrate pipeline state
  */
-function migratePipelines(pipelineRepo: PipelineRepository): void {
+function migratePipelines(_pipelineRepo: PipelineRepository): void {
   console.log('\n📦 Migrating pipeline state...');
 
   const pipelineFile = 'data/state/pipeline-state.json';
@@ -166,7 +166,7 @@ function migratePipelines(pipelineRepo: PipelineRepository): void {
 /**
  * Migrate task queue
  */
-function migrateQueue(queueRepo: QueueRepository): void {
+function migrateQueue(_queueRepo: QueueRepository): void {
   console.log('\n📦 Migrating task queue...');
 
   const queueFile = 'data/state/task-queue.json';
@@ -249,7 +249,7 @@ function migrateQueue(queueRepo: QueueRepository): void {
 /**
  * Migrate processed tasks cache
  */
-function migrateCache(cacheRepo: CacheRepository): void {
+function migrateCache(_cacheRepo: CacheRepository): void {
   console.log('\n📦 Migrating processed tasks cache...');
 
   const cacheFile = 'data/cache/processed-tasks.json';
@@ -286,7 +286,7 @@ function migrateCache(cacheRepo: CacheRepository): void {
 /**
  * Migrate processed comments
  */
-function migrateComments(commentRepo: CommentCacheRepository): void {
+function migrateComments(_commentRepo: CommentCacheRepository): void {
   console.log('\n📦 Migrating processed comments...');
 
   const commentsFile = 'data/cache/processed-comments.json';
@@ -322,7 +322,7 @@ function migrateComments(commentRepo: CommentCacheRepository): void {
 /**
  * Migrate review tracking
  */
-function migrateReviews(reviewRepo: ReviewTrackingRepository): void {
+function migrateReviews(_reviewRepo: ReviewTrackingRepository): void {
   console.log('\n📦 Migrating review tracking...');
 
   const reviewFile = 'data/tracking/review-tracking.json';
@@ -371,7 +371,7 @@ function migrateReviews(reviewRepo: ReviewTrackingRepository): void {
 /**
  * Migrate PR tracking
  */
-function migratePRTracking(prRepo: PRTrackingRepository): void {
+function migratePRTracking(_prRepo: PRTrackingRepository): void {
   console.log('\n📦 Migrating PR tracking...');
 
   const prFile = 'data/tracking/pr-tracking.json';
