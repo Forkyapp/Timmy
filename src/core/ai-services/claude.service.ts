@@ -261,8 +261,8 @@ Begin implementation now and make sure to create the PR when done!`;
 
         console.log(timmy.info('Starting Claude process in background (tracked for proper shutdown)...'));
 
-        // Create log stream for output
-        const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+        // Open log file and get file descriptor for stdio redirection
+        const logFd = fs.openSync(logFile, 'a');
 
         const child = processManager.spawn(
           processId,
@@ -272,7 +272,7 @@ Begin implementation now and make sure to create the PR when done!`;
             cwd: workingPath,
             env: cleanEnv,
             shell: '/bin/bash',
-            stdio: ['ignore', logStream, logStream], // Run in background, redirect output to log file
+            stdio: ['ignore', logFd, logFd], // Run in background, redirect output to log file
             detached: false // Keep attached so process manager can track it
           }
         );
@@ -281,7 +281,11 @@ Begin implementation now and make sure to create the PR when done!`;
         const timeout = setTimeout(() => {
           if (!hasExited) {
             console.log(timmy.error('Claude process timed out (30 minutes)'));
-            logStream.end();
+            try {
+              fs.closeSync(logFd);
+            } catch (e) {
+              // Ignore close errors
+            }
             processManager.kill(processId, 'SIGKILL');
             reject(new Error('Claude execution timed out after 30 minutes'));
           }
@@ -292,8 +296,12 @@ Begin implementation now and make sure to create the PR when done!`;
           clearTimeout(timeout);
           processManager.unregister(processId);
 
-          // Close log stream
-          logStream.end();
+          // Close log file descriptor
+          try {
+            fs.closeSync(logFd);
+          } catch (e) {
+            // Ignore close errors
+          }
 
           if (code === 0) {
             resolve();
@@ -307,8 +315,12 @@ Begin implementation now and make sure to create the PR when done!`;
           clearTimeout(timeout);
           processManager.unregister(processId);
 
-          // Close log stream
-          logStream.end();
+          // Close log file descriptor
+          try {
+            fs.closeSync(logFd);
+          } catch (e) {
+            // Ignore close errors
+          }
 
           reject(error);
         });
@@ -490,8 +502,8 @@ Begin addressing the comments now - FIXME comments first, then TODO!`;
 
         console.log(timmy.info('Starting Claude fix process in background (tracked for proper shutdown)...'));
 
-        // Create log stream for output
-        const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+        // Open log file and get file descriptor for stdio redirection
+        const logFd = fs.openSync(logFile, 'a');
 
         const child = processManager.spawn(
           processId,
@@ -501,7 +513,7 @@ Begin addressing the comments now - FIXME comments first, then TODO!`;
             cwd: workingPath,
             env: cleanEnv,
             shell: '/bin/bash',
-            stdio: ['ignore', logStream, logStream], // Run in background, redirect output to log file
+            stdio: ['ignore', logFd, logFd], // Run in background, redirect output to log file
             detached: false // Keep attached so process manager can track it
           }
         );
@@ -510,7 +522,11 @@ Begin addressing the comments now - FIXME comments first, then TODO!`;
         const timeout = setTimeout(() => {
           if (!hasExited) {
             console.log(timmy.error('Claude fix process timed out (30 minutes)'));
-            logStream.end();
+            try {
+              fs.closeSync(logFd);
+            } catch (e) {
+              // Ignore close errors
+            }
             processManager.kill(processId, 'SIGKILL');
             reject(new Error('Claude fix execution timed out after 30 minutes'));
           }
@@ -521,8 +537,12 @@ Begin addressing the comments now - FIXME comments first, then TODO!`;
           clearTimeout(timeout);
           processManager.unregister(processId);
 
-          // Close log stream
-          logStream.end();
+          // Close log file descriptor
+          try {
+            fs.closeSync(logFd);
+          } catch (e) {
+            // Ignore close errors
+          }
 
           if (code === 0) {
             resolve();
@@ -536,8 +556,12 @@ Begin addressing the comments now - FIXME comments first, then TODO!`;
           clearTimeout(timeout);
           processManager.unregister(processId);
 
-          // Close log stream
-          logStream.end();
+          // Close log file descriptor
+          try {
+            fs.closeSync(logFd);
+          } catch (e) {
+            // Ignore close errors
+          }
 
           reject(error);
         });
