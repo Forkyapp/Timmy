@@ -248,6 +248,21 @@ if (require.main === module) {
 
     claude.ensureClaudeSettings();
 
+    // Clean up any stale worktrees from previous runs
+    if (config.github.repoPath) {
+      try {
+        const { getWorktreeManager } = await import('./src/core/workspace/worktree-manager.service');
+        const worktreeManager = getWorktreeManager(config.github.repoPath);
+
+        console.log(timmy.info('Cleaning up stale worktrees from previous runs...'));
+        await worktreeManager.cleanupStaleWorktrees(config.github.repoPath, 0); // Clean all worktrees on startup
+        console.log(timmy.success('✓ Worktrees cleaned'));
+      } catch (error) {
+        const err = error as Error;
+        console.log(timmy.warning(`Failed to cleanup worktrees: ${err.message}`));
+      }
+    }
+
     // Initialize Discord asynchronously (non-blocking)
     let discordStatus: 'online' | 'offline' | 'idle' = 'offline';
     if (config.discord.enabled) {

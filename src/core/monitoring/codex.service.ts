@@ -372,19 +372,6 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
     throw new Error('Repository path is not configured');
   }
 
-  // Check if Codex CLI is available
-  try {
-    await execAsync('which codex', { timeout: 5000 });
-  } catch (error) {
-    console.log(timmy.warning(`${colors.bright}Codex${colors.reset} CLI not found - skipping code review`));
-    console.log(timmy.info('Install Codex CLI to enable automated code reviews'));
-    return {
-      success: false,
-      error: 'Codex CLI not installed',
-      branch
-    };
-  }
-
   console.log(timmy.ai(`${colors.bright}Codex${colors.reset} reviewing Claude's changes for ${colors.bright}${taskId}${colors.reset}`));
   ensureCodexSettings(repoPath);
 

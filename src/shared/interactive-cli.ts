@@ -55,6 +55,7 @@ export function handleCommand(
       console.log('\n' + `${colors.bright}${colors.cyan}Management${colors.reset}`);
       console.log(`  ${timmy.label('cache clear', 'Clear task cache')}`);
       console.log(`  ${timmy.label('context clear', 'Clear embeddings cache')}`);
+      console.log(`  ${timmy.label('worktree clean', 'Remove all Timmy worktrees')}`);
       console.log(`  ${timmy.label('discord test', 'Send test message to Discord')}`);
 
       console.log(timmy.divider() + '\n');
@@ -312,6 +313,28 @@ export function handleCommand(
         console.log(timmy.info(`No logs found for task ${taskId}`));
         console.log(timmy.dim(`Looking in: ${logsDir}`));
       }
+      break;
+    }
+
+    case 'worktree clean': {
+      if (!config.github.repoPath) {
+        console.log(timmy.error('Repository path not configured'));
+        break;
+      }
+
+      console.log(timmy.processing('Removing all Timmy worktrees...'));
+
+      import('@/core/workspace/worktree-manager.service').then(async ({ getWorktreeManager }) => {
+        try {
+          const worktreeManager = getWorktreeManager(config.github.repoPath!);
+          await worktreeManager.cleanupStaleWorktrees(config.github.repoPath!, 0); // 0 hours = remove all
+          console.log(timmy.success('✓ All worktrees removed'));
+        } catch (error) {
+          console.log(timmy.error(`Failed to clean worktrees: ${(error as Error).message}`));
+        }
+      }).catch((error: Error) => {
+        console.log(timmy.error(`Failed to load worktree manager: ${error.message}`));
+      });
       break;
     }
 
