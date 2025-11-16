@@ -21,6 +21,7 @@ dotenv.config();
 import fs from 'fs';
 import config from './src/shared/config';
 import { timmy, colors } from './src/shared/ui';
+import { logger } from './src/shared/utils/logger.util';
 import { setupInteractiveMode, type AppState } from './src/shared/interactive-cli';
 import * as storage from './lib/storage';
 import * as clickup from './lib/clickup';
@@ -229,9 +230,46 @@ if (require.main === module) {
       // Start Discord initialization in the background (don't await)
       discordService.init()
         .then(() => {
+          // Register event handler for detected messages
+          discordService.on({
+            onMessageDetected: async (analyzedMessage) => {
+              console.log(timmy.ai(`📨 Discord message detected with keywords: ${analyzedMessage.matches.map(m => m.keyword).join(', ')}`));
+
+              // Create ClickUp task from Discord message
+              const { createTaskFromDiscordMessage } = await import('./src/core/discord/discord-clickup-bridge');
+              const result = await createTaskFromDiscordMessage(analyzedMessage);
+
+              if (result.success && result.task) {
+                console.log(timmy.success(`✓ Created ClickUp task ${result.task.id} - Pipeline will process automatically`));
+
+                // Optional: Reply to Discord to confirm task creation
+                try {
+                  const client = (discordService as any).client;
+                  if (client && result.task.url) {
+                    await client.sendMessage(
+                      analyzedMessage.message.channelId,
+                      `✅ Task created: ${result.task.url}\n\nI'll start working on this now! The pipeline will:\n1. Analyze the issue (Gemini)\n2. Implement a fix (Claude)\n3. Review the code (Codex)\n4. Create a PR (GitHub)\n\nI'll update you when it's ready! 🚀`
+                    );
+                  }
+                } catch (err) {
+                  // Silently ignore Discord message send errors
+                  logger.error('Failed to send Discord confirmation', err instanceof Error ? err : new Error(String(err)));
+                }
+              } else if (result.error && !result.error.includes('CLICKUP_LIST_ID not configured')) {
+                console.log(timmy.error(`✗ Failed to create task: ${result.error}`));
+              }
+            },
+
+            onError: (error: Error) => {
+              console.log(timmy.error(`✗ Discord error: ${error.message}`));
+            },
+
+            onReady: () => {
+              console.log(timmy.success('✓ Discord bot connected and monitoring'));
+            },
+          });
+
           discordService.startPolling();
-          // Update status display after connection
-          console.log(timmy.success('✓ Discord bot connected and monitoring'));
         })
         .catch((error: Error) => {
           console.log(timmy.error(`✗ Discord connection failed: ${error.message}`));

@@ -19,6 +19,7 @@ interface Config {
     apiKey: string | undefined;
     botUserId: number;
     workspaceId: string | undefined;
+    listId: string | undefined;
   };
   github: {
     repoPath: string | undefined;
@@ -82,6 +83,7 @@ const config: Config = {
     botUserId: parseInt(process.env.CLICKUP_BOT_USER_ID || '0'),
     // Use active project's workspace ID, or fall back to .env
     workspaceId: activeProject?.clickup.workspaceId || process.env.CLICKUP_WORKSPACE_ID,
+    listId: process.env.CLICKUP_LIST_ID,
   },
   github: {
     // Use active project's GitHub config, or fall back to .env
