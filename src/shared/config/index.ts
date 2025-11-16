@@ -19,6 +19,7 @@ interface Config {
     apiKey: string | undefined;
     botUserId: number;
     workspaceId: string | undefined;
+    listId: string | undefined;
   };
   github: {
     repoPath: string | undefined;
@@ -82,6 +83,7 @@ const config: Config = {
     botUserId: parseInt(process.env.CLICKUP_BOT_USER_ID || '0'),
     // Use active project's workspace ID, or fall back to .env
     workspaceId: activeProject?.clickup.workspaceId || process.env.CLICKUP_WORKSPACE_ID,
+    listId: process.env.CLICKUP_LIST_ID,
   },
   github: {
     // Use active project's GitHub config, or fall back to .env
@@ -95,7 +97,7 @@ const config: Config = {
     token: process.env.DISCORD_BOT_TOKEN,
     guildId: process.env.DISCORD_GUILD_ID,
     channelIds: process.env.DISCORD_CHANNEL_IDS?.split(',').map(id => id.trim()) || [],
-    keywords: process.env.DISCORD_KEYWORDS?.split(',').map(kw => kw.trim().toLowerCase()) || ['bug', 'issue', 'error', 'problem', 'broken', 'crash', 'fix'],
+    keywords: process.env.DISCORD_KEYWORDS?.split(',').map(kw => kw.trim().toLowerCase()) || ['bug', 'issue', 'error', 'problem', 'broken', 'crash', 'fix', 'create', 'task'],
     pollIntervalMs: parseInt(process.env.DISCORD_POLL_INTERVAL_MS || '600000'), // Default: 10 minutes
   },
   openai: {
