@@ -64,19 +64,17 @@ export class ProcessManager {
       logger.info('Killing process', { id, pid: process.pid, signal });
 
       try {
-        // Kill the entire process group to ensure subprocesses are also terminated
-        // Negative PID kills the process group
+        // Kill the child process
         process.kill(signal);
 
         // Also try to kill the process group explicitly (works on Unix-like systems)
         if (process.pid) {
           try {
-            // Kill process group (negative PID)
-            process.kill(signal);
-            // Also send signal to process group using process.kill
-            require('process').kill(-process.pid, signal);
+            // Kill process group using negative PID
+            // This ensures all subprocesses spawned by the shell are also terminated
+            global.process.kill(-process.pid, signal);
           } catch (err) {
-            // Ignore errors - process may already be dead
+            // Ignore errors - process may already be dead or not a process group leader
             logger.info('Could not kill process group', { id, pid: process.pid, error: err });
           }
         }
@@ -101,13 +99,14 @@ export class ProcessManager {
         logger.info('Killing process', { id, pid: process.pid, signal });
 
         try {
-          // Kill the process
+          // Kill the child process
           process.kill(signal);
 
           // Also try to kill the process group to catch subprocesses
           if (process.pid) {
             try {
-              require('process').kill(-process.pid, signal);
+              // Kill process group using negative PID
+              global.process.kill(-process.pid, signal);
             } catch (err) {
               // Ignore errors - process may already be dead or not a process group leader
               logger.info('Could not kill process group', { id, pid: process.pid, error: err });
