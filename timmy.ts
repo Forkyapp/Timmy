@@ -19,7 +19,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import fs from 'fs';
-import config from './src/shared/config';
+import config, { validateRequiredEnvVars } from './src/shared/config';
 import { timmy, colors } from './src/shared/ui';
 import { logger } from './src/shared/utils/logger.util';
 import { setVerboseMode } from './src/shared/utils/verbose.util';
@@ -247,6 +247,15 @@ async function gracefulShutdown(): Promise<void> {
 // Only run if this file is executed directly (not imported for testing)
 if (require.main === module) {
   (async () => {
+    try {
+      // Validate required environment variables before doing anything else
+      validateRequiredEnvVars();
+    } catch (error) {
+      const err = error as Error;
+      console.error(timmy.error(`Configuration Error: ${err.message}`));
+      process.exit(1);
+    }
+
     // Initialize data on startup
     storage.cache.init();
     storage.processedComments.init();
