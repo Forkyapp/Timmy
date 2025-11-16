@@ -1,5 +1,5 @@
-import { ChildProcess, spawn } from 'child_process';
-import { timmy, colors } from '@/shared/ui';
+import { ChildProcess, spawn, type SpawnOptions } from 'child_process';
+import { timmy } from '@/shared/ui';
 import { logger } from '@/shared/utils/logger.util';
 
 /**
@@ -168,7 +168,7 @@ export class ProcessManager {
     id: string,
     command: string,
     args: string[] = [],
-    options: any = {}
+    options: SpawnOptions = {}
   ): ChildProcess {
     const child = spawn(command, args, {
       ...options,
@@ -195,7 +195,7 @@ export function spawnTracked(
   id: string,
   command: string,
   args: string[] = [],
-  options: any = {}
+  options: SpawnOptions = {}
 ): ChildProcess {
   return getProcessManager().spawn(id, command, args, options);
 }
