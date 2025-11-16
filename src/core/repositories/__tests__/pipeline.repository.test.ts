@@ -195,13 +195,16 @@ describe('PipelineRepository', () => {
     });
 
     it('should create new stage if it does not exist', async () => {
-      const initialStages = (await repository.get('task-1'))!.stages.length;
+      const initialPipeline = await repository.get('task-1');
+      expect(initialPipeline).toBeDefined();
+      const initialStages = initialPipeline?.stages.length ?? 0;
 
       await repository.updateStage('task-1', PIPELINE_STAGES.IMPLEMENTING);
 
       const pipeline = await repository.get('task-1');
-      expect(pipeline!.stages.length).toBe(initialStages + 1);
-      const stage = pipeline!.stages.find((s) => s.stage === PIPELINE_STAGES.IMPLEMENTING);
+      expect(pipeline).toBeDefined();
+      expect(pipeline?.stages.length).toBe(initialStages + 1);
+      const stage = pipeline?.stages.find((s) => s.stage === PIPELINE_STAGES.IMPLEMENTING);
       expect(stage).toBeDefined();
       expect(stage?.status).toBe(PIPELINE_STATUS.IN_PROGRESS);
     });

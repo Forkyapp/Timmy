@@ -16,7 +16,7 @@ class TestStage extends BaseStage<BaseStageResult> {
   public shouldThrow = false;
   public throwError: Error | null = null;
 
-  async execute(context: StageContext): Promise<BaseStageResult> {
+  async execute(_context: StageContext): Promise<BaseStageResult> {
     this.executeCalled = true;
 
     if (this.shouldThrow) {
