@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import { exec, spawn, ChildProcess } from 'child_process';
 import config from '../../shared/config';
 import { timmy, colors } from '../../shared/ui';
+import { logger } from '../../shared/utils/logger.util';
 import { loadContextForModel } from '../context/context-orchestrator';
 import * as clickup from '../../../lib/clickup';
 import * as storage from '../../../lib/storage';
