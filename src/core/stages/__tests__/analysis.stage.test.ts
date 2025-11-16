@@ -8,7 +8,7 @@ import * as storage from '../../../../lib/storage';
 import * as gemini from '../../ai-services/gemini.service';
 import * as clickup from '../../../../lib/clickup';
 import { createMockClickUpTask, suppressConsole } from '../../../test-setup';
-import type { StageContext, AnalysisResult } from '../types';
+import type { StageContext } from '../types';
 
 // Mock dependencies
 jest.mock('../../../../lib/storage');

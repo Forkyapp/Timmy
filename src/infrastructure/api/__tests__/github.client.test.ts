@@ -16,6 +16,7 @@ describe('GitHubClient', () => {
   let mockGet: jest.Mock;
   let mockPost: jest.Mock;
   let mockDelete: jest.Mock;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAxiosInstance: any;
 
   beforeEach(() => {
@@ -293,6 +294,7 @@ describe('GitHubClient', () => {
 
     it('should return false when branch not found', async () => {
       const error = new Error('Not found');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).statusCode = 404;
       mockGet.mockRejectedValue(error);
 
@@ -303,6 +305,7 @@ describe('GitHubClient', () => {
 
     it('should throw error for non-404 errors', async () => {
       const error = new Error('API error');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).statusCode = 500;
       mockGet.mockRejectedValue(error);
 
@@ -312,7 +315,7 @@ describe('GitHubClient', () => {
 
   describe('Client Configuration', () => {
     it('should create client with GitHub API configuration', () => {
-      const client = new GitHubClient({
+      new GitHubClient({
         token: 'test-token',
         owner: 'test-owner',
         repo: 'test-repo',
@@ -326,7 +329,7 @@ describe('GitHubClient', () => {
     });
 
     it('should include authorization and API headers', () => {
-      const client = new GitHubClient({
+      new GitHubClient({
         token: 'test-token-123',
         owner: 'test-owner',
         repo: 'test-repo',
@@ -343,7 +346,7 @@ describe('GitHubClient', () => {
     });
 
     it('should include GitHub API version header', () => {
-      const client = new GitHubClient({
+      new GitHubClient({
         token: 'test-token',
         owner: 'test-owner',
         repo: 'test-repo',
@@ -359,7 +362,7 @@ describe('GitHubClient', () => {
     });
 
     it('should accept custom timeout', () => {
-      const client = new GitHubClient({
+      new GitHubClient({
         token: 'test-token',
         owner: 'test-owner',
         repo: 'test-repo',
@@ -377,6 +380,7 @@ describe('GitHubClient', () => {
   describe('Error Handling', () => {
     it('should handle network errors', async () => {
       const networkError = new Error('Network error');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (networkError as any).code = 'ECONNREFUSED';
       mockGet.mockRejectedValue(networkError);
 
@@ -385,7 +389,9 @@ describe('GitHubClient', () => {
 
     it('should handle rate limit errors', async () => {
       const rateLimitError = new Error('Rate limit exceeded');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (rateLimitError as any).statusCode = 429;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (rateLimitError as any).response = { status: 429 };
       mockGet.mockRejectedValue(rateLimitError);
 
@@ -394,6 +400,7 @@ describe('GitHubClient', () => {
 
     it('should handle authentication errors', async () => {
       const authError = new Error('Bad credentials');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (authError as any).statusCode = 401;
       mockGet.mockRejectedValue(authError);
 
@@ -402,6 +409,7 @@ describe('GitHubClient', () => {
 
     it('should handle permission errors', async () => {
       const permError = new Error('Forbidden');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (permError as any).statusCode = 403;
       mockPost.mockRejectedValue(permError);
 

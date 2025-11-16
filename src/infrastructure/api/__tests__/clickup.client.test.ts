@@ -17,6 +17,7 @@ describe('ClickUpClient', () => {
   let mockGet: jest.Mock;
   let mockPost: jest.Mock;
   let mockPut: jest.Mock;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAxiosInstance: any;
 
   beforeEach(() => {
@@ -244,7 +245,7 @@ describe('ClickUpClient', () => {
 
   describe('Client Configuration', () => {
     it('should create client with ClickUp API configuration', () => {
-      const client = new ClickUpClient({
+      new ClickUpClient({
         apiKey: 'test-api-key',
       });
 
@@ -261,7 +262,7 @@ describe('ClickUpClient', () => {
     });
 
     it('should include API key in authorization header', () => {
-      const client = new ClickUpClient({
+      new ClickUpClient({
         apiKey: 'test-api-key-123',
       });
 
@@ -275,7 +276,7 @@ describe('ClickUpClient', () => {
     });
 
     it('should accept custom timeout', () => {
-      const client = new ClickUpClient({
+      new ClickUpClient({
         apiKey: 'test-api-key',
         timeout: 5000,
       });
@@ -291,6 +292,7 @@ describe('ClickUpClient', () => {
   describe('Error Handling', () => {
     it('should handle network errors', async () => {
       const networkError = new Error('Network error');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (networkError as any).code = 'ECONNREFUSED';
 
       mockGet.mockRejectedValue(networkError);
@@ -300,6 +302,7 @@ describe('ClickUpClient', () => {
 
     it('should handle rate limit errors', async () => {
       const rateLimitError = new Error('Rate limit exceeded');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (rateLimitError as any).response = { status: 429 };
 
       mockGet.mockRejectedValue(rateLimitError);
@@ -309,6 +312,7 @@ describe('ClickUpClient', () => {
 
     it('should handle timeout errors', async () => {
       const timeoutError = new Error('Timeout');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (timeoutError as any).code = 'ETIMEDOUT';
 
       mockGet.mockRejectedValue(timeoutError);
@@ -318,6 +322,7 @@ describe('ClickUpClient', () => {
 
     it('should handle 404 errors', async () => {
       const notFoundError = new Error('Not found');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (notFoundError as any).response = { status: 404 };
 
       mockGet.mockRejectedValue(notFoundError);
@@ -327,6 +332,7 @@ describe('ClickUpClient', () => {
 
     it('should handle 500 errors', async () => {
       const serverError = new Error('Internal server error');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (serverError as any).response = { status: 500 };
 
       mockGet.mockRejectedValue(serverError);

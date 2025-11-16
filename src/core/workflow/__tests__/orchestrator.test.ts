@@ -11,7 +11,6 @@ import * as storage from '../../../../lib/storage';
 import * as clickup from '../../../../lib/clickup';
 import * as config from '../../../shared/config';
 import { createMockClickUpTask, suppressConsole } from '../../../test-setup';
-import type { ProcessTaskResult, RerunResult } from '../types';
 
 // Mock all dependencies
 jest.mock('../workflow-executor');
