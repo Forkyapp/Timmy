@@ -46,7 +46,7 @@ describe('WorktreeManager - Cleanup Tests', () => {
       // Clean up worktrees directory
       const worktreesDir = path.join(path.dirname(tempRepoPath), '.timmy-worktrees');
       await fs.rm(worktreesDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
