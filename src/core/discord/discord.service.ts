@@ -5,7 +5,7 @@
 
 import config from '@/shared/config';
 import { DiscordClient } from '@/infrastructure/api/discord.client';
-import { DiscordMessageRepository } from '@/core/repositories/discord-message.repository';
+import { DiscordMessageRepository } from '@/infrastructure/storage/repositories/discord.repository';
 import { aiBrainService } from '@/core/ai-services/ai-brain.service';
 import type {
   DiscordMessage,
@@ -26,9 +26,7 @@ export class DiscordService {
   private events: DiscordServiceEvents = {};
 
   constructor() {
-    this.messageRepository = new DiscordMessageRepository(
-      config.files.discordMessagesFile
-    );
+    this.messageRepository = new DiscordMessageRepository();
   }
 
   /**
@@ -49,9 +47,6 @@ export class DiscordService {
       logger.warn('No Discord channels configured for monitoring');
       return;
     }
-
-    // Initialize message repository
-    await this.messageRepository.init();
 
     // Initialize Discord client with real-time message handler
     this.client = new DiscordClient({

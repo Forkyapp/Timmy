@@ -180,6 +180,28 @@ CREATE TABLE IF NOT EXISTS pr_tracking (
 CREATE INDEX IF NOT EXISTS idx_pr_tracking_last_checked ON pr_tracking(last_checked_at);
 
 -- ============================================================================
+-- DISCORD_MESSAGES - Processed Discord messages cache
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS discord_messages (
+  message_id TEXT PRIMARY KEY,
+  channel_id TEXT NOT NULL,
+  author_id TEXT NOT NULL,
+  content TEXT,
+  processed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL DEFAULT (datetime('now', '+30 days'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_discord_messages_expires ON discord_messages(expires_at);
+CREATE INDEX IF NOT EXISTS idx_discord_messages_channel ON discord_messages(channel_id);
+
+-- Auto-cleanup trigger for Discord messages
+CREATE TRIGGER IF NOT EXISTS cleanup_expired_discord_messages
+AFTER INSERT ON discord_messages
+BEGIN
+  DELETE FROM discord_messages WHERE expires_at < datetime('now');
+END;
+
+-- ============================================================================
 -- MIGRATIONS - Schema version tracking
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS migrations (
