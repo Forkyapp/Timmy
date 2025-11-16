@@ -97,7 +97,7 @@ const config: Config = {
     token: process.env.DISCORD_BOT_TOKEN,
     guildId: process.env.DISCORD_GUILD_ID,
     channelIds: process.env.DISCORD_CHANNEL_IDS?.split(',').map(id => id.trim()) || [],
-    keywords: process.env.DISCORD_KEYWORDS?.split(',').map(kw => kw.trim().toLowerCase()) || ['bug', 'issue', 'error', 'problem', 'broken', 'crash', 'fix'],
+    keywords: process.env.DISCORD_KEYWORDS?.split(',').map(kw => kw.trim().toLowerCase()) || ['bug', 'issue', 'error', 'problem', 'broken', 'crash', 'fix', 'create', 'task'],
     pollIntervalMs: parseInt(process.env.DISCORD_POLL_INTERVAL_MS || '600000'), // Default: 10 minutes
   },
   openai: {
