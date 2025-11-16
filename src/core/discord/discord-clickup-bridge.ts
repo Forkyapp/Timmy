@@ -190,9 +190,7 @@ export async function createTaskFromDiscordMessage(
 
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('❌ Failed to create ClickUp task from Discord message', {
-      error: err.message,
-      stack: err.stack,
+    logger.error('❌ Failed to create ClickUp task from Discord message', err, {
       messageId: analyzedMessage.message.id,
       author: analyzedMessage.message.author.username,
     });

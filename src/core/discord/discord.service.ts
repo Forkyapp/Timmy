@@ -374,8 +374,8 @@ export class DiscordService {
                 messageId: message.id,
               });
             } catch (eventError) {
-              logger.error('❌ Event handler failed', {
-                error: eventError instanceof Error ? eventError.message : String(eventError),
+              const err = eventError instanceof Error ? eventError : new Error(String(eventError));
+              logger.error('❌ Event handler failed', err, {
                 messageId: message.id,
               });
             }

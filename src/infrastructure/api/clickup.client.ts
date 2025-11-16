@@ -141,7 +141,8 @@ export class ClickUpClient extends BaseAPIClient {
 
       return task;
     } catch (error) {
-      const err = error as Error;
+      const err = error instanceof Error ? error : new Error(String(error));
+      let statusCode = 500;
 
       console.error('❌ ClickUp API: Task creation failed', {
         endpoint,
@@ -152,17 +153,18 @@ export class ClickUpClient extends BaseAPIClient {
       });
 
       // Log additional error details if available
-      if ('response' in error) {
+      if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { status?: number; data?: unknown } };
+        statusCode = axiosError.response?.status || 500;
         console.error('❌ ClickUp API: Response details', {
-          status: axiosError.response?.status,
+          status: statusCode,
           data: axiosError.response?.data,
         });
       }
 
       throw new ClickUpAPIError(
         `Failed to create task in list ${listId}: ${err.message}`,
-        error
+        statusCode
       );
     }
   }
