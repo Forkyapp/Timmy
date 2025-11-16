@@ -17,8 +17,7 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 function validateRequiredEnvVars(): void {
   const requiredVars = [
     'CLICKUP_API_KEY',
-    'GITHUB_TOKEN',
-    'GITHUB_REPO_PATH'
+    'GITHUB_TOKEN'
   ];
 
   const issues: Array<{ field: string; message: string }> = [];
@@ -31,6 +30,17 @@ function validateRequiredEnvVars(): void {
         message: `${varName} is required but not set or is empty`
       });
     }
+  }
+
+  // Check for repository configuration (either via active project or .env)
+  const hasActiveProject = activeProject && activeProject.github.path;
+  const hasEnvRepoPath = process.env.GITHUB_REPO_PATH && process.env.GITHUB_REPO_PATH.trim();
+
+  if (!hasActiveProject && !hasEnvRepoPath) {
+    issues.push({
+      field: 'GITHUB_REPO_PATH',
+      message: 'No repository configured. Either configure a project (npm run init) or set GITHUB_REPO_PATH in .env'
+    });
   }
 
   if (issues.length > 0) {
