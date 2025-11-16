@@ -14,6 +14,15 @@ import {
 import { FileReadError, FileWriteError, PipelineNotFoundError } from '../../shared/errors';
 import { PIPELINE_STAGES, PIPELINE_STATUS } from '../../shared/constants';
 
+export interface StaleTaskInfo {
+  taskId: string;
+  taskName: string;
+  currentStage: string;
+  status: string;
+  updatedAt: string;
+  staleDurationMs: number;
+}
+
 export interface IPipelineRepository {
   load(): Promise<Record<string, PipelineData>>;
   save(pipelines: Record<string, PipelineData>): Promise<void>;
@@ -27,6 +36,8 @@ export interface IPipelineRepository {
   fail(taskId: string, error: Error | string): Promise<PipelineData>;
   getActive(): Promise<PipelineData[]>;
   getSummary(taskId: string): Promise<PipelineSummary | null>;
+  findStaleTasks(staleTimeoutMs: number): Promise<StaleTaskInfo[]>;
+  recoverStaleTask(taskId: string, markAsFailed: boolean): Promise<PipelineData>;
 }
 
 export class PipelineRepository implements IPipelineRepository {
@@ -324,5 +335,95 @@ export class PipelineRepository implements IPipelineRepository {
       reviewIterations: pipeline.metadata.reviewIterations || 0,
       hasErrors: pipeline.errors.length > 0,
     };
+  }
+
+  /**
+   * Find stale tasks that have been in progress for too long
+   * A task is considered stale if:
+   * 1. Status is 'in_progress'
+   * 2. updatedAt timestamp is older than staleTimeoutMs
+   *
+   * @param staleTimeoutMs Timeout in milliseconds (e.g., 3600000 for 1 hour)
+   * @returns Array of stale task information
+   */
+  async findStaleTasks(staleTimeoutMs: number): Promise<StaleTaskInfo[]> {
+    const pipelines = await this.load();
+    const now = Date.now();
+    const staleTasks: StaleTaskInfo[] = [];
+
+    for (const [taskId, pipeline] of Object.entries(pipelines)) {
+      if (pipeline.status !== PIPELINE_STATUS.IN_PROGRESS) {
+        continue;
+      }
+
+      const updatedAt = Date.parse(pipeline.updatedAt);
+      const staleDuration = now - updatedAt;
+
+      if (staleDuration > staleTimeoutMs) {
+        staleTasks.push({
+          taskId: pipeline.taskId,
+          taskName: pipeline.taskName,
+          currentStage: pipeline.currentStage,
+          status: pipeline.status,
+          updatedAt: pipeline.updatedAt,
+          staleDurationMs: staleDuration,
+        });
+      }
+    }
+
+    return staleTasks;
+  }
+
+  /**
+   * Recover a stale task by either resuming or marking as failed
+   *
+   * @param taskId The task ID to recover
+   * @param markAsFailed If true, marks the task as failed. If false, resets to allow resumption
+   * @returns Updated pipeline data
+   */
+  async recoverStaleTask(taskId: string, markAsFailed: boolean): Promise<PipelineData> {
+    const pipelines = await this.load();
+    const pipeline = pipelines[taskId];
+
+    if (!pipeline) {
+      throw new PipelineNotFoundError(taskId);
+    }
+
+    if (markAsFailed) {
+      const errorMessage = `Task marked as failed due to stale state. Last updated: ${pipeline.updatedAt}. Stage: ${pipeline.currentStage}`;
+
+      pipeline.status = PIPELINE_STATUS.FAILED;
+      pipeline.currentStage = PIPELINE_STAGES.FAILED;
+      pipeline.failedAt = new Date().toISOString();
+      pipeline.errors.push({
+        stage: pipeline.currentStage,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+
+      const currentStageEntry = pipeline.stages.find((s) => s.stage === pipeline.currentStage);
+      if (currentStageEntry && currentStageEntry.status === PIPELINE_STATUS.IN_PROGRESS) {
+        currentStageEntry.status = PIPELINE_STATUS.FAILED;
+        currentStageEntry.completedAt = new Date().toISOString();
+        currentStageEntry.error = 'Stage did not complete before crash/timeout';
+      }
+    } else {
+      const currentStageEntry = pipeline.stages.find((s) => s.stage === pipeline.currentStage);
+      if (currentStageEntry && currentStageEntry.status === PIPELINE_STATUS.IN_PROGRESS) {
+        currentStageEntry.status = PIPELINE_STATUS.PENDING;
+        currentStageEntry.startedAt = '';
+      }
+
+      pipeline.errors.push({
+        stage: pipeline.currentStage,
+        error: `Task recovery initiated. Stage reset from stale state. Last updated: ${pipeline.updatedAt}`,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    pipeline.updatedAt = new Date().toISOString();
+    await this.save(pipelines);
+
+    return pipeline;
   }
 }

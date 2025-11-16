@@ -28,6 +28,7 @@ import * as clickup from './lib/clickup';
 import * as claude from './src/core/ai-services/claude.service';
 import * as orchestrator from './src/core/orchestrator/orchestrator.service';
 import { discordService } from './src/core/discord/discord.service';
+import { recoverStaleTasks } from './src/core/recovery/stale-task-recovery.service';
 
 // ============================================
 // INTERFACES
@@ -119,6 +120,16 @@ async function pollAndProcess(): Promise<void> {
   if (!appState.isRunning) return;
 
   try {
+    // Check for stale tasks periodically (every poll)
+    if (config.pipeline.staleTaskRecoveryEnabled) {
+      try {
+        await recoverStaleTasks();
+      } catch (error) {
+        const err = error as Error;
+        logger.error('Periodic stale task recovery failed', err);
+      }
+    }
+
     // First, check for command comments
     await checkTaskCommands();
 
@@ -242,6 +253,20 @@ if (require.main === module) {
     }
 
     claude.ensureClaudeSettings();
+
+    // Recover any stale tasks from previous crashes
+    if (config.pipeline.staleTaskRecoveryEnabled) {
+      try {
+        console.log(timmy.info('Checking for stale tasks...'));
+        const recoveryStats = await recoverStaleTasks();
+        if (recoveryStats.totalStale > 0) {
+          console.log(timmy.divider());
+        }
+      } catch (error) {
+        const err = error as Error;
+        console.log(timmy.warning(`Stale task recovery failed: ${err.message}`));
+      }
+    }
 
     // Initialize Discord asynchronously (non-blocking)
     let discordStatus: 'online' | 'offline' | 'idle' = 'offline';

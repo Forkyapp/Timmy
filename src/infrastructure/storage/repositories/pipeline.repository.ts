@@ -382,4 +382,101 @@ export class PipelineRepository {
       errors: this.getErrors(taskId)
     };
   }
+
+  /**
+   * Find stale tasks that have been in progress for too long
+   */
+  findStaleTasks(staleTimeoutMs: number): Array<{
+    taskId: string;
+    taskName: string;
+    currentStage: string;
+    status: string;
+    updatedAt: string;
+    staleDurationMs: number;
+  }> {
+    const cutoffDate = new Date(Date.now() - staleTimeoutMs).toISOString();
+
+    const rows = this.db.prepare(`
+      SELECT
+        task_id as taskId,
+        task_name as taskName,
+        current_stage as currentStage,
+        status,
+        updated_at as updatedAt
+      FROM pipelines
+      WHERE status = 'in_progress'
+        AND updated_at < ?
+      ORDER BY updated_at ASC
+    `).all(cutoffDate) as any[];
+
+    return rows.map((row) => ({
+      ...row,
+      staleDurationMs: Date.now() - Date.parse(row.updatedAt)
+    }));
+  }
+
+  /**
+   * Recover a stale task by either resuming or marking as failed
+   */
+  recoverStaleTask(taskId: string, markAsFailed: boolean): PipelineData {
+    const now = new Date().toISOString();
+
+    return this.db.transaction(() => {
+      const pipeline = this.get(taskId);
+      if (!pipeline) {
+        throw new Error(`Pipeline not found: ${taskId}`);
+      }
+
+      if (markAsFailed) {
+        const errorMessage = `Task marked as failed due to stale state. Last updated: ${pipeline.updatedAt}. Stage: ${pipeline.currentStage}`;
+
+        // Update pipeline status to failed
+        this.db.prepare(`
+          UPDATE pipelines
+          SET status = 'failed', failed_at = ?, updated_at = ?, current_stage = 'failed'
+          WHERE task_id = ?
+        `).run(now, now, taskId);
+
+        // Mark current stage as failed
+        this.db.prepare(`
+          UPDATE stages
+          SET status = 'failed', completed_at = ?, error = ?
+          WHERE pipeline_task_id = ? AND status = 'in_progress'
+        `).run(now, 'Stage did not complete before crash/timeout', taskId);
+
+        // Add error entry
+        this.db.prepare(`
+          INSERT INTO pipeline_errors (pipeline_task_id, stage, error, timestamp)
+          VALUES (?, ?, ?, ?)
+        `).run(taskId, pipeline.currentStage, errorMessage, now);
+      } else {
+        // Reset stage to pending for resumption
+        this.db.prepare(`
+          UPDATE stages
+          SET status = 'pending', started_at = NULL
+          WHERE pipeline_task_id = ? AND status = 'in_progress'
+        `).run(taskId);
+
+        // Update pipeline timestamp
+        this.db.prepare(`
+          UPDATE pipelines
+          SET updated_at = ?
+          WHERE task_id = ?
+        `).run(now, taskId);
+
+        // Add recovery note to errors
+        this.db.prepare(`
+          INSERT INTO pipeline_errors (pipeline_task_id, stage, error, timestamp)
+          VALUES (?, ?, ?, ?)
+        `).run(
+          taskId,
+          pipeline.currentStage,
+          `Task recovery initiated. Stage reset from stale state. Last updated: ${pipeline.updatedAt}`,
+          now
+        );
+      }
+
+      return this.get(taskId)!;
+    })();
+  }
 }

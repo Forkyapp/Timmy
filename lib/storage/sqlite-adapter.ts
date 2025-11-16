@@ -192,6 +192,14 @@ export const pipeline = {
   getAgentExecution(taskId: string, agent: string): any {
     const metadata = pipelineRepo.getMetadata(taskId);
     return metadata?.agentExecution?.[agent];
+  },
+
+  findStaleTasks(staleTimeoutMs: number): any[] {
+    return pipelineRepo.findStaleTasks(staleTimeoutMs) as any;
+  },
+
+  recoverStaleTask(taskId: string, markAsFailed: boolean): any {
+    return pipelineRepo.recoverStaleTask(taskId, markAsFailed) as any;
   }
 };
 

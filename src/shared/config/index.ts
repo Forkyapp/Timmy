@@ -63,6 +63,11 @@ interface Config {
     checkIntervalMs: number;
     timeoutMs: number;
   };
+  pipeline: {
+    staleTaskTimeoutMs: number;
+    staleTaskRecoveryEnabled: boolean;
+    staleTaskAutoFail: boolean;
+  };
   context: {
     mode: 'free' | 'premium' | 'hybrid';
     openaiApiKey?: string;
@@ -127,6 +132,11 @@ const config: Config = {
   prTracking: {
     checkIntervalMs: 30000,
     timeoutMs: 30 * 60 * 1000,
+  },
+  pipeline: {
+    staleTaskTimeoutMs: parseInt(process.env.PIPELINE_STALE_TIMEOUT_MS || '3600000'), // Default: 1 hour
+    staleTaskRecoveryEnabled: process.env.PIPELINE_STALE_RECOVERY_ENABLED !== 'false', // Default: true
+    staleTaskAutoFail: process.env.PIPELINE_STALE_AUTO_FAIL === 'true', // Default: false (resume instead)
   },
   context: {
     mode: (process.env.CONTEXT_MODE as 'free' | 'premium' | 'hybrid') || 'hybrid',
