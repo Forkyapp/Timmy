@@ -196,9 +196,8 @@ export class DiscordService {
             taskCreated = true;
             logger.info('✅ Task creation triggered from mention');
           } catch (eventError) {
-            logger.error('❌ Task creation failed from mention', {
-              error: eventError instanceof Error ? eventError.message : String(eventError),
-            });
+            const err = eventError instanceof Error ? eventError : new Error(String(eventError));
+            logger.error('❌ Task creation failed from mention', err);
           }
         }
       }
