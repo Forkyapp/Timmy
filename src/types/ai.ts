@@ -63,6 +63,21 @@ export interface ClaudeFixTodoResult {
   readonly error?: string;
 }
 
+export interface ClaudeFixVerificationOptions {
+  readonly repoConfig?: RepositoryConfig;
+  readonly worktreePath?: string;
+  readonly buildError?: string;
+  readonly testError?: string;
+  readonly testPatterns?: string;
+}
+
+export interface ClaudeFixVerificationResult {
+  readonly success: boolean;
+  readonly branch?: string;
+  readonly logFile?: string;
+  readonly error?: string;
+}
+
 // Gemini types
 export interface GeminiAnalyzeTaskOptions {
   readonly repoConfig?: RepositoryConfig;
@@ -136,6 +151,8 @@ export type LaunchOptions = ClaudeLaunchOptions;
 export type LaunchResult = ClaudeLaunchResult;
 export type FixTodoOptions = ClaudeFixTodoOptions;
 export type FixTodoResult = ClaudeFixTodoResult;
+export type FixVerificationOptions = ClaudeFixVerificationOptions;
+export type FixVerificationResult = ClaudeFixVerificationResult;
 export type AnalysisResult = GeminiAnalysisResult;
 export type FeatureSpec = GeminiFeatureSpec;
 export type Progress = AIProgress;

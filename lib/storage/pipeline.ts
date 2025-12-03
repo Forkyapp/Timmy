@@ -14,6 +14,8 @@ const STAGES = {
   ANALYZED: 'analyzed',
   IMPLEMENTING: 'implementing',
   IMPLEMENTED: 'implemented',
+  VERIFYING: 'verifying',
+  VERIFIED: 'verified',
   CODEX_REVIEWING: 'codex_reviewing',
   CODEX_REVIEWED: 'codex_reviewed',
   QWEN_TESTING: 'qwen_testing',
