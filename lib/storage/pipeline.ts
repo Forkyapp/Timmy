@@ -20,6 +20,8 @@ const STAGES = {
   QWEN_TESTED: 'qwen_tested',
   CLAUDE_FIXING: 'claude_fixing',
   CLAUDE_FIXED: 'claude_fixed',
+  GENERATING_TESTS: 'generating_tests',
+  TESTS_GENERATED: 'tests_generated',
   MERGING: 'merging',
   MERGED: 'merged',
   PR_CREATING: 'pr_creating',

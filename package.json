@@ -20,7 +20,8 @@
     "projects": "ts-node scripts/list-projects.ts",
     "current": "ts-node scripts/current-project.ts",
     "build:context-index": "ts-node scripts/build-context-index.ts",
-    "migrate:json-to-sqlite": "ts-node scripts/migrate-json-to-sqlite.ts"
+    "migrate:json-to-sqlite": "ts-node scripts/migrate-json-to-sqlite.ts",
+    "dashboard": "ts-node scripts/dashboard.ts"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",
