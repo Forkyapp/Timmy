@@ -305,9 +305,13 @@ if (require.main === module) {
           discordService.on({
             onMessageDetected: async (analyzedMessage) => {
 
-              // Create ClickUp task from Discord message
+              // Create ClickUp task from Discord message with AI reasoning
               const { createTaskFromDiscordMessage } = await import('./src/core/discord/discord-clickup-bridge');
-              const result = await createTaskFromDiscordMessage(analyzedMessage);
+
+              // Get Discord client from service for conversation history
+              const client = (discordService as any).client;
+
+              const result = await createTaskFromDiscordMessage(analyzedMessage, client);
 
               if (result.success && result.task) {
                 // Send minimal Discord response

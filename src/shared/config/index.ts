@@ -75,6 +75,9 @@ interface Config {
   openai: {
     apiKey: string | undefined;
   };
+  openrouter: {
+    apiKey: string | undefined;
+  };
   system: {
     pollIntervalMs: number;
     claudeCliPath: string;
@@ -140,6 +143,9 @@ const config: Config = {
   },
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
+  },
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY,
   },
   system: {
     pollIntervalMs: parseInt(process.env.POLL_INTERVAL_MS || '15000'),

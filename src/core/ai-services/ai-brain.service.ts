@@ -1,7 +1,7 @@
 /**
  * AI Brain Service
  * Provides conversational AI capabilities for Timmy to chat with users
- * Uses GPT-4o-mini for cost-effective interactions
+ * Uses Grok 4 Fast (x-ai/grok-4-fast) for cost-effective interactions
  */
 
 import OpenAI from 'openai';
@@ -41,12 +41,14 @@ Guidelines:
 Current context: You're monitoring Discord channels for task requests and bug reports.`;
 
   constructor() {
-    if (!config.openai?.apiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!config.openrouter?.apiKey) {
+      throw new Error('OpenRouter API key not configured (OPENROUTER_API_KEY in .env)');
     }
 
+    // Initialize OpenRouter client (uses OpenAI-compatible API)
     this.openai = new OpenAI({
-      apiKey: config.openai.apiKey,
+      apiKey: config.openrouter.apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
     });
 
     // Clean up old conversations every hour
@@ -95,9 +97,9 @@ Current context: You're monitoring Discord channels for task requests and bug re
         ];
       }
 
-      // Call OpenAI API with GPT-4o-mini
+      // Call OpenRouter with Grok 4 Fast
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini', // Cheap and fast
+        model: 'x-ai/grok-4-fast', // Grok 4 Fast via OpenRouter
         messages: context.messages,
         max_tokens: 150, // Keep responses short
         temperature: 0.7,
@@ -149,7 +151,7 @@ Respond in JSON format:
 }`;
 
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'x-ai/grok-beta',
         messages: [
           {
             role: 'system',
@@ -162,7 +164,6 @@ Respond in JSON format:
         ],
         max_tokens: 200,
         temperature: 0.3,
-        response_format: { type: 'json_object' },
       });
 
       const response = completion.choices[0]?.message?.content || '{}';
