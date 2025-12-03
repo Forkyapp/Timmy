@@ -116,6 +116,20 @@ export interface FixResult extends BaseStageResult {
   issuesFixed?: number;
 }
 
+/**
+ * Result from test generation stage
+ */
+export interface TestGenerationResult extends BaseStageResult {
+  /** Git branch where tests were committed */
+  branch?: string;
+  /** Number of test files created */
+  testsCreated?: number;
+  /** List of test files generated */
+  testFiles?: string[];
+  /** Path to Claude execution log file */
+  logFile?: string;
+}
+
 // ============================================
 // STAGE METADATA
 // ============================================

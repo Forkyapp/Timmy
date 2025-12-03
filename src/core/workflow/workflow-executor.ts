@@ -18,6 +18,7 @@ import {
   ImplementationStage,
   ReviewStage,
   FixesStage,
+  TestGenerationStage,
   type AnalysisResult,
   type StageContext,
   type ImplementationStageContext,
@@ -35,6 +36,7 @@ export class WorkflowExecutor {
   private readonly implementationStage: ImplementationStage;
   private readonly reviewStage: ReviewStage;
   private readonly fixesStage: FixesStage;
+  private readonly testGenerationStage: TestGenerationStage;
 
   constructor() {
     // Initialize all stages
@@ -43,6 +45,7 @@ export class WorkflowExecutor {
     this.implementationStage = new ImplementationStage();
     this.reviewStage = new ReviewStage();
     this.fixesStage = new FixesStage();
+    this.testGenerationStage = new TestGenerationStage();
   }
 
   /**
@@ -167,6 +170,17 @@ export class WorkflowExecutor {
           async () => {
             console.log(timmy.info('Stage 5: Claude Fixes'));
             return await this.fixesStage.run(baseContext);
+          }
+        );
+      }
+
+      // Stage 6: Test Generation
+      if (!this.shouldSkipStage('test-generation', options)) {
+        await this.runStageWithRetry(
+          'test-generation',
+          async () => {
+            console.log(timmy.info('Stage 6: Test Generation'));
+            return await this.testGenerationStage.run(baseContext);
           }
         );
       }
