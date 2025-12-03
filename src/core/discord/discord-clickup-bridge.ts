@@ -171,51 +171,45 @@ async function analyzeIssueWithAI(
       .join('\n');
 
     // Build prompt for AI analysis
-    const analysisPrompt = `You are Timmy, an AI assistant that helps create well-structured development tasks from Discord conversations.
+    const analysisPrompt = `Create a concise task from this Discord message.
 
-**Current Message:**
-[${currentMessage.author.username}]: ${currentMessage.content}
-
-${contextMessages ? `**Previous Conversation Context:**
-${contextMessages}
-
-` : ''}**Your Task:**
-Analyze this message and the conversation context to understand the REAL issue being reported. Then create a structured task.
-
-**Instructions:**
-1. Read the conversation history to understand the full context
-2. Identify the root problem (not just symptoms)
-3. Determine if this is a bug, feature request, or improvement
-4. Extract technical details mentioned in the conversation
-5. Set appropriate priority based on severity
-
-**Respond in this EXACT JSON format:**
+**Message:** ${currentMessage.content}
+${contextMessages ? `\n**Context:** ${contextMessages}\n` : ''}
+**Respond ONLY with valid JSON:**
 {
-  "title": "Clear, concise task title (max 100 chars)",
-  "description": "Detailed description including:\n- What is the issue?\n- What was discussed in the conversation?\n- Technical details mentioned\n- Expected vs actual behavior (if bug)",
+  "title": "Clear title (max 70 chars)",
+  "description": "1-3 sentence summary of what needs to be done and why",
   "priority": "HIGH|MEDIUM|LOW",
-  "reasoning": "Explain why you chose this title, priority, and what context clues you used",
-  "relatedContext": ["Key quote 1 from conversation", "Key quote 2 from conversation"]
+  "reasoning": "Why this priority (1 sentence)",
+  "relatedContext": []
 }
 
-**Priority Guidelines:**
-- HIGH: Crashes, data loss, security issues, blocking bugs
-- MEDIUM: Bugs affecting functionality, important features
-- LOW: Minor issues, enhancements, nice-to-haves
+**Rules:**
+- Description: Maximum 3 sentences, no bullet points
+- Be direct and actionable
+- Priority: HIGH=crashes/security, MEDIUM=features/bugs, LOW=minor
+- No markdown formatting in description`;
 
-Respond ONLY with valid JSON, no other text.`;
+    // Get AI analysis using dedicated conversation analyzer (1000 token limit for detailed analysis)
+    const response = await aiBrainService.analyzeConversation(analysisPrompt);
 
-    // Get AI analysis
-    const response = await aiBrainService.chat(
-      currentMessage.author.id,
-      currentMessage.channelId,
-      analysisPrompt
-    );
+    logger.debug('AI raw response', { response: response.substring(0, 500) });
 
-    // Parse JSON response
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    // Parse JSON response - try to extract JSON even if wrapped in markdown
+    let jsonMatch = response.match(/\{[\s\S]*\}/);
+
+    // If no JSON found, try to find it in code blocks
     if (!jsonMatch) {
-      throw new Error('AI did not return valid JSON');
+      const codeBlockMatch = response.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+      if (codeBlockMatch) {
+        jsonMatch = [codeBlockMatch[1]];
+      }
+    }
+
+    if (!jsonMatch) {
+      const err = new Error(`AI did not return valid JSON. Response: ${response.substring(0, 200)}`);
+      logger.error('AI response did not contain JSON', err);
+      throw err;
     }
 
     const analysis: AIAnalysisResult = JSON.parse(jsonMatch[0]);
@@ -274,7 +268,6 @@ export async function createTaskFromDiscordMessage(
     let title: string;
     let description: string;
     let priority: number;
-    let aiReasoning = '';
 
     // Use AI analysis if Discord client is available (for fetching history)
     if (discordClient && config.discord.enabled) {
@@ -299,41 +292,16 @@ export async function createTaskFromDiscordMessage(
       // Use AI-generated content
       title = aiAnalysis.title;
       priority = getPriorityValue(aiAnalysis.priority);
-      aiReasoning = aiAnalysis.reasoning;
 
-      // Build enhanced description with AI analysis
+      // Build clean, minimal description
       const { message: msg } = analyzedMessage;
       const messageLink = `https://discord.com/channels/${msg.guildId}/${msg.channelId}/${msg.id}`;
 
-      description = `**Reported via Discord**
-**Message Link:** ${messageLink}
+      description = `${aiAnalysis.description}
 
----
+━━━━━━━━━━━━━━━━━━━━━━
 
-## AI Analysis
-
-${aiAnalysis.description}
-
-${aiAnalysis.relatedContext.length > 0 ? `
-### Related Context from Conversation:
-${aiAnalysis.relatedContext.map(ctx => `- "${ctx}"`).join('\n')}
-` : ''}
-
-### AI Reasoning:
-${aiReasoning}
-
----
-
-## Original Message
-
-**Author:** ${msg.author.username}
-**Content:**
-${msg.content}
-
-${msg.attachments.length > 0 ? `
-**Attachments:**
-${msg.attachments.map(a => `- [${a.filename}](${a.url})`).join('\n')}
-` : ''}`;
+🔗 ${messageLink}${msg.attachments.length > 0 ? `\n📎 ${msg.attachments.map(a => a.filename).join(', ')}` : ''}`;
 
       logger.info('AI analysis complete', {
         title,

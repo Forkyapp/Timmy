@@ -131,6 +131,32 @@ Current context: You're monitoring Discord channels for task requests and bug re
   }
 
   /**
+   * Analyze Discord conversation for task creation (non-conversational, one-shot)
+   * Returns structured JSON analysis
+   */
+  async analyzeConversation(prompt: string): Promise<string> {
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'x-ai/grok-4-fast',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        max_tokens: 1000, // Plenty of room for detailed JSON analysis
+        temperature: 0.3,
+      });
+
+      return completion.choices[0]?.message?.content || '{}';
+    } catch (error) {
+      const err = error as Error;
+      logger.error('Conversation analysis failed', err);
+      throw err;
+    }
+  }
+
+  /**
    * Analyze a message to extract task requirements
    */
   async analyzeTaskRequirements(message: string): Promise<{
