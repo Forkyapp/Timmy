@@ -16,6 +16,7 @@ import {
   InvestigationStage,
   AnalysisStage,
   ImplementationStage,
+  VerificationStage,
   ReviewStage,
   FixesStage,
   type AnalysisResult,
@@ -33,6 +34,7 @@ export class WorkflowExecutor {
   private readonly investigationStage: InvestigationStage;
   private readonly analysisStage: AnalysisStage;
   private readonly implementationStage: ImplementationStage;
+  private readonly verificationStage: VerificationStage;
   private readonly reviewStage: ReviewStage;
   private readonly fixesStage: FixesStage;
 
@@ -41,6 +43,7 @@ export class WorkflowExecutor {
     this.investigationStage = new InvestigationStage();
     this.analysisStage = new AnalysisStage();
     this.implementationStage = new ImplementationStage();
+    this.verificationStage = new VerificationStage();
     this.reviewStage = new ReviewStage();
     this.fixesStage = new FixesStage();
   }
@@ -149,26 +152,61 @@ export class WorkflowExecutor {
         }
       }
 
-      // Stage 4: Codex Review
+      // Stage 4: Build & Test Verification (CRITICAL)
+      if (!this.shouldSkipStage('verification', options)) {
+        const verifyResult = await this.runStageWithRetry(
+          'verification',
+          async () => {
+            console.log(timmy.info('Stage 4: Build & Test Verification'));
+            return await this.verificationStage.run(baseContext);
+          }
+        );
+
+        // Verification should succeed - log warning if it didn't
+        if (!verifyResult || !verifyResult.success) {
+          console.log(
+            timmy.warning('Verification failed but continuing with review stage')
+          );
+        }
+      }
+
+      // Stage 5: Codex Review
       if (!this.shouldSkipStage('review', options)) {
         await this.runStageWithRetry(
           'review',
           async () => {
-            console.log(timmy.info('Stage 4: Codex Code Review'));
+            console.log(timmy.info('Stage 5: Codex Code Review'));
             return await this.reviewStage.run(baseContext);
           }
         );
       }
 
-      // Stage 5: Claude Fixes
+      // Stage 6: Claude Fixes
       if (!this.shouldSkipStage('fixes', options)) {
         await this.runStageWithRetry(
           'fixes',
           async () => {
-            console.log(timmy.info('Stage 5: Claude Fixes'));
+            console.log(timmy.info('Stage 6: Claude Fixes'));
             return await this.fixesStage.run(baseContext);
           }
         );
+      }
+
+      // Stage 7: Final Verification (after fixes)
+      if (!this.shouldSkipStage('final-verification', options)) {
+        const finalVerifyResult = await this.runStageWithRetry(
+          'final-verification',
+          async () => {
+            console.log(timmy.info('Stage 7: Final Build & Test Verification'));
+            return await this.verificationStage.run(baseContext);
+          }
+        );
+
+        if (!finalVerifyResult || !finalVerifyResult.success) {
+          console.log(
+            timmy.warning('Final verification failed - PR may have issues')
+          );
+        }
       }
 
       console.log(

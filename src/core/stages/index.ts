@@ -12,5 +12,6 @@ export * from './base-stage';
 export { InvestigationStage } from './investigation.stage';
 export { AnalysisStage } from './analysis.stage';
 export { ImplementationStage } from './implementation.stage';
+export { VerificationStage } from './verification.stage';
 export { ReviewStage } from './review.stage';
 export { FixesStage } from './fixes.stage';

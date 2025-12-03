@@ -116,6 +116,30 @@ export interface FixResult extends BaseStageResult {
   issuesFixed?: number;
 }
 
+/**
+ * Result from verification stage (build/test/lint)
+ */
+export interface VerificationResult extends BaseStageResult {
+  /** Whether the build passed */
+  buildPassed?: boolean;
+  /** Whether all tests passed */
+  testsPassed?: boolean;
+  /** Whether linting passed */
+  lintPassed?: boolean;
+  /** Total number of tests run */
+  testsRun?: number;
+  /** Number of tests that failed */
+  testsFailed?: number;
+  /** Number of fix attempts made */
+  fixAttempts?: number;
+  /** Path to verification log file */
+  logFile?: string;
+  /** Build error output (if failed) */
+  buildError?: string;
+  /** Test error output (if failed) */
+  testError?: string;
+}
+
 // ============================================
 // STAGE METADATA
 // ============================================
