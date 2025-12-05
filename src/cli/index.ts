@@ -9,9 +9,7 @@ import { startCommand } from './commands/start';
 import { statusCommand } from './commands/status';
 import { configCommand } from './commands/config';
 import { projectsCommand } from './commands/projects';
-
-// Read version from package.json at runtime
-const pkg = require('../../package.json');
+import pkg from '../../package.json';
 
 export function createCLI(): Command {
   const program = new Command();
