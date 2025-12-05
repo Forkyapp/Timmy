@@ -3,17 +3,9 @@
  */
 
 import { Command } from 'commander';
-import path from 'path';
-import os from 'os';
 import fs from 'fs';
 import { timmy, colors } from '@/shared/ui';
-
-function getConfigDir(): string {
-  return process.env.TIMMY_CONFIG_DIR ||
-    (process.env.XDG_CONFIG_HOME
-      ? path.join(process.env.XDG_CONFIG_HOME, 'timmy')
-      : path.join(os.homedir(), '.timmy'));
-}
+import { getConfigPath } from '@/shared/utils/paths.util';
 
 export function configCommand(): Command {
   const cmd = new Command('config')
@@ -49,8 +41,7 @@ export function configCommand(): Command {
 async function listConfig(): Promise<void> {
   console.log(timmy.section('Configuration'));
 
-  const configDir = getConfigDir();
-  const envPath = path.join(configDir, '.env');
+  const envPath = getConfigPath('.env');
 
   if (!fs.existsSync(envPath)) {
     console.log(`\n${colors.yellow}No configuration found.${colors.reset}`);
@@ -79,8 +70,7 @@ async function listConfig(): Promise<void> {
 }
 
 async function getConfig(key: string): Promise<void> {
-  const configDir = getConfigDir();
-  const envPath = path.join(configDir, '.env');
+  const envPath = getConfigPath('.env');
 
   if (!fs.existsSync(envPath)) {
     console.log(`${colors.red}No configuration found.${colors.reset}`);
@@ -103,8 +93,7 @@ async function getConfig(key: string): Promise<void> {
 }
 
 async function setConfig(key: string, value: string): Promise<void> {
-  const configDir = getConfigDir();
-  const envPath = path.join(configDir, '.env');
+  const envPath = getConfigPath('.env');
 
   if (!fs.existsSync(envPath)) {
     console.log(`${colors.red}No configuration found.${colors.reset}`);
@@ -134,8 +123,7 @@ async function setConfig(key: string, value: string): Promise<void> {
 }
 
 async function showPath(): Promise<void> {
-  const configDir = getConfigDir();
-  console.log(path.join(configDir, '.env'));
+  console.log(getConfigPath('.env'));
 }
 
 function maskSensitive(key: string, value: string): string {

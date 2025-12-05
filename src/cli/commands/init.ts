@@ -8,21 +8,11 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { timmy, colors } from '@/shared/ui';
-
-// Note: These path functions will be provided by Plan A
-// For now, define simple versions that will be replaced during merge
-function getConfigDir(): string {
-  return process.env.TIMMY_CONFIG_DIR ||
-    (process.env.XDG_CONFIG_HOME
-      ? path.join(process.env.XDG_CONFIG_HOME, 'timmy')
-      : path.join(os.homedir(), '.timmy'));
-}
-
-function ensureDir(dir: string): void {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
+import {
+  getConfigDir,
+  ensureDirectories,
+  getConfigPath,
+} from '@/shared/utils/paths.util';
 
 interface SetupAnswers {
   clickupApiKey: string;
@@ -51,15 +41,11 @@ export async function runInitWizard(options: { force?: boolean } = {}): Promise<
   console.log(timmy.section('Timmy Setup Wizard'));
   console.log(`\nConfiguration will be saved to: ${colors.cyan}${configDir}${colors.reset}\n`);
 
-  // Ensure config directory exists
-  ensureDir(configDir);
-  ensureDir(path.join(configDir, 'data'));
-  ensureDir(path.join(configDir, 'data', 'cache'));
-  ensureDir(path.join(configDir, 'data', 'state'));
-  ensureDir(path.join(configDir, 'data', 'tracking'));
+  // Ensure all required directories exist
+  ensureDirectories();
 
   // Check if config already exists
-  const envPath = path.join(configDir, '.env');
+  const envPath = getConfigPath('.env');
   if (fs.existsSync(envPath) && !options.force) {
     const { overwrite } = await inquirer.prompt([{
       type: 'confirm',
@@ -163,17 +149,17 @@ export async function runInitWizard(options: { force?: boolean } = {}): Promise<
   fs.writeFileSync(envPath, envContent);
 
   // Generate and save projects.json
-  const projectsPath = path.join(configDir, 'projects.json');
+  const projectsPath = getConfigPath('projects.json');
   const projectsContent = generateProjectsFile(answers);
   fs.writeFileSync(projectsPath, JSON.stringify(projectsContent, null, 2));
 
   // Generate and save workspace.json
-  const workspacePath = path.join(configDir, 'workspace.json');
+  const workspacePath = getConfigPath('workspace.json');
   const workspaceContent = { active: 'default', comment: 'Active project name' };
   fs.writeFileSync(workspacePath, JSON.stringify(workspaceContent, null, 2));
 
   // Create empty data files
-  createDataFiles(configDir);
+  createDataFiles(getConfigDir());
 
   console.log('\n' + timmy.success('Configuration saved successfully!'));
   console.log('\n' + colors.bright + 'Next steps:' + colors.reset);

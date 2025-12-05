@@ -1,0 +1,61 @@
+# Source files (compiled to dist/)
+*.ts
+!*.d.ts
+tsconfig.json
+tsconfig.*.json
+
+# Development files
+.env
+.env.*
+*.log
+.git/
+.github/
+.vscode/
+.idea/
+.context/
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.spec.ts
+jest.config.js
+jest.setup.ts
+coverage/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Documentation (keep README)
+docs/
+CLAUDE.md
+PLAN_*.md
+NPM_PACKAGE_CONVERSION_PLAN.md
+*.md
+!README.md
+!CHANGELOG.md
+
+# Configuration templates (keep data templates)
+templates/context/
+templates/*.md
+templates/README.md
+
+# Runtime data
+data/
+
+# Scripts not needed for users
+scripts/interactive-setup.ts
+scripts/settings.ts
+scripts/switch-project.ts
+scripts/list-projects.ts
+scripts/current-project.ts
+scripts/build-context-index.ts
+scripts/migrate-json-to-sqlite.ts
+
+# Legacy code being migrated
+lib/
+
+# Other
+*.local
+.DS_Store
+Thumbs.db
+node_modules/

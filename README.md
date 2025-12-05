@@ -1,10 +1,59 @@
-# Timmy - Your AI Junior Developer
+# Timmy CLI
 
+[![npm version](https://img.shields.io/npm/v/timmy-cli.svg)](https://www.npmjs.com/package/timmy-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 
+Autonomous task automation: ClickUp to GitHub via AI
+
 Your autonomous AI junior developer that you can chat with on Discord or assign tasks via ClickUp! Mention @Timmy in Discord to discuss bugs/features - he'll ask questions, understand the context, and automatically create tasks. Or create ClickUp tasks manually. Either way, Timmy orchestrates multiple AI services (Gemini, Claude, Codex) to analyze, implement, review, and fix code automatically - just like a real junior developer on your team!
+
+## Quick Start
+
+```bash
+# Install globally
+npm install -g timmy-cli
+
+# Run setup wizard
+timmy init
+
+# Start the automation
+timmy start
+```
+
+## CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `timmy init` | Run the setup wizard |
+| `timmy start` | Start the polling loop |
+| `timmy start -v` | Start with verbose logging |
+| `timmy status` | Show current status |
+| `timmy config list` | Show configuration |
+| `timmy config set KEY VALUE` | Update configuration |
+| `timmy projects list` | List all projects |
+| `timmy projects switch NAME` | Switch active project |
+| `timmy projects add` | Add new project |
+| `timmy --help` | Show all commands |
+
+## Configuration
+
+Configuration is stored in `~/.timmy/`:
+
+```
+~/.timmy/
+├── .env              # API keys and credentials
+├── workspace.json    # Active project
+├── projects.json     # Project configurations
+└── data/             # Runtime data
+```
+
+### Required Credentials
+
+- **ClickUp API Key** - Get from ClickUp Settings > Apps
+- **ClickUp Workspace ID** - Found in your ClickUp URL
+- **GitHub Token** - Personal access token with repo scope
 
 ## How It Works
 
@@ -174,10 +223,34 @@ Your autonomous AI junior developer that you can chat with on Discord or assign 
 
 ## Installation
 
+### Global Installation (Recommended)
+
 ```bash
-git clone https://github.com/kuxala/clickup-bot.git
-cd clickup-bot
+# Install globally from npm
+npm install -g timmy-cli
+
+# Run the setup wizard
+timmy init
+
+# Start Timmy
+timmy start
+```
+
+### Development Setup
+
+```bash
+# Clone and install
+git clone https://github.com/Forkyapp/Timmy.git
+cd Timmy
 npm install
+
+# Run in development mode
+npm run dev
+
+# Run tests
+npm test
+
+# Build
 npm run build
 ```
 
@@ -185,46 +258,50 @@ npm run build
 
 **Interactive Setup (Recommended):**
 ```bash
-npm run init
+timmy init
 ```
 
 This interactive setup will guide you through:
-- GitHub authentication (with browser or token)
 - ClickUp API key configuration
-- Optional OpenAI API (for RAG-based context loading)
-- Optional Discord Bot (for monitoring Discord channels)
+- GitHub authentication
+- Optional Discord Bot configuration
 - Project configuration
 - System settings
 
 **Manual Setup:**
 ```bash
 # 1. Copy the example environment file
-cp .env.example .env
+cp .env.example ~/.timmy/.env
 
 # 2. Edit .env with your credentials
 #    - CLICKUP_API_KEY: Get from https://app.clickup.com/settings/apps
 #    - GITHUB_TOKEN: Create at https://github.com/settings/tokens
-#    - OPENAI_API_KEY: (Optional) From https://platform.openai.com/api-keys
 #    - DISCORD_BOT_TOKEN: (Optional) From https://discord.com/developers/applications
 
 # 3. Configure your projects
-# Edit projects.json with your projects
-nano projects.json
+nano ~/.timmy/projects.json
 
 # 4. Switch to your project
-npm run switch my-project
+timmy projects switch my-project
 ```
 
 ## Usage
 
 ### Starting Timmy
 
-**Standard Mode:**
+**Using CLI (Recommended):**
 ```bash
-npm start
+# Start with default settings
+timmy start
+
+# Start with verbose logging
+timmy start -v
+
+# Check status
+timmy status
 ```
 
-**Interactive Mode:**
+**Development Mode:**
 ```bash
 npm run dev
 ```
@@ -326,9 +403,10 @@ DISCORD_AI_ENABLED=true  # Enable AI Brain
 ### Project Management
 
 ```bash
-npm run projects        # List all projects
-npm run switch <name>   # Switch active project
-npm run current         # Show current project
+timmy projects list           # List all projects
+timmy projects switch <name>  # Switch active project
+timmy projects current        # Show current project
+timmy projects add            # Add a new project
 ```
 
 ### Interactive Commands

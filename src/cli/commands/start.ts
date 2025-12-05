@@ -3,28 +3,19 @@
  */
 
 import { Command } from 'commander';
-import path from 'path';
-import os from 'os';
-import fs from 'fs';
 import { timmy, colors } from '@/shared/ui';
+import {
+  findEnvFile,
+  getLogsDir,
+} from '@/shared/utils/paths.util';
 
 interface StartOptions {
   verbose?: boolean;
   daemon?: boolean;
 }
 
-// Simple config dir check (will be replaced with paths.util during merge)
-function getConfigDir(): string {
-  return process.env.TIMMY_CONFIG_DIR ||
-    (process.env.XDG_CONFIG_HOME
-      ? path.join(process.env.XDG_CONFIG_HOME, 'timmy')
-      : path.join(os.homedir(), '.timmy'));
-}
-
 function isConfigured(): boolean {
-  const envPath = path.join(getConfigDir(), '.env');
-  const localEnv = path.join(process.cwd(), '.env');
-  return fs.existsSync(envPath) || fs.existsSync(localEnv);
+  return findEnvFile() !== null;
 }
 
 export function startCommand(): Command {
@@ -52,7 +43,7 @@ export async function runStart(options: StartOptions = {}): Promise<void> {
 
   if (options.daemon) {
     console.log('Daemon mode: enabled');
-    console.log(timmy.info('Running in background. Logs will be written to ~/.timmy/data/logs/'));
+    console.log(timmy.info(`Running in background. Logs will be written to ${getLogsDir()}`));
     // TODO: Implement proper daemonization
   }
 
@@ -62,7 +53,6 @@ export async function runStart(options: StartOptions = {}): Promise<void> {
   // This dynamically imports to ensure config is loaded after CLI parsing
   try {
     // Try to load main-loop module if it exists (added during merge)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mainLoopPath = '../../main-loop';
     const mainLoop = await import(/* webpackIgnore: true */ mainLoopPath);
     if (mainLoop.startMainLoop) {
@@ -75,7 +65,6 @@ export async function runStart(options: StartOptions = {}): Promise<void> {
 
   // Fallback: run the existing timmy logic
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const timmyPath = '../../../timmy';
     await import(/* webpackIgnore: true */ timmyPath);
     // The main module auto-starts when imported

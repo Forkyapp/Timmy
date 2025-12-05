@@ -3,18 +3,15 @@
  */
 
 import { Command } from 'commander';
-import path from 'path';
-import os from 'os';
 import fs from 'fs';
 import { timmy, colors } from '@/shared/ui';
-
-// Simple config dir (will use paths.util after merge)
-function getConfigDir(): string {
-  return process.env.TIMMY_CONFIG_DIR ||
-    (process.env.XDG_CONFIG_HOME
-      ? path.join(process.env.XDG_CONFIG_HOME, 'timmy')
-      : path.join(os.homedir(), '.timmy'));
-}
+import {
+  getConfigDir,
+  getDataDir,
+  findEnvFile,
+  isDevMode,
+  getDataPath,
+} from '@/shared/utils/paths.util';
 
 export function statusCommand(): Command {
   return new Command('status')
@@ -25,7 +22,7 @@ export function statusCommand(): Command {
 
 export async function runStatus(): Promise<void> {
   const configDir = getConfigDir();
-  const dataDir = path.join(configDir, 'data');
+  const dataDir = getDataDir();
 
   console.log(timmy.section('Timmy Status'));
 
@@ -35,15 +32,13 @@ export async function runStatus(): Promise<void> {
   console.log(`  Data directory: ${dataDir}`);
 
   // Check if configured
-  const envPath = path.join(configDir, '.env');
-  const localEnvPath = path.join(process.cwd(), '.env');
-  const isGlobalConfig = fs.existsSync(envPath);
-  const isLocalConfig = fs.existsSync(localEnvPath);
+  const envFile = findEnvFile();
+  const isLocalConfig = isDevMode();
 
-  if (isGlobalConfig) {
+  if (envFile && !isLocalConfig) {
     console.log(`  Config source: ${colors.green}~/.timmy/.env${colors.reset}`);
   } else if (isLocalConfig) {
-    console.log(`  Config source: ${colors.yellow}./env (local dev)${colors.reset}`);
+    console.log(`  Config source: ${colors.yellow}./.env (local dev)${colors.reset}`);
   } else {
     console.log(`  Config source: ${colors.red}Not configured${colors.reset}`);
     console.log(`\n  Run ${colors.cyan}timmy init${colors.reset} to configure.`);
@@ -69,7 +64,7 @@ export async function runStatus(): Promise<void> {
 
     // === Pipeline Status ===
     console.log('\n' + colors.bright + 'Pipeline:' + colors.reset);
-    const pipelineFile = path.join(dataDir, 'state', 'pipeline-state.json');
+    const pipelineFile = getDataPath('state', 'pipeline-state.json');
     if (fs.existsSync(pipelineFile)) {
       try {
         const pipelines = JSON.parse(fs.readFileSync(pipelineFile, 'utf8'));
@@ -90,7 +85,7 @@ export async function runStatus(): Promise<void> {
 
     // === Cache Status ===
     console.log('\n' + colors.bright + 'Cache:' + colors.reset);
-    const cacheFile = path.join(dataDir, 'cache', 'processed-tasks.json');
+    const cacheFile = getDataPath('cache', 'processed-tasks.json');
     if (fs.existsSync(cacheFile)) {
       try {
         const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
