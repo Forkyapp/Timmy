@@ -3,9 +3,21 @@ import dotenv from 'dotenv';
 import { workspace as workspaceManager } from '../../core/workspace/workspace.service';
 import type { ProjectConfig } from '../../core/workspace/workspace.service';
 import { ValidationError } from '../errors';
+import {
+  getDataDir,
+  findEnvFile,
+  ensureDirectories,
+  isDevMode,
+} from '../utils/paths.util';
 
-// Load .env file for global credentials
-dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env') });
+// Load .env file - supports both dev mode (local .env) and global install (~/.timmy/.env)
+const envPath = findEnvFile();
+if (envPath) {
+  dotenv.config({ path: envPath });
+} else if (!isDevMode()) {
+  // No .env found and not in dev mode - user needs to run init
+  console.warn('Warning: No .env file found. Run `timmy init` to configure.');
+}
 
 /**
  * Validates that all required environment variables are present and non-empty.
@@ -162,12 +174,12 @@ const config: Config = {
     defaultBranch: process.env.AUTO_REPO_DEFAULT_BRANCH || 'main'
   },
   files: {
-    cacheFile: path.join(__dirname, '..', '..', '..', 'data', 'cache', 'processed-tasks.json'),
-    queueFile: path.join(__dirname, '..', '..', '..', 'data', 'state', 'task-queue.json'),
-    prTrackingFile: path.join(__dirname, '..', '..', '..', 'data', 'tracking', 'pr-tracking.json'),
-    pipelineFile: path.join(__dirname, '..', '..', '..', 'data', 'state', 'pipeline-state.json'),
-    featuresDir: path.join(__dirname, '..', '..', '..', 'docs', 'features'),
-    discordMessagesFile: path.join(__dirname, '..', '..', '..', 'data', 'discord', 'processed-messages.json'),
+    cacheFile: path.join(getDataDir(), 'cache', 'processed-tasks.json'),
+    queueFile: path.join(getDataDir(), 'state', 'task-queue.json'),
+    prTrackingFile: path.join(getDataDir(), 'tracking', 'pr-tracking.json'),
+    pipelineFile: path.join(getDataDir(), 'state', 'pipeline-state.json'),
+    featuresDir: path.join(getDataDir(), 'features'),
+    discordMessagesFile: path.join(getDataDir(), 'discord', 'processed-messages.json'),
   },
   prTracking: {
     checkIntervalMs: 30000,
@@ -212,3 +224,4 @@ function resolveRepoConfig(): RepositoryConfig {
 
 export default config;
 export { resolveRepoConfig, validateRequiredEnvVars, Config, RepositoryConfig };
+export { ensureDirectories } from '../utils/paths.util';
