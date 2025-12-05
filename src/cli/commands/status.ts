@@ -3,7 +3,6 @@
  */
 
 import { Command } from 'commander';
-import path from 'path';
 import fs from 'fs';
 import { timmy, colors } from '@/shared/ui';
 import {

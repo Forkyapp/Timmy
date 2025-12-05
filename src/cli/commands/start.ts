@@ -53,7 +53,6 @@ export async function runStart(options: StartOptions = {}): Promise<void> {
   // This dynamically imports to ensure config is loaded after CLI parsing
   try {
     // Try to load main-loop module if it exists (added during merge)
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mainLoopPath = '../../main-loop';
     const mainLoop = await import(/* webpackIgnore: true */ mainLoopPath);
     if (mainLoop.startMainLoop) {
@@ -66,7 +65,6 @@ export async function runStart(options: StartOptions = {}): Promise<void> {
 
   // Fallback: run the existing timmy logic
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const timmyPath = '../../../timmy';
     await import(/* webpackIgnore: true */ timmyPath);
     // The main module auto-starts when imported
