@@ -1,15 +1,24 @@
 {
-  "name": "timmy-task-automation",
-  "version": "1.0.0",
-  "description": "Timmy autonomous task automation system",
+  "name": "timmy-cli",
+  "version": "2.0.0",
+  "description": "Autonomous task automation: ClickUp to GitHub via AI",
   "main": "dist/timmy.js",
+  "bin": {
+    "timmy": "dist/timmy.js"
+  },
+  "files": [
+    "dist/",
+    "templates/data/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "init": "ts-node scripts/interactive-setup.ts",
     "settings": "ts-node scripts/settings.ts",
     "setup": "bash scripts/setup.sh",
     "build": "tsc && tsc-alias && cp src/infrastructure/storage/schema.sql dist/src/infrastructure/storage/schema.sql",
     "start": "npm run build && NODE_NO_WARNINGS=1 node dist/timmy.js",
-    "dev": "ts-node timmy.ts",
+    "dev": "ts-node -r tsconfig-paths/register timmy.ts",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "lint": "eslint . --ext .ts",
@@ -20,8 +29,32 @@
     "projects": "ts-node scripts/list-projects.ts",
     "current": "ts-node scripts/current-project.ts",
     "build:context-index": "ts-node scripts/build-context-index.ts",
-    "migrate:json-to-sqlite": "ts-node scripts/migrate-json-to-sqlite.ts"
+    "migrate:json-to-sqlite": "ts-node scripts/migrate-json-to-sqlite.ts",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "cli",
+    "automation",
+    "clickup",
+    "github",
+    "ai",
+    "claude",
+    "task-management",
+    "devtools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Forkyapp/Timmy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Forkyapp/Timmy/issues"
+  },
+  "homepage": "https://github.com/Forkyapp/Timmy#readme",
+  "author": "Forkyapp",
+  "license": "MIT",
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "axios": "^1.6.0",

@@ -4,17 +4,10 @@
 
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import path from 'path';
 import os from 'os';
 import fs from 'fs';
 import { timmy, colors } from '@/shared/ui';
-
-function getConfigDir(): string {
-  return process.env.TIMMY_CONFIG_DIR ||
-    (process.env.XDG_CONFIG_HOME
-      ? path.join(process.env.XDG_CONFIG_HOME, 'timmy')
-      : path.join(os.homedir(), '.timmy'));
-}
+import { getConfigPath } from '@/shared/utils/paths.util';
 
 interface Project {
   name: string;
@@ -73,8 +66,7 @@ export function projectsCommand(): Command {
 }
 
 function loadProjects(): ProjectsFile {
-  const configDir = getConfigDir();
-  const projectsPath = path.join(configDir, 'projects.json');
+  const projectsPath = getConfigPath('projects.json');
 
   if (!fs.existsSync(projectsPath)) {
     return { projects: {} };
@@ -84,14 +76,12 @@ function loadProjects(): ProjectsFile {
 }
 
 function saveProjects(data: ProjectsFile): void {
-  const configDir = getConfigDir();
-  const projectsPath = path.join(configDir, 'projects.json');
+  const projectsPath = getConfigPath('projects.json');
   fs.writeFileSync(projectsPath, JSON.stringify(data, null, 2));
 }
 
 function loadWorkspace(): WorkspaceFile {
-  const configDir = getConfigDir();
-  const workspacePath = path.join(configDir, 'workspace.json');
+  const workspacePath = getConfigPath('workspace.json');
 
   if (!fs.existsSync(workspacePath)) {
     return { active: 'default' };
@@ -101,8 +91,7 @@ function loadWorkspace(): WorkspaceFile {
 }
 
 function saveWorkspace(data: WorkspaceFile): void {
-  const configDir = getConfigDir();
-  const workspacePath = path.join(configDir, 'workspace.json');
+  const workspacePath = getConfigPath('workspace.json');
   fs.writeFileSync(workspacePath, JSON.stringify(data, null, 2));
 }
 

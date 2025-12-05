@@ -3,28 +3,19 @@
  */
 
 import { Command } from 'commander';
-import path from 'path';
-import os from 'os';
-import fs from 'fs';
 import { timmy, colors } from '@/shared/ui';
+import {
+  findEnvFile,
+  getLogsDir,
+} from '@/shared/utils/paths.util';
 
 interface StartOptions {
   verbose?: boolean;
   daemon?: boolean;
 }
 
-// Simple config dir check (will be replaced with paths.util during merge)
-function getConfigDir(): string {
-  return process.env.TIMMY_CONFIG_DIR ||
-    (process.env.XDG_CONFIG_HOME
-      ? path.join(process.env.XDG_CONFIG_HOME, 'timmy')
-      : path.join(os.homedir(), '.timmy'));
-}
-
 function isConfigured(): boolean {
-  const envPath = path.join(getConfigDir(), '.env');
-  const localEnv = path.join(process.cwd(), '.env');
-  return fs.existsSync(envPath) || fs.existsSync(localEnv);
+  return findEnvFile() !== null;
 }
 
 export function startCommand(): Command {
@@ -52,7 +43,7 @@ export async function runStart(options: StartOptions = {}): Promise<void> {
 
   if (options.daemon) {
     console.log('Daemon mode: enabled');
-    console.log(timmy.info('Running in background. Logs will be written to ~/.timmy/data/logs/'));
+    console.log(timmy.info(`Running in background. Logs will be written to ${getLogsDir()}`));
     // TODO: Implement proper daemonization
   }
 
