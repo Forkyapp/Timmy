@@ -1,6 +1,6 @@
 import fs from 'fs';
-import path from 'path';
 import { timmy, colors } from '../../shared/ui';
+import { findWorkspaceFile, findProjectsFile, getConfigPath } from '../../shared/utils/paths.util';
 
 interface WorkspaceConfig {
   active?: string;
@@ -32,15 +32,26 @@ interface ProjectsConfig {
   };
 }
 
-// Use process.cwd() to ensure we're always looking in the project root, not dist/lib
-const workspaceFile = path.join(process.cwd(), 'workspace.json');
-const projectsFile = path.join(process.cwd(), 'projects.json');
+/**
+ * Get the workspace file path - finds existing file or defaults to config dir
+ */
+function getWorkspaceFilePath(): string {
+  return findWorkspaceFile() || getConfigPath('workspace.json');
+}
+
+/**
+ * Get the projects file path - finds existing file or defaults to config dir
+ */
+function getProjectsFilePath(): string {
+  return findProjectsFile() || getConfigPath('projects.json');
+}
 
 export const workspace = {
   /**
    * Load workspace configuration
    */
   loadWorkspace(): WorkspaceConfig | null {
+    const workspaceFile = getWorkspaceFilePath();
     try {
       if (fs.existsSync(workspaceFile)) {
         const content = fs.readFileSync(workspaceFile, 'utf8');
@@ -60,6 +71,7 @@ export const workspace = {
    * Save workspace configuration
    */
   saveWorkspace(config: WorkspaceConfig): void {
+    const workspaceFile = getWorkspaceFilePath();
     try {
       fs.writeFileSync(workspaceFile, JSON.stringify(config, null, 2));
     } catch (error) {
@@ -71,6 +83,7 @@ export const workspace = {
    * Load projects configuration
    */
   loadProjects(): ProjectsConfig | null {
+    const projectsFile = getProjectsFilePath();
     try {
       if (fs.existsSync(projectsFile)) {
         return JSON.parse(fs.readFileSync(projectsFile, 'utf8'));

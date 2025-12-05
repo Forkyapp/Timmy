@@ -3,6 +3,7 @@
  * Re-exports all utility functions
  */
 
+export * from './paths.util';
 export * from './retry.util';
 export * from './logger.util';
 export * from './validation.util';
