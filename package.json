@@ -26,13 +26,16 @@
     "@types/better-sqlite3": "^7.6.13",
     "axios": "^1.6.0",
     "better-sqlite3": "^12.4.1",
+    "commander": "^12.1.0",
     "discord.js": "^14.24.2",
     "dotenv": "^16.3.1",
+    "inquirer": "^9.2.23",
     "openai": "^6.9.0",
     "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/inquirer": "^9.0.7",
     "@types/jest": "^29.5.14",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
