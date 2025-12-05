@@ -6,7 +6,6 @@ import { ValidationError } from '../errors';
 import {
   getDataDir,
   findEnvFile,
-  ensureDirectories,
   isDevMode,
 } from '../utils/paths.util';
 
