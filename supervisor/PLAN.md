@@ -36,6 +36,7 @@ A supervisory AI agent that monitors and controls Timmy's multi-AI pipeline. Whe
 | 04 | Supervisor Core | The decision-making brain |
 | 05 | Pipeline Integration | Connect supervisor to Timmy |
 | 06 | Monitoring | Observe, log, and control |
+| 07 | Discord Integration | Remote control and notifications via Discord |
 
 ## Success Definition
 
@@ -46,3 +47,5 @@ When complete, we will have:
 - [ ] `docker stop` kills everything instantly
 - [ ] All actions are logged
 - [ ] Human can pause/resume/abort anytime
+- [ ] Discord commands control supervisor remotely
+- [ ] Notifications posted to Discord in real-time
