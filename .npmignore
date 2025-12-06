@@ -54,6 +54,11 @@ scripts/migrate-json-to-sqlite.ts
 # Legacy code being migrated
 lib/
 
+# Temporary directories (worktrees, clones, etc.)
+codex-review-clone/
+*-worktree/
+.timmy-worktrees/
+
 # Other
 *.local
 .DS_Store

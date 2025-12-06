@@ -76,3 +76,9 @@ local/
 *.db
 *.db-shm
 *.db-wal
+
+# Temporary directories (worktrees, clones, etc.)
+codex-review-clone/
+codex-task-worktree
+*-worktree/
+.timmy-worktrees/

@@ -37,6 +37,9 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "codex-review-clone",
+    "*-worktree",
+    ".timmy-worktrees"
   ]
 }

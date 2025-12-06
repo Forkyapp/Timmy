@@ -96,11 +96,21 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/dist/",
-      "/tmp/"
+      "/tmp/",
+      "/codex-review-clone/",
+      "/*-worktree/",
+      "/.timmy-worktrees/"
     ],
     "testMatch": [
       "**/__tests__/**/*.test.ts",
       "**/*.test.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      "/codex-review-clone/",
+      "/*-worktree/",
+      "/.timmy-worktrees/"
     ],
     "collectCoverageFrom": [
       "src/**/*.ts",
