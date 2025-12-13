@@ -14,7 +14,7 @@ export function isVerbose(): boolean {
   return verboseMode;
 }
 
-export function logVerbose(message: string, ...args: any[]): void {
+export function logVerbose(message: string, ...args: unknown[]): void {
   if (verboseMode) {
     console.log(message, ...args);
   }

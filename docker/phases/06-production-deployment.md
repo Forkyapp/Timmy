@@ -543,12 +543,15 @@ volumes:
 - [ ] CI/CD pipeline builds and pushes images
 - [ ] Production deployment runs stable
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **Registry?** GitHub Container Registry, Docker Hub, or private?
-2. **Blue-green deployment?** Strategy for zero-downtime updates?
-3. **Monitoring?** Prometheus metrics, logs aggregation?
-4. **Scaling?** Horizontal scaling with multiple instances?
+1. **Registry?** → **GitHub Container Registry (ghcr.io).** Free for public repos, integrated with GitHub Actions, supports multi-arch images.
+
+2. **Blue-green deployment?** → **Future consideration.** Current single-container setup. For zero-downtime, use container orchestrator (K8s) with rolling updates.
+
+3. **Monitoring?** → **Docker health checks + JSON logs.** Built-in health checks report to Docker. Logs can be collected by external systems (ELK, Datadog, etc.).
+
+4. **Scaling?** → **Not implemented.** Timmy processes tasks sequentially. Horizontal scaling would require queue coordination (Redis, etc.).
 
 ---
 

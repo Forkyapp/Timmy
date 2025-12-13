@@ -324,10 +324,12 @@ export function handleCommand(
 
       console.log(timmy.processing('Removing all Timmy worktrees...'));
 
+      // Store repoPath in a const to avoid non-null assertions
+      const repoPath = config.github.repoPath;
       import('@/core/workspace/worktree-manager.service').then(async ({ getWorktreeManager }) => {
         try {
-          const worktreeManager = getWorktreeManager(config.github.repoPath!);
-          await worktreeManager.cleanupStaleWorktrees(config.github.repoPath!, 0); // 0 hours = remove all
+          const worktreeManager = getWorktreeManager(repoPath);
+          await worktreeManager.cleanupStaleWorktrees(repoPath, 0); // 0 hours = remove all
           console.log(timmy.success('✓ All worktrees removed'));
         } catch (error) {
           console.log(timmy.error(`Failed to clean worktrees: ${(error as Error).message}`));

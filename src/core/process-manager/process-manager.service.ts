@@ -45,7 +45,10 @@ function registerProcess(taskId: string, processInfo: ProcessInfo): ProcessInfo 
     status: 'running'
   };
 
-  processes.get(taskId)!.push(entry);
+  const taskProcesses = processes.get(taskId);
+  if (taskProcesses) {
+    taskProcesses.push(entry);
+  }
 
   return entry;
 }
