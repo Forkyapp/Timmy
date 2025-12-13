@@ -417,12 +417,15 @@ docker compose ps
 - [ ] Logs captured and rotated
 - [ ] Environment variables load correctly
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **Compose version?** v2 (docker compose) vs v1 (docker-compose)?
-2. **Multiple replicas?** Scale Timmy horizontally?
-3. **Swarm/K8s?** Future migration to orchestrators?
-4. **Secrets management?** Docker secrets vs .env files?
+1. **Compose version?** → **v2 (`docker compose`).** Modern, built into Docker Desktop, better performance.
+
+2. **Multiple replicas?** → **Not needed.** Timmy processes tasks sequentially. Scaling would require queue coordination.
+
+3. **Swarm/K8s?** → **Future consideration.** Current setup works for single-node deployment. K8s manifests can be derived from compose files later.
+
+4. **Secrets management?** → **`.env` files for now.** Simple and works. Docker secrets can be added for production if needed.
 
 ---
 

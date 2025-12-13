@@ -1,0 +1,142 @@
+# =========================================
+# Timmy Docker Compose - Development
+# Phase 05: Compose Orchestration
+# =========================================
+# Usage:
+#   docker compose up -d            # Start in background
+#   docker compose logs -f          # Watch logs
+#   docker compose down             # Stop everything
+#   docker compose ps               # Check status
+#
+# For production, use:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# =========================================
+
+services:
+  timmy:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: timmy-dev
+
+    # =========================================
+    # Phase 04: Volume Mounts (Clone-Based)
+    # =========================================
+    # Repos are CLONED inside container, not mounted from host.
+    # This provides complete isolation and eliminates worktree complexity.
+    volumes:
+      # Source code - changes reflect immediately (hot reload)
+      - .:/app:rw
+
+      # Dependencies - use container's node_modules, not host's
+      - node_modules:/app/node_modules
+
+      # Workspace - repos are cloned here (named volume, isolated from host)
+      - workspace:/workspace
+
+      # Git cache - speeds up subsequent clones (shared git objects)
+      - git-cache:/home/timmy/.git-cache
+
+      # Persistent data - cache, queue, pipeline state
+      - ./data:/app/data:rw
+
+      # Logs - persist across restarts
+      - ./logs:/app/logs:rw
+
+      # Git credentials - for private repo access (read-only)
+      - ~/.ssh:/home/timmy/.ssh:ro
+      - ~/.gitconfig:/home/timmy/.gitconfig:ro
+
+    # Environment configuration
+    # Files are optional - won't fail if they don't exist
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.development
+        required: false
+
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      # Faster polling for development (30s instead of 60s)
+      # - POLL_INTERVAL_MS=30000
+
+      # =========================================
+      # Phase 03: AI CLI Configuration
+      # =========================================
+      # API Keys (loaded from .env file)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+
+      # CLI wrapper paths (with timeouts and error handling)
+      - CLAUDE_CLI_PATH=/app/scripts/cli/claude-wrapper.sh
+      - GEMINI_CLI_PATH=/app/scripts/cli/gemini-wrapper.sh
+      - CODEX_CLI_PATH=/app/scripts/cli/codex-wrapper.sh
+
+      # CLI timeouts in seconds
+      - CLAUDE_TIMEOUT_SECONDS=600
+      - GEMINI_TIMEOUT_SECONDS=300
+      - CODEX_TIMEOUT_SECONDS=300
+
+      # =========================================
+      # Phase 04: Volume Paths
+      # =========================================
+      - WORKSPACE_PATH=/workspace
+      - DATA_PATH=/app/data
+      - CONFIG_PATH=/app/config
+      - LOG_PATH=/app/logs
+
+    # Expose debug port for VS Code
+    ports:
+      - "9229:9229"
+
+    # Command is defined in Dockerfile.dev
+    # Entrypoint fixes permissions, then runs: npm install && nodemon
+
+    # Keep container running and allow interactive input
+    tty: true
+    stdin_open: true
+
+    # Restart policy - don't restart on failure during development
+    # (we want to see errors, not hide them)
+    restart: "no"
+
+    # =========================================
+    # Phase 05: Health, Logging, Network
+    # =========================================
+    # Health check - verifies Timmy is responsive
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Logging - prevent unbounded disk usage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network - isolated from other containers
+    networks:
+      - timmy-network
+
+# Networks
+networks:
+  timmy-network:
+    driver: bridge
+
+# Named volumes
+volumes:
+  # Persists node_modules across container restarts
+  node_modules:
+
+  # Workspace for cloned repositories (isolated from host)
+  workspace:
+
+  # Git cache for faster clones (shared objects)
+  git-cache:

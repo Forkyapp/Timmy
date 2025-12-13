@@ -298,12 +298,50 @@ GITHUB_REPO_PATH=/workspace/my-app
 - [ ] Read-only volumes cannot be written
 - [ ] Proper file permissions on all volumes
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **Volume driver?** Local or network storage for production?
-2. **Backup strategy?** How to backup data volume?
-3. **Multi-workspace?** Multiple workspace paths for different projects?
-4. **Windows compatibility?** Path differences on Windows hosts?
+1. **Volume driver?** → **Local volumes.** Using Docker named volumes for workspace and git-cache. Network storage can be considered for production clustering.
+
+2. **Backup strategy?** → **Data volume only.** The `./data` directory is mounted from host and can be backed up normally. Workspace is ephemeral (cloned repos).
+
+3. **Multi-workspace?** → **Clone-based approach.** Instead of mounting multiple host paths, repos are cloned into a single `/workspace` volume. No worktrees needed.
+
+4. **Windows compatibility?** → **Named volumes.** Using named volumes (`workspace:`, `git-cache:`) instead of host paths avoids Windows path issues.
+
+---
+
+## Implementation Decision: Clone-Based Workflow
+
+**We chose to CLONE repositories inside the container instead of mounting host repos.**
+
+### Why Clone Instead of Mount?
+
+1. **Complete isolation** - Container can't break host repo
+2. **No worktrees needed** - Eliminates orchestration complexity
+3. **Simpler workflow** - Clone → branch → work → push → done
+4. **Stateless containers** - Each task starts fresh
+5. **Matches CI/CD patterns** - Same approach pipelines use
+
+### Volume Strategy
+
+```
+Named Volumes (isolated from host):
+  - workspace:/workspace       # Cloned repos live here
+  - git-cache:/home/timmy/.git-cache  # Speeds up clones
+
+Host Mounts:
+  - ./data:/app/data          # Persistent state
+  - ./logs:/app/logs          # Log files
+  - ~/.ssh (read-only)        # Git authentication
+```
+
+### Git Helper Functions
+
+Available via `source /app/scripts/git-helpers.sh`:
+- `clone_repo <url> [name]` - Clone with caching
+- `prepare_branch <repo> <branch>` - Set up feature branch
+- `cleanup_repo <name>` - Remove cloned repo
+- `list_repos` - Show all cloned repos
 
 ---
 

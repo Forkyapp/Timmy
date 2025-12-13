@@ -1,0 +1,72 @@
+# =========================================
+# Timmy Docker Compose - Production Overrides
+# Phase 06: Production Deployment
+# =========================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Or use the helper script:
+#   ./docker/scripts/docker-start.sh prod
+# =========================================
+
+services:
+  timmy:
+    # Use production Dockerfile (multi-stage build)
+    build:
+      dockerfile: docker/Dockerfile.prod
+
+    container_name: timmy-prod
+
+    # Production environment
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+
+    # Remove debug port in production
+    ports: []
+
+    # Disable interactive mode
+    tty: false
+    stdin_open: false
+
+    # Auto-restart on failure
+    restart: unless-stopped
+
+    # Graceful shutdown timeout
+    stop_grace_period: 60s
+
+    # Resource limits - prevent runaway processes
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # =========================================
+    # Security Hardening
+    # =========================================
+    # Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Drop all capabilities (least privilege)
+    cap_drop:
+      - ALL
+
+    # Production health check (uses healthcheck.js)
+    healthcheck:
+      test: ["CMD", "node", "/app/scripts/healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # More aggressive log rotation in production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
