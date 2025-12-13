@@ -14,20 +14,20 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docker/**'
-      - 'src/**'
-      - 'lib/**'
-      - 'timmy.ts'
-      - 'package.json'
-      - 'tsconfig.json'
+      - "docker/**"
+      - "src/**"
+      - "lib/**"
+      - "timmy.ts"
+      - "package.json"
+      - "tsconfig.json"
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       push:
-        description: 'Push to registry'
+        description: "Push to registry"
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 env:
