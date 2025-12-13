@@ -300,8 +300,12 @@ export class PipelineRepository {
     if (!row) return null;
 
     return {
-      ...row,
+      pipelineTaskId: row.pipelineTaskId,
+      geminiAnalysisFile: row.geminiAnalysisFile ?? undefined,
       geminiAnalysisFallback: row.geminiAnalysisFallback === 1,
+      prNumber: row.prNumber ?? undefined,
+      reviewIterations: row.reviewIterations,
+      maxReviewIterations: row.maxReviewIterations,
       branches: row.branches ? JSON.parse(row.branches) : undefined,
       agentExecution: row.agentExecution ? JSON.parse(row.agentExecution) : undefined
     };
