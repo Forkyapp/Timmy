@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* global process, console, setImmediate */
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Production Health Check Script
  * Phase 06: Production Deployment
@@ -9,8 +11,8 @@
  * - Event loop responsiveness (not blocked)
  */
 
-const fs = require('fs');
-const path = require('path');
+import { writeFileSync, unlinkSync } from "fs";
+import { join } from "path";
 
 async function healthCheck() {
   const checks = {
@@ -23,12 +25,12 @@ async function healthCheck() {
 
   // Check 1: Filesystem access
   try {
-    const dataPath = process.env.DATA_PATH || '/app/data';
-    const testFile = path.join(dataPath, '.healthcheck');
+    const dataPath = process.env.DATA_PATH || "/app/data";
+    const testFile = join(dataPath, ".healthcheck");
 
     // Try to write
-    fs.writeFileSync(testFile, Date.now().toString());
-    fs.unlinkSync(testFile);
+    writeFileSync(testFile, Date.now().toString());
+    unlinkSync(testFile);
     checks.filesystem = true;
   } catch (err) {
     errors.push(`Filesystem: ${err.message}`);
@@ -67,9 +69,9 @@ async function healthCheck() {
   const healthy = Object.values(checks).every(Boolean);
 
   if (!healthy) {
-    console.error('Health check FAILED');
-    console.error('Checks:', JSON.stringify(checks, null, 2));
-    console.error('Errors:', errors);
+    console.error("Health check FAILED");
+    console.error("Checks:", JSON.stringify(checks, null, 2));
+    console.error("Errors:", errors);
     process.exit(1);
   }
 
@@ -78,6 +80,6 @@ async function healthCheck() {
 }
 
 healthCheck().catch((err) => {
-  console.error('Health check error:', err);
+  console.error("Health check error:", err);
   process.exit(1);
 });

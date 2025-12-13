@@ -1,77 +1,59 @@
-# Docker Setup Guide
+# Timmy Setup Guide
 
-Get Timmy running in Docker in 5 minutes.
-
-## Prerequisites
-
-- Docker Desktop installed and running
-- API keys for ClickUp, GitHub, and at least one AI service (Anthropic/Google/OpenAI)
-
-## Quick Start
+## Quickest Setup (2 commands)
 
 ```bash
-# 1. Clone and enter
 git clone https://github.com/Forkyapp/Timmy.git && cd Timmy
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your API keys (see Environment Variables below)
-
-# 3. Build and run
-./docker/scripts/build-base.sh
-docker compose up -d
-
-# 4. Check it's working
-docker compose logs -f
+npm run setup    # Interactive setup (handles all auth)
+npm start        # Auto-detects Docker or runs locally
 ```
 
-## Commands
+That's it! `npm start` will:
+1. Check if setup is complete (runs setup if not)
+2. Use Docker if available, otherwise run locally
+3. Build images automatically on first run
+
+## All Commands
+
+| Command | What it does |
+|---------|--------------|
+| `npm run setup` | Interactive setup for all credentials |
+| `npm start` | Smart start (Docker if available, else local) |
+| `npm run start:docker` | Force Docker mode |
+| `npm run start:local` | Force local mode (no Docker) |
+| `npm run docker:logs` | View Docker logs |
+| `npm run docker:down` | Stop Docker containers |
+
+## Alternative: Global Install
 
 ```bash
-# Development
-docker compose up -d          # Start
-docker compose down           # Stop
-docker compose logs -f        # Watch logs
-docker compose restart        # Restart
-docker compose exec timmy bash # Shell access
-
-# Production
-./docker/scripts/docker-start.sh prod
-./docker/scripts/docker-stop.sh
-
-# Maintenance
-docker compose build          # Rebuild after code changes
-docker compose build --no-cache # Full rebuild
-./docker/scripts/docker-stop.sh --clean # Reset everything
+npm install -g timmy-cli
+timmy init     # Setup
+timmy start    # Run from anywhere
 ```
 
-## Environment Variables
+## What Setup Configures
 
-Edit `.env` with these values:
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `CLICKUP_API_KEY` | Yes | ClickUp API token |
-| `CLICKUP_WORKSPACE_ID` | Yes | ClickUp workspace ID |
-| `GITHUB_TOKEN` | Yes | GitHub personal access token |
-| `GITHUB_OWNER` | Yes | GitHub username or org |
-| `GITHUB_REPO` | Yes | Default repository name |
-| `ANTHROPIC_API_KEY` | One of these | For Claude |
-| `GOOGLE_API_KEY` | One of these | For Gemini |
-| `OPENAI_API_KEY` | One of these | For Codex |
-| `POLL_INTERVAL_MS` | No | Task polling interval (default: 60000) |
-| `LOG_LEVEL` | No | Logging verbosity (default: debug) |
+| Service | Auth Method | Required? |
+|---------|-------------|-----------|
+| GitHub | Browser OAuth | Yes |
+| Claude/Gemini/Codex | Browser OAuth | Yes (one AI minimum) |
+| ClickUp | API key | Yes |
+| OpenRouter | API key | Optional |
+| Discord | API key | Optional |
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Container won't start | `docker compose logs timmy` to see errors |
-| Permission denied | `docker compose down && docker volume rm timmy_node_modules && docker compose up -d` |
-| Can't connect to APIs | Verify keys in `.env`, test with `docker compose exec timmy curl -I https://api.github.com` |
+```bash
+# Reset and start fresh
+npm run docker:down
+docker volume prune -f
+npm run setup
+npm start
 
-## Help
+# View what's happening
+npm run docker:logs
 
-- [Phase documentation](./phases/) - Detailed explanations
-- [Architecture overview](./PLAN.md)
-- [GitHub Issues](https://github.com/Forkyapp/Timmy/issues)
+# Run without Docker
+npm run start:local
+```

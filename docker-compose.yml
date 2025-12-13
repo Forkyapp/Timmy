@@ -47,6 +47,13 @@ services:
       - ~/.ssh:/home/timmy/.ssh:ro
       - ~/.gitconfig:/home/timmy/.gitconfig:ro
 
+      # CLI auth directories - browser OAuth credentials (read-only)
+      # These are populated by: ./docker/scripts/setup-auth.sh
+      - ~/.config/gh:/home/timmy/.config/gh:ro
+      - ~/.claude:/home/timmy/.claude:ro
+      - ~/.gemini:/home/timmy/.gemini:ro
+      - ~/.codex:/home/timmy/.codex:ro
+
     # Environment configuration
     # Files are optional - won't fail if they don't exist
     env_file:
@@ -64,7 +71,7 @@ services:
       # =========================================
       # Phase 03: AI CLI Configuration
       # =========================================
-      # API Keys (loaded from .env file)
+      # API Keys (fallback - CLIs prefer browser OAuth from mounted ~/.claude etc.)
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
