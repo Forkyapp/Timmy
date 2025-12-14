@@ -6,22 +6,30 @@
 
 set -e
 
-# Colors
+# =========================================
+# Terminal Colors & Formatting
+# =========================================
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-NC='\033[0m'
+NC='\033[0m'      # No Color
 BOLD='\033[1m'
 DIM='\033[2m'
 
-# Paths
+# =========================================
+# Path Configuration
+# =========================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ENV_FILE="$PROJECT_ROOT/.env"
 
-# Print helpers
+# =========================================
+# UI Helper Functions
+# =========================================
+
+# Print a large header with borders
 print_header() {
     echo ""
     echo -e "${CYAN}${BOLD}═══════════════════════════════════════${NC}"
@@ -30,60 +38,119 @@ print_header() {
     echo ""
 }
 
+# Print a section divider
 print_section() {
     echo ""
     echo -e "${BLUE}${BOLD}▸ $1${NC}"
     echo -e "${DIM}$(printf '─%.0s' {1..40})${NC}"
 }
 
-print_step() { echo -e "${BLUE}${BOLD}[$1]${NC} $2"; }
-print_success() { echo -e "  ${GREEN}✓${NC} $1"; }
-print_error() { echo -e "  ${RED}✗${NC} $1"; }
-print_warning() { echo -e "  ${YELLOW}!${NC} $1"; }
-print_info() { echo -e "  ${CYAN}→${NC} $1"; }
-print_dim() { echo -e "  ${DIM}$1${NC}"; }
+# Print status messages
+print_step() {
+    echo -e "${BLUE}${BOLD}[$1]${NC} $2"
+}
 
-command_exists() { command -v "$1" &> /dev/null; }
+print_success() {
+    echo -e "  ${GREEN}✓${NC} $1"
+}
+
+print_error() {
+    echo -e "  ${RED}✗${NC} $1"
+}
+
+print_warning() {
+    echo -e "  ${YELLOW}!${NC} $1"
+}
+
+print_info() {
+    echo -e "  ${CYAN}→${NC} $1"
+}
+
+print_dim() {
+    echo -e "  ${DIM}$1${NC}"
+}
+
+# Check if command exists
+command_exists() {
+    command -v "$1" &> /dev/null
+}
+
+# =========================================
+# Input Helper Functions
+# =========================================
 
 # Read input with bracketed paste handling
 # Usage: value=$(read_clean "prompt text")
 read_clean() {
     local prompt="$1"
     local input
-    # Disable bracketed paste mode - send to terminal directly, not stdout
+
+    # Disable bracketed paste mode
     printf '\e[?2004l' >/dev/tty
     printf '%s' "$prompt" >/dev/tty
     IFS= read -r input </dev/tty
+
     # Re-enable for other apps
     printf '\e[?2004h' >/dev/tty
-    # Strip any escape sequences and control chars that got through
+
+    # Strip escape sequences and control characters
     printf '%s' "$input" | sed $'s/\x1b\\[[0-9;]*[~a-zA-Z]//g' | tr -d '[:cntrl:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
-# Env file helpers
+# =========================================
+# Environment File Management
+# =========================================
+
+# Ensure .env file exists
 ensure_env_file() {
     if [ ! -f "$ENV_FILE" ]; then
-        [ -f "$PROJECT_ROOT/.env.example" ] && cp "$PROJECT_ROOT/.env.example" "$ENV_FILE" || touch "$ENV_FILE"
+        if [ -f "$PROJECT_ROOT/.env.example" ]; then
+            cp "$PROJECT_ROOT/.env.example" "$ENV_FILE"
+        else
+            touch "$ENV_FILE"
+        fi
     fi
 }
 
+# Set or update environment variable
 set_env_var() {
-    local key="$1" value="$2"
+    local key="$1"
+    local value="$2"
+
     ensure_env_file
+
     if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-        [[ "$OSTYPE" == "darwin"* ]] && sed -i '' "s|^${key}=.*|${key}=${value}|" "$ENV_FILE" || sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+        # Update existing variable (macOS vs Linux compatible)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+        else
+            sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+        fi
     else
+        # Add new variable
         echo "${key}=${value}" >> "$ENV_FILE"
     fi
 }
 
-get_env_var() { grep "^${1}=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2-; }
-
-is_configured() {
-    local val=$(get_env_var "$1")
-    [ -n "$val" ] && [ "$val" != "your_"* ] && [ "$val" != "pk_your"* ] && [ "$val" != "ghp_your"* ] && [ "$val" != "sk-your"* ] && [ "$val" != "sk-or-v1-your"* ]
+# Get environment variable value
+get_env_var() {
+    grep "^${1}=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2-
 }
 
+# Check if variable is properly configured
+is_configured() {
+    local val=$(get_env_var "$1")
+
+    # Check if value exists and is not a placeholder
+    [ -n "$val" ] && \
+    [ "$val" != "your_"* ] && \
+    [ "$val" != "pk_your"* ] && \
+    [ "$val" != "ghp_your"* ] && \
+    [ "$val" != "sk-your"* ] && \
+    [ "$val" != "sk-or-v1-your"* ]
+}
+
+# Prompt to update existing configuration
 prompt_update() {
     local name="$1"
     echo -n "  Update $name? (y/N): "
@@ -98,26 +165,29 @@ prompt_update() {
 setup_github_auth() {
     echo -e "  ${BOLD}GitHub${NC} ${DIM}(for creating PRs)${NC}"
 
+    # Check if GitHub CLI is installed
     if ! command_exists gh; then
-        echo -e "    ${YELLOW}!${NC} GitHub CLI not installed"
-        echo -e "    ${DIM}Install: brew install gh${NC}"
+        print_warning "GitHub CLI not installed"
+        print_dim "Install: brew install gh"
         return 1
     fi
 
+    # Check if already authenticated
     if gh auth status &> /dev/null; then
         local user=$(gh api user --jq '.login' 2>/dev/null || echo "unknown")
-        echo -e "    ${GREEN}✓${NC} Already logged in as ${BOLD}@${user}${NC}"
+        print_success "Already logged in as ${BOLD}@${user}${NC}"
         set_env_var "GITHUB_DEFAULT_USERNAME" "$user"
         return 0
     fi
 
-    echo -e "    ${DIM}Opening browser...${NC}"
+    # Authenticate via browser
+    print_dim "Opening browser..."
     if gh auth login --web --scopes "repo,workflow,read:org"; then
         local user=$(gh api user --jq '.login' 2>/dev/null || echo "unknown")
-        echo -e "    ${GREEN}✓${NC} Logged in as ${BOLD}@${user}${NC}"
+        print_success "Logged in as ${BOLD}@${user}${NC}"
         set_env_var "GITHUB_DEFAULT_USERNAME" "$user"
     else
-        echo -e "    ${RED}✗${NC} GitHub auth failed"
+        print_error "GitHub auth failed"
         return 1
     fi
 }
@@ -126,28 +196,32 @@ setup_claude_auth() {
     echo ""
     echo -e "  ${BOLD}Claude${NC} ${DIM}(AI code implementation)${NC}"
 
+    # Check if Claude CLI is installed
     if ! command_exists claude; then
-        echo -e "    ${YELLOW}!${NC} Claude CLI not installed"
-        echo -e "    ${DIM}Install: npm install -g @anthropic-ai/claude-code${NC}"
+        print_warning "Claude CLI not installed"
+        print_dim "Install: npm install -g @anthropic-ai/claude-code"
         return 1
     fi
 
+    # Check if already authenticated
     if [ -d "$HOME/.claude" ] && [ -f "$HOME/.claude/.credentials.json" ]; then
-        echo -e "    ${GREEN}✓${NC} Already authenticated"
+        print_success "Already authenticated"
         return 0
     fi
 
-    echo -e "    ${DIM}This will open Claude CLI.${NC}"
-    echo -e "    ${DIM}Type ${NC}${BOLD}/login${NC}${DIM} and authorize in browser.${NC}"
+    # Interactive authentication
+    print_dim "This will open Claude CLI."
+    print_dim "Type ${NC}${BOLD}/login${NC}${DIM} and authorize in browser.${NC}"
     echo ""
     echo -n "    Press Enter to continue..."
     read -r
     claude
 
+    # Verify authentication
     if [ -f "$HOME/.claude/.credentials.json" ]; then
-        echo -e "    ${GREEN}✓${NC} Authenticated"
+        print_success "Authenticated"
     else
-        echo -e "    ${YELLOW}!${NC} Run 'claude' → '/login' manually if needed"
+        print_warning "Run 'claude' → '/login' manually if needed"
     fi
 }
 
@@ -155,28 +229,32 @@ setup_gemini_auth() {
     echo ""
     echo -e "  ${BOLD}Gemini${NC} ${DIM}(AI task analysis)${NC}"
 
+    # Check if Gemini CLI is installed
     if ! command_exists gemini; then
-        echo -e "    ${YELLOW}!${NC} Gemini CLI not installed"
-        echo -e "    ${DIM}Install: npm install -g @anthropic-ai/gemini-cli${NC}"
+        print_warning "Gemini CLI not installed"
+        print_dim "Install: npm install -g @anthropic-ai/gemini-cli"
         return 1
     fi
 
+    # Check if already authenticated
     if [ -d "$HOME/.gemini" ]; then
-        echo -e "    ${GREEN}✓${NC} Already authenticated"
+        print_success "Already authenticated"
         return 0
     fi
 
-    echo -e "    ${DIM}This will open Gemini CLI.${NC}"
-    echo -e "    ${DIM}Select ${NC}${BOLD}Login with Google${NC}${DIM} when prompted.${NC}"
+    # Interactive authentication
+    print_dim "This will open Gemini CLI."
+    print_dim "Select ${NC}${BOLD}Login with Google${NC}${DIM} when prompted.${NC}"
     echo ""
     echo -n "    Press Enter to continue..."
     read -r
     gemini
 
+    # Verify authentication
     if [ -d "$HOME/.gemini" ]; then
-        echo -e "    ${GREEN}✓${NC} Authenticated"
+        print_success "Authenticated"
     else
-        echo -e "    ${YELLOW}!${NC} Run 'gemini' manually if needed"
+        print_warning "Run 'gemini' manually if needed"
     fi
 }
 
@@ -184,24 +262,28 @@ setup_codex_auth() {
     echo ""
     echo -e "  ${BOLD}Codex${NC} ${DIM}(AI code review)${NC}"
 
+    # Check if Codex CLI is installed
     if ! command_exists codex; then
-        echo -e "    ${YELLOW}!${NC} Codex CLI not installed"
-        echo -e "    ${DIM}Install: npm install -g @openai/codex${NC}"
+        print_warning "Codex CLI not installed"
+        print_dim "Install: npm install -g @openai/codex"
         return 1
     fi
 
+    # Check if already authenticated
     if codex login status &>/dev/null; then
-        echo -e "    ${GREEN}✓${NC} Already authenticated"
+        print_success "Already authenticated"
         return 0
     fi
 
-    echo -e "    ${DIM}Opening browser for ChatGPT login...${NC}"
+    # Authenticate via browser
+    print_dim "Opening browser for ChatGPT login..."
     codex login
 
+    # Verify authentication
     if codex login status &>/dev/null; then
-        echo -e "    ${GREEN}✓${NC} Authenticated"
+        print_success "Authenticated"
     else
-        echo -e "    ${YELLOW}!${NC} Run 'codex login' manually if needed"
+        print_warning "Run 'codex login' manually if needed"
     fi
 }
 
@@ -216,13 +298,14 @@ setup_clickup() {
     echo -e "${CYAN}${BOLD}│  ${DIM}Required - This is where Timmy gets tasks from${NC}${CYAN}${BOLD}             │${NC}"
     echo -e "${CYAN}${BOLD}└─────────────────────────────────────────────────────────────┘${NC}"
 
+    # Check if already configured
     if is_configured "CLICKUP_API_KEY" && is_configured "CLICKUP_WORKSPACE_ID"; then
         print_success "Already configured"
         prompt_update "ClickUp settings" || return 0
     fi
 
     echo ""
-    echo -e "  ${DIM}Opening ClickUp settings...${NC}"
+    print_dim "Opening ClickUp settings..."
 
     # Auto-open ClickUp Apps settings
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -231,6 +314,7 @@ setup_clickup() {
         xdg-open "https://app.clickup.com/settings/apps" 2>/dev/null
     fi
 
+    # Instructions for getting API key
     echo ""
     echo -e "  ${BOLD}To get your API key:${NC}"
     echo ""
@@ -238,6 +322,8 @@ setup_clickup() {
     echo "  2. Click ${BOLD}[Generate]${NC} (or [Regenerate] if you have one)"
     echo "  3. Click ${BOLD}[Copy]${NC}"
     echo ""
+
+    # Get API key from user
     api_key=$(read_clean "  Paste API key here: ")
 
     if [ -z "$api_key" ]; then
@@ -245,9 +331,11 @@ setup_clickup() {
         return 1
     fi
 
-    # Validate and get user info
+    # Validate API key and get user info
     print_info "Validating API key..."
-    local user_response=$(curl -s -H "Authorization: $api_key" https://api.clickup.com/api/v2/user 2>/dev/null)
+    local user_response=$(curl -s -H "Authorization: $api_key" \
+        https://api.clickup.com/api/v2/user 2>/dev/null)
+
     local user_id=$(echo "$user_response" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
     local username=$(echo "$user_response" | grep -o '"username":"[^"]*"' | head -1 | cut -d'"' -f4)
 
@@ -260,12 +348,13 @@ setup_clickup() {
         return 1
     fi
 
-    # Fetch workspaces
+    # Fetch and select workspace
     echo ""
     print_info "Fetching your workspaces..."
-    local teams_response=$(curl -s -H "Authorization: $api_key" https://api.clickup.com/api/v2/team 2>/dev/null)
+    local teams_response=$(curl -s -H "Authorization: $api_key" \
+        https://api.clickup.com/api/v2/team 2>/dev/null)
 
-    # Parse workspaces - use jq if available, otherwise use careful grep
+    # Parse workspaces
     local workspace_ids=()
     local workspace_names=()
 
@@ -274,28 +363,33 @@ setup_clickup() {
         while IFS= read -r id; do
             workspace_ids+=("$id")
         done < <(echo "$teams_response" | jq -r '.teams[].id')
+
         while IFS= read -r name; do
             workspace_names+=("$name")
         done < <(echo "$teams_response" | jq -r '.teams[].name')
     else
-        # Fallback: extract id/name pairs that appear at start of team objects
-        # Team objects start with {"id":"...","name":"..." pattern
+        # Fallback: extract id/name pairs
         while IFS='|' read -r id name; do
             [ -n "$id" ] && workspace_ids+=("$id")
             [ -n "$name" ] && workspace_names+=("$name")
-        done < <(echo "$teams_response" | grep -oE '\{"id":"[0-9]+","name":"[^"]+"|"id":"[0-9]+","name":"[^"]+","color"' | sed 's/.*"id":"\([0-9]*\)","name":"\([^"]*\)".*/\1|\2/')
+        done < <(echo "$teams_response" | \
+            grep -oE '\{"id":"[0-9]+","name":"[^"]+"|"id":"[0-9]+","name":"[^"]+","color"' | \
+            sed 's/.*"id":"\([0-9]*\)","name":"\([^"]*\)".*/\1|\2/')
     fi
 
     local workspace_count=${#workspace_ids[@]}
 
+    # Handle workspace selection
     if [ "$workspace_count" -eq 0 ]; then
         print_warning "Could not fetch workspaces"
         echo -n "  Enter Workspace ID manually: "
         read -r workspace_id
         [ -n "$workspace_id" ] && set_env_var "CLICKUP_WORKSPACE_ID" "$workspace_id"
+
     elif [ "$workspace_count" -eq 1 ]; then
         print_success "Found workspace: ${workspace_names[0]} (ID: ${workspace_ids[0]})"
         set_env_var "CLICKUP_WORKSPACE_ID" "${workspace_ids[0]}"
+
     else
         echo ""
         print_info "Found $workspace_count workspaces:"
@@ -306,7 +400,9 @@ setup_clickup() {
         echo -n "  Select workspace (1-$workspace_count): "
         read -r choice
 
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "$workspace_count" ]; then
+        if [[ "$choice" =~ ^[0-9]+$ ]] && \
+           [ "$choice" -ge 1 ] && \
+           [ "$choice" -le "$workspace_count" ]; then
             local idx=$((choice-1))
             print_success "Selected: ${workspace_names[$idx]}"
             set_env_var "CLICKUP_WORKSPACE_ID" "${workspace_ids[$idx]}"
@@ -342,21 +438,24 @@ setup_openrouter() {
     echo -e "${YELLOW}${BOLD}│  ${DIM}Optional - Powers AI reasoning for Discord messages${NC}${YELLOW}${BOLD}        │${NC}"
     echo -e "${YELLOW}${BOLD}└─────────────────────────────────────────────────────────────┘${NC}"
 
+    # Check if already configured
     if is_configured "OPENROUTER_API_KEY"; then
         print_success "Already configured"
         prompt_update "API key" || return 0
     fi
 
+    # Ask if user wants to set up
     echo ""
     echo -n "  Set up OpenRouter? (y/N): "
     read -r setup_openrouter_choice
+
     if [[ ! "$setup_openrouter_choice" =~ ^[Yy]$ ]]; then
         print_warning "Skipped"
         return 0
     fi
 
     echo ""
-    echo -e "  ${DIM}Opening OpenRouter...${NC}"
+    print_dim "Opening OpenRouter..."
 
     # Auto-open OpenRouter keys page
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -365,6 +464,7 @@ setup_openrouter() {
         xdg-open "https://openrouter.ai/keys" 2>/dev/null
     fi
 
+    # Instructions
     echo ""
     echo -e "  ${BOLD}To get your API key:${NC}"
     echo ""
@@ -373,6 +473,7 @@ setup_openrouter() {
     echo "  3. Name it: ${BOLD}Timmy${NC}"
     echo "  4. Click ${BOLD}[Create]${NC} → Copy the key"
     echo ""
+
     api_key=$(read_clean "  Paste API key here (or Enter to skip): ")
 
     if [ -n "$api_key" ]; then
@@ -390,26 +491,35 @@ setup_discord() {
     echo -e "${YELLOW}${BOLD}│  ${DIM}Optional - Monitor Discord channels for task keywords${NC}${YELLOW}${BOLD}      │${NC}"
     echo -e "${YELLOW}${BOLD}└─────────────────────────────────────────────────────────────┘${NC}"
 
+    # Check if already configured
     if is_configured "DISCORD_BOT_TOKEN"; then
         print_success "Already configured"
         prompt_update "Discord settings" || return 0
     fi
 
+    # Ask if user wants to set up
     echo ""
     echo -n "  Set up Discord integration? (y/N): "
     read -r setup_discord_choice
-    [[ ! "$setup_discord_choice" =~ ^[Yy]$ ]] && print_warning "Skipped" && set_env_var "DISCORD_ENABLED" "false" && return 0
 
+    if [[ ! "$setup_discord_choice" =~ ^[Yy]$ ]]; then
+        print_warning "Skipped"
+        set_env_var "DISCORD_ENABLED" "false"
+        return 0
+    fi
+
+    # Show overview
     echo ""
     echo -e "${BOLD}  This will take about 5 minutes.${NC}"
     echo ""
-    echo -e "  ${DIM}Timmy will monitor your Discord channels for keywords like${NC}"
-    echo -e "  ${DIM}\"bug\", \"issue\", \"error\" and create ClickUp tasks automatically.${NC}"
+    print_dim "Timmy will monitor your Discord channels for keywords like"
+    print_dim "\"bug\", \"issue\", \"error\" and create ClickUp tasks automatically."
+
+    # STEP 1: Create Application
     echo ""
     echo -e "${CYAN}STEP 1: Create Application${NC}"
-    echo -e "  ${DIM}Opening Discord Developer Portal...${NC}"
+    print_dim "Opening Discord Developer Portal..."
 
-    # Auto-open Discord Developer Portal
     if [[ "$OSTYPE" == "darwin"* ]]; then
         open "https://discord.com/developers/applications" 2>/dev/null
     elif command_exists xdg-open; then
@@ -424,6 +534,7 @@ setup_discord() {
     echo -n "  Press Enter when done..."
     read -r
 
+    # STEP 2: Create Bot & Enable Permissions
     echo ""
     echo -e "${CYAN}STEP 2: Create Bot & Enable Permissions${NC}"
     echo ""
@@ -438,6 +549,7 @@ setup_discord() {
     echo ""
     echo "  5. Click ${BOLD}[Save Changes]${NC} at the bottom"
     echo ""
+
     bot_token=$(read_clean "  Paste Bot Token here: ")
 
     if [ -z "$bot_token" ]; then
@@ -449,6 +561,7 @@ setup_discord() {
     set_env_var "DISCORD_BOT_TOKEN" "$bot_token"
     set_env_var "DISCORD_ENABLED" "true"
 
+    # STEP 3: Invite Bot to Server
     echo ""
     echo -e "${CYAN}STEP 3: Invite Bot to Your Server${NC}"
     echo ""
@@ -468,6 +581,7 @@ setup_discord() {
     echo -n "  Press Enter when bot is in your server..."
     read -r
 
+    # STEP 4: Get Server & Channel IDs
     echo ""
     echo -e "${CYAN}STEP 4: Get Server & Channel IDs${NC}"
     echo ""
@@ -481,13 +595,15 @@ setup_discord() {
     echo "  ${BOLD}Now copy the IDs:${NC}"
     echo "  • Right-click your ${BOLD}server icon${NC} → Copy Server ID"
     echo ""
+
     guild_id=$(read_clean "  Paste Server ID: " | tr -d '[:space:]')
     [ -n "$guild_id" ] && set_env_var "DISCORD_GUILD_ID" "$guild_id"
 
     echo ""
     echo "  • Right-click the ${BOLD}channel(s)${NC} to monitor → Copy Channel ID"
-    echo "    ${DIM}(For multiple channels, separate with commas)${NC}"
+    print_dim "(For multiple channels, separate with commas)"
     echo ""
+
     channel_ids=$(read_clean "  Paste Channel ID(s): " | tr -d '[:space:]')
     [ -n "$channel_ids" ] && set_env_var "DISCORD_CHANNEL_IDS" "$channel_ids"
 
@@ -521,7 +637,7 @@ setup_project() {
 
     echo ""
     echo -e "  ${BOLD}Your First Project${NC}"
-    echo -e "  ${DIM}This is the repo where Timmy will create branches and PRs.${NC}"
+    print_dim "This is the repo where Timmy will create branches and PRs."
     echo ""
 
     echo -n "  Project name (e.g., my-app): "
@@ -532,7 +648,9 @@ setup_project() {
     read -r project_desc
 
     # Get GitHub username for default
-    local default_owner=$(gh api user --jq '.login' 2>/dev/null || get_env_var "GITHUB_DEFAULT_USERNAME" || echo "")
+    local default_owner=$(gh api user --jq '.login' 2>/dev/null || \
+                          get_env_var "GITHUB_DEFAULT_USERNAME" || \
+                          echo "")
 
     echo ""
     echo -e "  ${BOLD}GitHub Repository${NC}"
@@ -553,7 +671,7 @@ setup_project() {
 
     echo ""
     echo -e "  ${BOLD}Local Path${NC}"
-    echo -e "  ${DIM}Where is this repo cloned on your machine?${NC}"
+    print_dim "Where is this repo cloned on your machine?"
     echo ""
     echo -n "  Path (e.g., ~/projects/$repo_name): "
     read -r repo_path
@@ -605,7 +723,7 @@ setup_system_settings() {
     echo -e "${BLUE}${BOLD}└─────────────────────────────────────────────────────────────┘${NC}"
 
     echo ""
-    echo -e "  ${DIM}Press Enter to accept the default value in [brackets].${NC}"
+    print_dim "Press Enter to accept the default value in [brackets]."
     echo ""
 
     echo -n "  How often to check for new tasks? [15] seconds: "
@@ -615,14 +733,22 @@ setup_system_settings() {
 
     echo -n "  Post progress comments to ClickUp/GitHub? (Y/n): "
     read -r enable_comments
-    [[ "$enable_comments" =~ ^[Nn]$ ]] && set_env_var "DISABLE_COMMENTS" "true" || set_env_var "DISABLE_COMMENTS" "false"
+    if [[ "$enable_comments" =~ ^[Nn]$ ]]; then
+        set_env_var "DISABLE_COMMENTS" "true"
+    else
+        set_env_var "DISABLE_COMMENTS" "false"
+    fi
 
     echo -n "  Auto-create GitHub repos if they don't exist? (Y/n): "
     read -r auto_create
-    [[ "$auto_create" =~ ^[Nn]$ ]] && set_env_var "AUTO_CREATE_REPO" "false" || set_env_var "AUTO_CREATE_REPO" "true"
+    if [[ "$auto_create" =~ ^[Nn]$ ]]; then
+        set_env_var "AUTO_CREATE_REPO" "false"
+    else
+        set_env_var "AUTO_CREATE_REPO" "true"
+    fi
 
     echo ""
-    echo -e "  ${DIM}Where should new repos be created?${NC}"
+    print_dim "Where should new repos be created?"
     echo -n "  Base directory [~/Documents/Personal-Projects]: "
     read -r base_dir
     base_dir="${base_dir:-$HOME/Documents/Personal-Projects}"
@@ -643,7 +769,7 @@ setup_system_settings() {
 
 setup_directories() {
     echo ""
-    echo -e "  ${DIM}Creating data directories...${NC}"
+    print_dim "Creating data directories..."
 
     local dirs=(
         "logs"
@@ -683,7 +809,7 @@ setup_directories() {
 }
 
 # =========================================
-# Main
+# Summary & Next Steps
 # =========================================
 
 show_summary() {
@@ -698,40 +824,95 @@ show_summary() {
 
     echo -e "  ${BOLD}Status:${NC}"
     echo ""
+
+    # Required services
     echo -e "  ${BOLD}Required:${NC}"
-    is_configured "CLICKUP_API_KEY" && is_configured "CLICKUP_WORKSPACE_ID" && echo -e "    ${GREEN}✓${NC} ClickUp" || echo -e "    ${RED}✗${NC} ClickUp ${RED}(missing!)${NC}"
-    (gh auth status &>/dev/null) && echo -e "    ${GREEN}✓${NC} GitHub" || echo -e "    ${RED}✗${NC} GitHub ${RED}(missing!)${NC}"
+    if is_configured "CLICKUP_API_KEY" && is_configured "CLICKUP_WORKSPACE_ID"; then
+        echo -e "    ${GREEN}✓${NC} ClickUp"
+    else
+        echo -e "    ${RED}✗${NC} ClickUp ${RED}(missing!)${NC}"
+    fi
+
+    if gh auth status &>/dev/null; then
+        echo -e "    ${GREEN}✓${NC} GitHub"
+    else
+        echo -e "    ${RED}✗${NC} GitHub ${RED}(missing!)${NC}"
+    fi
+
+    # AI tools
     echo ""
     echo -e "  ${BOLD}AI Tools:${NC} ${DIM}(need at least one)${NC}"
-    [ -d ~/.claude ] && echo -e "    ${GREEN}✓${NC} Claude" || echo -e "    ${DIM}○${NC} Claude"
-    [ -d ~/.gemini ] && echo -e "    ${GREEN}✓${NC} Gemini" || echo -e "    ${DIM}○${NC} Gemini"
-    (codex login status &>/dev/null 2>&1) && echo -e "    ${GREEN}✓${NC} Codex" || echo -e "    ${DIM}○${NC} Codex"
+
+    if [ -d ~/.claude ]; then
+        echo -e "    ${GREEN}✓${NC} Claude"
+    else
+        echo -e "    ${DIM}○${NC} Claude"
+    fi
+
+    if [ -d ~/.gemini ]; then
+        echo -e "    ${GREEN}✓${NC} Gemini"
+    else
+        echo -e "    ${DIM}○${NC} Gemini"
+    fi
+
+    if codex login status &>/dev/null 2>&1; then
+        echo -e "    ${GREEN}✓${NC} Codex"
+    else
+        echo -e "    ${DIM}○${NC} Codex"
+    fi
+
+    # Optional services
     echo ""
     echo -e "  ${BOLD}Optional:${NC}"
-    is_configured "OPENROUTER_API_KEY" && echo -e "    ${GREEN}✓${NC} OpenRouter" || echo -e "    ${DIM}○${NC} OpenRouter"
-    [[ "$(get_env_var DISCORD_ENABLED)" == "true" ]] && echo -e "    ${GREEN}✓${NC} Discord" || echo -e "    ${DIM}○${NC} Discord"
-    [ -f "$PROJECT_ROOT/projects.json" ] && echo -e "    ${GREEN}✓${NC} Project config" || echo -e "    ${DIM}○${NC} Project config"
+
+    if is_configured "OPENROUTER_API_KEY"; then
+        echo -e "    ${GREEN}✓${NC} OpenRouter"
+    else
+        echo -e "    ${DIM}○${NC} OpenRouter"
+    fi
+
+    if [[ "$(get_env_var DISCORD_ENABLED)" == "true" ]]; then
+        echo -e "    ${GREEN}✓${NC} Discord"
+    else
+        echo -e "    ${DIM}○${NC} Discord"
+    fi
+
+    if [ -f "$PROJECT_ROOT/projects.json" ]; then
+        echo -e "    ${GREEN}✓${NC} Project config"
+    else
+        echo -e "    ${DIM}○${NC} Project config"
+    fi
+
     echo ""
 
+    # Files created
     echo -e "  ${BOLD}Files created:${NC}"
     echo -e "    ${DIM}.env${NC}              API keys & settings"
     echo -e "    ${DIM}projects.json${NC}     Project configuration"
     echo ""
 
+    # Next steps
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}  NEXT STEPS${NC}"
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo ""
+
     echo -e "  ${BOLD}Option 1: Docker (recommended)${NC}"
     echo -e "    ${CYAN}./docker/scripts/build-base.sh${NC}"
     echo -e "    ${CYAN}docker compose up -d${NC}"
     echo ""
+
     echo -e "  ${BOLD}Option 2: Run locally${NC}"
     echo -e "    ${CYAN}npm install && npm run build && npm start${NC}"
     echo ""
-    echo -e "  ${DIM}View logs: docker compose logs -f${NC}"
+
+    print_dim "View logs: docker compose logs -f"
     echo ""
 }
+
+# =========================================
+# Main Setup Flow
+# =========================================
 
 main() {
     clear
@@ -744,62 +925,71 @@ main() {
     echo -e "${CYAN}${BOLD}║                                                              ║${NC}"
     echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
+
     echo -e "  This wizard will configure all services Timmy needs."
     echo -e "  Estimated time: ${BOLD}5-10 minutes${NC}"
     echo ""
+
     echo -e "  ${BOLD}WHAT WE'LL SET UP:${NC}"
     echo ""
+
     echo -e "  ${GREEN}Quick (browser login):${NC}"
     echo -e "    • GitHub     - For creating pull requests"
     echo -e "    • Claude     - AI code implementation"
     echo -e "    • Gemini     - AI task analysis"
     echo -e "    • Codex      - AI code review"
     echo ""
+
     echo -e "  ${YELLOW}Manual (paste API key):${NC}"
     echo -e "    • ClickUp    - Task management ${DIM}(required)${NC}"
     echo -e "    • OpenRouter - AI reasoning ${DIM}(optional)${NC}"
     echo -e "    • Discord    - Message monitoring ${DIM}(optional)${NC}"
     echo ""
+
     echo -n "  Press Enter to begin..."
     read -r
 
-    # Browser OAuth services
+    # Part 1: Browser OAuth services
     echo ""
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}  PART 1: AI TOOLS (Browser Login)${NC}"
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "  ${DIM}These tools open your browser - just click Authorize.${NC}"
+    print_dim "These tools open your browser - just click Authorize."
     echo ""
+
     setup_github_auth || true
     setup_claude_auth || true
     setup_gemini_auth || true
     setup_codex_auth || true
 
-    # Manual API keys
+    # Part 2: Manual API keys
     echo ""
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}  PART 2: API KEYS (Copy & Paste)${NC}"
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "  ${DIM}These require copying an API key from a website.${NC}"
+    print_dim "These require copying an API key from a website."
     echo ""
+
     setup_clickup || true
     setup_openrouter || true
     setup_discord || true
 
-    # Project & system config
+    # Part 3: Project & system config
     echo ""
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}  PART 3: PROJECT SETTINGS${NC}"
     echo -e "${BOLD}══════════════════════════════════════════════════════════════${NC}"
     echo ""
+
     setup_project || true
     setup_system_settings || true
     setup_directories || true
 
-    # Summary
+    # Show summary
     show_summary
 }
 
+# Run main setup
 main "$@"
