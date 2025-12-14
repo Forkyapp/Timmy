@@ -34,7 +34,22 @@ export interface PipelineMetadata {
   reviewIterations?: number;
   maxReviewIterations?: number;
   branches?: string[];
-  agentExecution?: any;
+  agentExecution?: {
+    gemini?: unknown;
+    claude?: unknown;
+    codex?: unknown;
+  };
+}
+
+interface PipelineMetadataRow {
+  pipelineTaskId: string;
+  geminiAnalysisFile: string | null;
+  geminiAnalysisFallback: number | null;
+  prNumber: number | null;
+  reviewIterations: number;
+  maxReviewIterations: number;
+  branches: string | null;
+  agentExecution: string | null;
 }
 
 export interface PipelineError {
@@ -75,7 +90,11 @@ export class PipelineRepository {
         VALUES (?, 0, 3)
       `).run(taskId);
 
-      return this.get(taskId)!;
+      const pipeline = this.get(taskId);
+      if (!pipeline) {
+        throw new Error(`Failed to initialize pipeline for task ${taskId}`);
+      }
+      return pipeline;
     })();
   }
 
@@ -212,7 +231,7 @@ export class PipelineRepository {
    */
   updateMetadata(taskId: string, metadata: Partial<PipelineMetadata>): void {
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | null)[] = [];
 
     if (metadata.geminiAnalysisFile !== undefined) {
       updates.push('gemini_analysis_file = ?');
@@ -276,13 +295,17 @@ export class PipelineRepository {
         agent_execution as agentExecution
       FROM pipeline_metadata
       WHERE pipeline_task_id = ?
-    `).get(taskId) as any;
+    `).get(taskId) as PipelineMetadataRow | undefined;
 
     if (!row) return null;
 
     return {
-      ...row,
+      pipelineTaskId: row.pipelineTaskId,
+      geminiAnalysisFile: row.geminiAnalysisFile ?? undefined,
       geminiAnalysisFallback: row.geminiAnalysisFallback === 1,
+      prNumber: row.prNumber ?? undefined,
+      reviewIterations: row.reviewIterations,
+      maxReviewIterations: row.maxReviewIterations,
       branches: row.branches ? JSON.parse(row.branches) : undefined,
       agentExecution: row.agentExecution ? JSON.parse(row.agentExecution) : undefined
     };

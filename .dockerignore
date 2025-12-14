@@ -1,0 +1,68 @@
+# =========================================
+# Docker Ignore File for Timmy
+# =========================================
+
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-error.log
+
+# TypeScript build output (we'll build inside container or use pre-built)
+dist
+
+# Development files
+*.log
+*.tmp
+.DS_Store
+
+# IDE/Editor
+.idea
+.vscode
+*.swp
+*.swo
+
+# Environment files (secrets should not be in image)
+.env
+.env.*
+!.env.example
+
+# Test files
+coverage
+*.test.ts
+__tests__
+jest.config.*
+jest.setup.ts
+
+# Documentation (not needed in container)
+*.md
+!README.md
+docs
+
+# Runtime data (mounted as volumes, not baked into image)
+data/cache
+data/state
+data/tracking
+
+# Docker files (don't need to copy these into the image)
+docker/*
+!docker/entrypoint.sh
+!docker/scripts/
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Scripts that are only for local development
+scripts
+
+# Templates and context files
+templates
+.context
+
+# Worktrees created by Timmy
+*-worktree
+.timmy-worktrees
+codex-review-clone

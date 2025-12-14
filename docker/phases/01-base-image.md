@@ -211,11 +211,13 @@ Nothing - this is the first phase.
 - [ ] Health check passes
 - [ ] Can be used as base for dev/prod images
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **Alpine vs Slim?** Alpine is smaller but can have compatibility issues with npm packages
-2. **Node version pinning?** Should we pin to specific version (20.10.0) or minor (20.x)?
-3. **Multi-architecture?** Do we need ARM support for Apple Silicon?
+1. **Alpine vs Slim?** → **Slim chosen.** Alpine can have compatibility issues with npm packages that use native bindings (like `better-sqlite3`). Slim provides good balance of size and compatibility.
+
+2. **Node version pinning?** → **20.x (minor) chosen.** Using `node:20-slim` gives us automatic patch updates while staying on LTS. For production deployments requiring strict reproducibility, pin to specific version in docker-compose.
+
+3. **Multi-architecture?** → **Yes, ARM64 supported.** The `node:20-slim` base image supports both AMD64 and ARM64. Build script supports explicit platform targeting via `docker buildx`.
 
 ---
 

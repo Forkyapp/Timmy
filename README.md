@@ -12,17 +12,32 @@ Your autonomous AI junior developer that you can chat with on Discord or assign 
 ## Quick Start
 
 ```bash
-# Install globally
-npm install -g timmy-cli
-
-# Run setup wizard
-timmy init
-
-# Start the automation
-timmy start
+# Clone and run (2 commands!)
+git clone https://github.com/Forkyapp/Timmy.git && cd Timmy
+npm run setup    # Interactive setup (handles all auth)
+npm start        # Auto-detects Docker or runs locally
 ```
 
-## CLI Commands
+Or install globally:
+
+```bash
+npm install -g timmy-cli
+timmy init       # Setup wizard
+timmy start      # Run from anywhere
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run setup` | Interactive setup for all credentials |
+| `npm start` | Smart start (Docker if available, else local) |
+| `npm run start:docker` | Force Docker mode |
+| `npm run start:local` | Force local mode |
+| `npm run docker:logs` | View Docker logs |
+| `npm run docker:down` | Stop Docker containers |
+
+### CLI Commands (Global Install)
 
 | Command | Description |
 |---------|-------------|
@@ -31,10 +46,8 @@ timmy start
 | `timmy start -v` | Start with verbose logging |
 | `timmy status` | Show current status |
 | `timmy config list` | Show configuration |
-| `timmy config set KEY VALUE` | Update configuration |
 | `timmy projects list` | List all projects |
 | `timmy projects switch NAME` | Switch active project |
-| `timmy projects add` | Add new project |
 | `timmy --help` | Show all commands |
 
 ## Configuration
@@ -223,87 +236,87 @@ Configuration is stored in `~/.timmy/`:
 
 ## Installation
 
-### Global Installation (Recommended)
+### Option A: Clone & Run (Recommended)
 
 ```bash
-# Install globally from npm
-npm install -g timmy-cli
-
-# Run the setup wizard
-timmy init
-
-# Start Timmy
-timmy start
+git clone https://github.com/Forkyapp/Timmy.git && cd Timmy
+npm run setup    # Interactive setup (browser OAuth + API keys)
+npm start        # Auto-detects Docker, or runs locally
 ```
 
-### Development Setup
+### Option B: Global CLI
 
 ```bash
-# Clone and install
-git clone https://github.com/Forkyapp/Timmy.git
-cd Timmy
-npm install
+npm install -g timmy-cli
+timmy init       # Setup wizard
+timmy start      # Run from anywhere
+```
 
-# Run in development mode
-npm run dev
+### Option C: Docker Only
 
-# Run tests
-npm test
-
-# Build
-npm run build
+```bash
+git clone https://github.com/Forkyapp/Timmy.git && cd Timmy
+npm run setup
+npm run docker:build
+npm run docker:up
 ```
 
 ## Setup
 
-**Interactive Setup (Recommended):**
+The setup wizard (`npm run setup` or `timmy init`) handles everything:
+
+| Service | Auth Method | Required? |
+|---------|-------------|-----------|
+| GitHub | Browser OAuth | Yes |
+| Claude | Browser OAuth | Yes (one AI minimum) |
+| Gemini | Browser OAuth | Yes (one AI minimum) |
+| Codex | Browser OAuth | Yes (one AI minimum) |
+| ClickUp | API key | Yes |
+| OpenRouter | API key | Optional (for AI Brain) |
+| Discord | Bot token | Optional |
+
+**What gets configured:**
+- All API credentials (browser OAuth where possible)
+- Project settings (`projects.json`)
+- System settings (poll interval, auto-repo, etc.)
+- Data directories
+
+**Re-run setup anytime:**
 ```bash
-timmy init
-```
-
-This interactive setup will guide you through:
-- ClickUp API key configuration
-- GitHub authentication
-- Optional Discord Bot configuration
-- Project configuration
-- System settings
-
-**Manual Setup:**
-```bash
-# 1. Copy the example environment file
-cp .env.example ~/.timmy/.env
-
-# 2. Edit .env with your credentials
-#    - CLICKUP_API_KEY: Get from https://app.clickup.com/settings/apps
-#    - GITHUB_TOKEN: Create at https://github.com/settings/tokens
-#    - DISCORD_BOT_TOKEN: (Optional) From https://discord.com/developers/applications
-
-# 3. Configure your projects
-nano ~/.timmy/projects.json
-
-# 4. Switch to your project
-timmy projects switch my-project
+npm run setup    # Update any credentials
 ```
 
 ## Usage
 
 ### Starting Timmy
 
-**Using CLI (Recommended):**
 ```bash
-# Start with default settings
-timmy start
+# Smart start (uses Docker if available)
+npm start
 
-# Start with verbose logging
-timmy start -v
+# Force specific mode
+npm run start:docker   # Docker only
+npm run start:local    # Local only (no Docker)
 
-# Check status
-timmy status
+# Global CLI
+timmy start            # Start polling
+timmy start -v         # Verbose logging
+timmy status           # Check status
 ```
 
-**Development Mode:**
+### Docker Commands
+
 ```bash
-npm run dev
+npm run docker:up      # Start containers
+npm run docker:down    # Stop containers
+npm run docker:logs    # View logs
+npm run docker:build   # Rebuild images
+```
+
+### Development Mode
+
+```bash
+npm run dev            # Run with ts-node (hot reload)
 ```
 
 The interactive terminal provides:
@@ -422,25 +435,44 @@ When running in interactive mode:
 
 **Tasks not detected:**
 - Verify status is exactly "bot in progress"
-- Check credentials in `.env`
+- Check credentials: `npm run setup`
 - Confirm correct user ID
+
+**Docker issues:**
+```bash
+# View logs
+npm run docker:logs
+
+# Reset everything
+npm run docker:down
+docker volume prune -f
+npm run setup
+npm start
+```
+
+**Run without Docker:**
+```bash
+npm run start:local
+```
 
 **Background execution:**
 ```bash
+# Using Docker (recommended)
+npm run docker:up
+
 # Using pm2
-pm2 start npm --name timmy -- start
+pm2 start npm --name timmy -- run start:local
 
 # Using nohup
-nohup npm start > timmy.log 2>&1 &
+nohup npm run start:local > timmy.log 2>&1 &
 ```
 
 ## Documentation
 
-- **[CLAUDE.md](CLAUDE.md)** - Comprehensive codebase guide for AI assistants (1400+ lines)
+- **[docker/SETUP.md](docker/SETUP.md)** - Docker setup guide (recommended)
 - **[DISCORD_SETUP.md](DISCORD_SETUP.md)** - Discord bot setup and configuration
+- **[CLAUDE.md](CLAUDE.md)** - Comprehensive codebase guide for AI assistants
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-- **[REPORT.md](REPORT.md)** - Detailed codebase analysis report
-- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide
 
 ## Important Notes
 

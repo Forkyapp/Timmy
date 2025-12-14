@@ -13,17 +13,23 @@
     "LICENSE"
   ],
   "scripts": {
+    "setup": "bash docker/scripts/setup-auth.sh",
+    "start": "bash scripts/smart-start.sh",
+    "start:local": "npm run build && NODE_NO_WARNINGS=1 node dist/timmy.js",
+    "start:docker": "bash scripts/smart-start.sh --docker",
+    "docker:build": "bash docker/scripts/build-base.sh && docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "init": "ts-node scripts/interactive-setup.ts",
     "settings": "ts-node scripts/settings.ts",
-    "setup": "bash scripts/setup.sh",
     "build": "tsc && tsc-alias && cp src/infrastructure/storage/schema.sql dist/src/infrastructure/storage/schema.sql",
-    "start": "npm run build && NODE_NO_WARNINGS=1 node dist/timmy.js",
     "dev": "ts-node -r tsconfig-paths/register timmy.ts",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "switch": "ts-node scripts/switch-project.ts",
     "projects": "ts-node scripts/list-projects.ts",
@@ -84,7 +90,9 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ],
     "moduleNameMapper": {
       "^@/types$": "<rootDir>/src/types",
       "^@/types/(.*)$": "<rootDir>/src/types/$1",

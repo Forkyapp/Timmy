@@ -184,14 +184,15 @@ export const pipeline = {
 
   storeAgentExecution(taskId: string, agent: string, data: any): void {
     const metadata = pipelineRepo.getMetadata(taskId);
-    const agentExecution = metadata?.agentExecution || {};
+    const agentExecution = (metadata?.agentExecution || {}) as Record<string, unknown>;
     agentExecution[agent] = data;
     pipelineRepo.updateMetadata(taskId, { agentExecution });
   },
 
   getAgentExecution(taskId: string, agent: string): any {
     const metadata = pipelineRepo.getMetadata(taskId);
-    return metadata?.agentExecution?.[agent];
+    const agentExecution = metadata?.agentExecution as Record<string, unknown> | undefined;
+    return agentExecution?.[agent];
   }
 };
 

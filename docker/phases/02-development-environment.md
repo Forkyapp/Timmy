@@ -297,11 +297,13 @@ docker compose down
 - [ ] Environment variables load correctly
 - [ ] node_modules persists across restarts
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **ts-node vs esbuild?** esbuild is faster but less compatible
-2. **Separate test container?** Or run tests in same container?
-3. **Watch mode scope?** Watch all files or specific patterns?
+1. **ts-node vs esbuild?** → **ts-node chosen.** Better compatibility with TypeScript path aliases and existing tsconfig. esbuild can be considered later if startup time becomes a problem.
+
+2. **Separate test container?** → **Same container.** Tests run via `docker compose exec timmy npm test`. Simpler setup, and tests should run in the same environment as the code.
+
+3. **Watch mode scope?** → **Specific patterns.** Configured in `nodemon.json` to watch `src/`, `lib/`, and `timmy.ts`. Ignores `node_modules`, `data`, `dist`, tests, and docker files.
 
 ---
 

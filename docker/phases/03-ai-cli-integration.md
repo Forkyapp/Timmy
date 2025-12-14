@@ -314,12 +314,15 @@ docker compose exec timmy claude "Hello, respond with 'OK'"
 - [ ] Health checks verify CLI availability
 - [ ] Timmy can call each CLI and receive responses
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **CLI versioning?** Pin specific versions or use latest?
-2. **Offline mode?** Mock CLIs for testing without API calls?
-3. **Rate limiting?** Should wrapper scripts handle rate limits?
-4. **Installation source?** npm, pip, or direct binary download?
+1. **CLI versioning?** → **Latest via npm.** Using latest versions for now. Pin specific versions in production if stability issues arise.
+
+2. **Offline mode?** → **Graceful degradation.** If CLI not available, wrapper scripts exit with error code 127. Timmy should handle missing CLIs gracefully.
+
+3. **Rate limiting?** → **Not in wrappers.** Rate limiting is handled at the application level. Wrappers focus on timeouts and auth checks only.
+
+4. **Installation source?** → **npm preferred.** Try npm packages first (`@anthropic-ai/claude-code`, `@openai/codex`). Fall back to system-installed CLIs if npm packages unavailable.
 
 ---
 
