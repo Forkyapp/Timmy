@@ -36,11 +36,15 @@ timmy start    # Run from anywhere
 
 | Service | Auth Method | Required? |
 |---------|-------------|-----------|
-| GitHub | Browser OAuth | Yes |
-| Claude/Gemini/Codex | Browser OAuth | Yes (one AI minimum) |
-| ClickUp | API key | Yes |
-| OpenRouter | API key | Optional |
-| Discord | API key | Optional |
+| GitHub | `gh auth login` → Browser | Yes |
+| Claude | Run `claude` → `/login` → Browser | Yes (one AI) |
+| Gemini | Run `gemini` → "Login with Google" | Yes (one AI) |
+| Codex | `codex login` → Browser | Yes (one AI) |
+| ClickUp | API key (manual) | Yes |
+| OpenRouter | API key (manual) | Optional |
+| Discord | Bot token (manual) | Optional |
+
+**Note:** You need at least ONE AI CLI (Claude, Gemini, or Codex).
 
 ## Troubleshooting
 
