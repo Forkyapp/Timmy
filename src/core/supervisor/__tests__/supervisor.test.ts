@@ -63,7 +63,7 @@ describe('Supervisor', () => {
   });
 
   it('should throw SupervisorValidationError on failed validation', async () => {
-    const { validateEnvironment } = require('../validators');
+    const { validateEnvironment } = jest.requireMock('../validators') as { validateEnvironment: jest.Mock };
     validateEnvironment.mockReturnValueOnce({
       valid: false,
       checks: [
