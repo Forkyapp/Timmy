@@ -8,6 +8,7 @@ import { getProcessManager } from '../../shared/utils/process-manager.util';
 import * as clickup from '../../../lib/clickup';
 import * as storage from '../../../lib/storage';
 import { loadContextForModel } from '../context/context-orchestrator';
+import { loadAndApplySkill } from '../skills';
 import type { ClickUpTask } from '../../../src/types/clickup';
 import type { LaunchOptions, FixTodoOptions, LaunchResult, FixTodoResult, Settings } from '../../../src/types/ai';
 
@@ -104,63 +105,32 @@ async function launchClaude(task: ClickUpTask, options: WorktreeLaunchOptions = 
   let featureDocsPath = '';
 
   if (analysis && analysis.content) {
-    // Include feature folder location
     if (analysis.featureDir) {
-      featureDocsPath = `
-
-**FEATURE DOCUMENTATION:**
-The detailed feature specification is located at:
-\`${analysis.featureDir}/feature-spec.md\`
-
-You can read this file to understand the implementation requirements, files to modify, and acceptance criteria.
-`;
+      featureDocsPath = `\n\n**FEATURE DOCUMENTATION:**\nThe detailed feature specification is located at:\n\`${analysis.featureDir}/feature-spec.md\`\n\nYou can read this file to understand the implementation requirements, files to modify, and acceptance criteria.`;
     }
 
-    analysisSection = `
-
-**GEMINI AI ANALYSIS:**
-This task has been pre-analyzed by Gemini AI. Please review the analysis below for implementation guidance:
-
----
-${analysis.content}
----
-
-Use this analysis to guide your implementation. Follow the suggested approach and implementation steps.
-${featureDocsPath}`;
+    analysisSection = `\n\n**GEMINI AI ANALYSIS:**\nThis task has been pre-analyzed by Gemini AI. Please review the analysis below for implementation guidance:\n\n---\n${analysis.content}\n---\n\nUse this analysis to guide your implementation. Follow the suggested approach and implementation steps.${featureDocsPath}`;
   }
 
   // Adjust instructions based on whether we're using a worktree
   const setupInstructions = isWorktree
-    ? `1. **Navigate to worktree:**
-   cd ${workingPath}
+    ? `1. **Navigate to worktree:**\n   cd ${workingPath}\n\n   Note: You are working in an isolated worktree. The branch 'task-${taskId}' is already checked out.\n   Your changes will not affect the main repository working directory.\n\n2. **Verify you're on the correct branch:**\n   git branch --show-current\n   (Should show: task-${taskId})\n\n3. **Ensure latest changes:**\n   git pull origin main --rebase\n   (Rebase your work on latest main)`
+    : `1. **Navigate to repository:**\n   cd ${workingPath}\n\n2. **Update main branch:**\n   git checkout main\n   git pull origin main\n   (Ensure we have latest changes)\n\n3. **Create new branch from main:**\n   git checkout -b task-${taskId}`;
 
-   Note: You are working in an isolated worktree. The branch 'task-${taskId}' is already checked out.
-   Your changes will not affect the main repository working directory.
+  // Load implementation skill from markdown file
+  const implementationSkill = await loadAndApplySkill('implementation', {
+    taskId,
+    taskTitle,
+    taskDescription,
+    taskUrl: task.url || `https://app.clickup.com/t/${taskId}`,
+    setupInstructions,
+  });
 
-2. **Verify you're on the correct branch:**
-   git branch --show-current
-   (Should show: task-${taskId})
+  const readSpecStep = analysis && analysis.featureDir
+    ? `0. **Read the feature specification:**\n   Read the file: ${analysis.featureDir}/feature-spec.md\n   This contains detailed requirements, files to modify, and implementation guidance.\n\n`
+    : '';
 
-3. **Ensure latest changes:**
-   git pull origin main --rebase
-   (Rebase your work on latest main)`
-    : `1. **Navigate to repository:**
-   cd ${workingPath}
-
-2. **Update main branch:**
-   git checkout main
-   git pull origin main
-   (Ensure we have latest changes)
-
-3. **Create new branch from main:**
-   git checkout -b task-${taskId}`;
-
-  const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}I need you to implement a ClickUp task and create a GitHub Pull Request.
-
-**ClickUp Task ID:** ${taskId}
-**Title:** ${taskTitle}
-**Description:**
-${taskDescription}
+  const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}${implementationSkill}
 ${analysisSection}
 
 **Repository Information:**
@@ -169,64 +139,7 @@ ${analysisSection}
 - Repo: ${repoName}
 - Branch: task-${taskId}
 
-**Required Steps (MUST COMPLETE ALL):**
-
-${analysis && analysis.featureDir ? `0. **Read the feature specification:**
-   Read the file: ${analysis.featureDir}/feature-spec.md
-   This contains detailed requirements, files to modify, and implementation guidance.
-
-` : ''}${setupInstructions}
-
-4. **Implement the feature:**
-   - Read the description carefully
-   - Make all necessary code changes
-   - Follow existing code style and patterns
-
-5. **Test your changes:**
-   - Run any relevant tests
-   - Verify the implementation works
-
-6. **Commit your changes:**
-   git add .
-   git commit -m "feat: ${taskTitle} (#${taskId})"
-
-7. **Push to GitHub:**
-   git push -u origin task-${taskId}
-
-8. **Create Pull Request:**
-   Use gh CLI to create PR (non-interactive):
-   gh pr create --title "[ClickUp #${taskId}] ${taskTitle}" --body "## ClickUp Task
-
-**Task:** ${taskTitle}
-**ID:** ${taskId}
-**URL:** ${task.url || `https://app.clickup.com/t/${taskId}`}
-
-## Description
-${taskDescription}
-
-## Implementation
-[Brief summary of what you implemented]
-
----
-🤖 Automated via Forky" --base main --head task-${taskId}
-
-**CRITICAL:**
-- You MUST create the Pull Request at the end
-- Do NOT skip the PR creation step
-- After PR is created, respond with the PR URL
-
-**Important Instructions:**
-- Work AUTONOMOUSLY - make reasonable decisions
-- Follow the repository's existing code style and patterns
-- If you encounter minor issues, resolve them independently
-- Install new packages without asking
-- Use claude --dangerously-skip-permissions to bypass security prompts
-- Use any git commands you need to complete the task
-- MUST complete ALL steps including PR creation
-- DO NOT leave TODO or FIXME comments in your code - implement features completely
-- Codex will review your code and add TODO/FIXME comments for improvements if needed
-
-**ClickUp Task URL:** ${task.url || `https://app.clickup.com/t/${taskId}`}
+${readSpecStep}**ClickUp Task URL:** ${task.url || `https://app.clickup.com/t/${taskId}`}
 
 Begin implementation now and make sure to create the PR when done!`;
 
@@ -398,18 +311,18 @@ async function fixTodoComments(task: ClickUpTask, options: WorktreeFixTodoOption
 
   // Adjust instructions based on whether we're using a worktree
   const checkoutInstructions = isWorktree
-    ? `1. **Navigate to worktree:**
-   cd ${workingPath}
+    ? `1. **Navigate to worktree:**\n   cd ${workingPath}\n\n   Note: You are in an isolated worktree with branch '${branch}' already checked out.\n\n   git pull origin ${branch}`
+    : `1. **Checkout the branch:**\n   cd ${workingPath}\n   git checkout ${branch}\n   git pull origin ${branch}`;
 
-   Note: You are in an isolated worktree with branch '${branch}' already checked out.
+  // Load fixes skill from markdown file
+  const fixesSkill = await loadAndApplySkill('fixes', {
+    taskId,
+    taskTitle,
+    branch,
+    checkoutInstructions,
+  });
 
-   git pull origin ${branch}`
-    : `1. **Checkout the branch:**
-   cd ${workingPath}
-   git checkout ${branch}
-   git pull origin ${branch}`;
-
-  const prompt = `You need to address the TODO and FIXME comments that Codex added during code review.
+  const prompt = `${fixesSkill}
 
 **ClickUp Task ID:** ${taskId}
 **Title:** ${taskTitle}
@@ -419,57 +332,6 @@ async function fixTodoComments(task: ClickUpTask, options: WorktreeFixTodoOption
 - Working Path: ${workingPath}${isWorktree ? ' (isolated worktree)' : ''}
 - Owner: ${repoOwner}
 - Repo: ${repoName}
-
-**Your Task:**
-
-${checkoutInstructions}
-
-2. **Find all TODO and FIXME comments:**
-   Search for both comment types in the codebase:
-   - grep -r "FIXME:" .
-   - grep -r "TODO:" .
-
-3. **Address comments by priority:**
-   a. **FIXME comments (Critical - Address FIRST):**
-      - These are bugs or critical issues
-      - MUST be fixed before PR can be merged
-      - Read, understand, implement fix, remove comment
-
-   b. **TODO comments (Enhancements - Address SECOND):**
-      - These are improvements or nice-to-haves
-      - Should be addressed if reasonable
-      - Read, understand, implement, remove comment
-
-4. **For each comment:**
-   - Read and understand the issue/suggestion
-   - Implement the fix or improvement
-   - Remove the comment after fixing
-   - Test your changes
-
-5. **Commit your fixes:**
-   git add .
-   git commit -m "fix: Address TODO/FIXME comments from code review (#${taskId})"
-   git push origin ${branch}
-
-6. **Update the PR:**
-   The PR will be automatically updated with your fixes.
-   Add a comment summarizing what was addressed.
-
-**Important Guidelines:**
-- Address ALL FIXME comments (critical bugs)
-- Address all TODO comments when possible
-- Remove each comment after fixing it
-- Make sure your fixes are correct and tested
-- Don't skip any FIXMEs - they're critical issues
-- Priority: FIXME > TODO
-- If you can't fix something, leave the comment and explain why in commit message
-
-**Example workflow:**
-1. Find: \`// FIXME: This crashes when user is null\`
-2. Fix: Add null check and error handling
-3. Remove the FIXME comment
-4. Test it works
-5. Move to next FIXME/TODO
 
 Begin addressing the comments now - FIXME comments first, then TODO!`;
 

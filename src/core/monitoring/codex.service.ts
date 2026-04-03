@@ -6,6 +6,7 @@ import config from '../../shared/config';
 import { timmy, colors } from '../../shared/ui';
 import { logger } from '../../shared/utils/logger.util';
 import { loadContextForModel } from '../context/context-orchestrator';
+import { loadAndApplySkill } from '../skills';
 import * as clickup from '../../../lib/clickup';
 import * as storage from '../../../lib/storage';
 import type { ClickUpTask } from '../../../src/types/clickup';
@@ -147,40 +148,30 @@ async function launchCodex(task: ClickUpTask, options: LaunchOptions = {}): Prom
 
   // Build prompt with optional Gemini analysis
   let analysisSection = '';
-  let featureDocsPath = '';
-
   if (analysis && analysis.content) {
-    // Include feature folder location
+    let featureDocsPath = '';
     if (analysis.featureDir) {
-      featureDocsPath = `
-
-**FEATURE DOCUMENTATION:**
-The detailed feature specification is located at:
-\`${analysis.featureDir}/feature-spec.md\`
-
-You can read this file to understand the implementation requirements, files to modify, and acceptance criteria.
-`;
+      featureDocsPath = `\n\n**FEATURE DOCUMENTATION:**\nThe detailed feature specification is located at:\n\`${analysis.featureDir}/feature-spec.md\`\n\nYou can read this file to understand the implementation requirements, files to modify, and acceptance criteria.`;
     }
-
-    analysisSection = `
-
-**GEMINI AI ANALYSIS:**
-This task has been pre-analyzed by Gemini AI. Please review the analysis below for implementation guidance:
-
----
-${analysis.content}
----
-
-Use this analysis to guide your implementation. Follow the suggested approach and implementation steps.
-${featureDocsPath}`;
+    analysisSection = `\n\n**GEMINI AI ANALYSIS:**\nThis task has been pre-analyzed by Gemini AI. Please review the analysis below for implementation guidance:\n\n---\n${analysis.content}\n---\n\nUse this analysis to guide your implementation. Follow the suggested approach and implementation steps.${featureDocsPath}`;
   }
 
-  const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}I need you to implement a ClickUp task and create a GitHub Pull Request.
+  const setupInstructions = `1. **Navigate to repository:**\n   cd ${repoPath}\n\n2. **Update main branch:**\n   git checkout main\n   git pull origin main\n   (Ensure we have latest changes)\n\n3. **Create new branch from main:**\n   git checkout -b task-${taskId}`;
 
-**ClickUp Task ID:** ${taskId}
-**Title:** ${taskTitle}
-**Description:**
-${taskDescription}
+  // Load implementation skill from markdown file
+  const implementationSkill = await loadAndApplySkill('implementation', {
+    taskId,
+    taskTitle,
+    taskDescription,
+    taskUrl: task.url || `https://app.clickup.com/t/${taskId}`,
+    setupInstructions,
+  });
+
+  const readSpecStep = analysis && analysis.featureDir
+    ? `0. **Read the feature specification:**\n   Read the file: ${analysis.featureDir}/feature-spec.md\n   This contains detailed requirements, files to modify, and implementation guidance.\n\n`
+    : '';
+
+  const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}${implementationSkill}
 ${analysisSection}
 
 **Repository Information:**
@@ -188,70 +179,7 @@ ${analysisSection}
 - Owner: ${repoOwner}
 - Repo: ${repoName}
 
-**Required Steps (MUST COMPLETE ALL):**
-
-${analysis && analysis.featureDir ? `0. **Read the feature specification:**
-   Read the file: ${analysis.featureDir}/feature-spec.md
-   This contains detailed requirements, files to modify, and implementation guidance.
-
-` : ''}1. **Navigate to repository:**
-   cd ${repoPath}
-
-2. **Update main branch:**
-   git checkout main
-   git pull origin main
-   (Ensure we have latest changes)
-
-3. **Create new branch from main:**
-   git checkout -b task-${taskId}
-
-4. **Implement the feature:**
-   - Read the description carefully
-   - Make all necessary code changes
-   - Follow existing code style and patterns
-
-5. **Test your changes:**
-   - Run any relevant tests
-   - Verify the implementation works
-
-6. **Commit your changes:**
-   git add .
-   git commit -m "feat: ${taskTitle} (#${taskId})"
-
-7. **Push to GitHub:**
-   git push -u origin task-${taskId}
-
-8. **Create Pull Request:**
-   Use gh CLI to create PR (non-interactive):
-   gh pr create --title "[ClickUp #${taskId}] ${taskTitle}" --body "## ClickUp Task
-
-**Task:** ${taskTitle}
-**ID:** ${taskId}
-**URL:** ${task.url || `https://app.clickup.com/t/${taskId}`}
-
-## Description
-${taskDescription}
-
-## Implementation
-[Brief summary of what you implemented]
-
----
-🤖 Automated via Forky (Codex)" --base main --head task-${taskId}
-
-**CRITICAL:**
-- You MUST create the Pull Request at the end
-- Do NOT skip the PR creation step
-- After PR is created, respond with the PR URL
-
-**Important Instructions:**
-- Work AUTONOMOUSLY - make reasonable decisions
-- Follow the repository's existing code style and patterns
-- If you encounter minor issues, resolve them independently
-- Install new packages without asking
-- Use any git commands you need to complete the task
-- MUST complete ALL steps including PR creation
-
-**ClickUp Task URL:** ${task.url || `https://app.clickup.com/t/${taskId}`}
+${readSpecStep}**ClickUp Task URL:** ${task.url || `https://app.clickup.com/t/${taskId}`}
 
 Begin implementation now and make sure to create the PR when done!`;
 
@@ -385,7 +313,15 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
     minRelevance: 0.7
   });
 
-  const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}You are a senior code reviewer. Your job is to review the changes made by Claude and add constructive TODO comments for improvements.
+  // Load review skill from markdown file
+  const reviewSkill = await loadAndApplySkill('review', {
+    taskId,
+    taskTitle,
+    branch,
+    repoPath: repoPath || '',
+  });
+
+  const prompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}${reviewSkill}
 
 **ClickUp Task ID:** ${taskId}
 **Title:** ${taskTitle}
@@ -395,68 +331,6 @@ async function reviewClaudeChanges(task: ClickUpTask, options: ReviewOptions = {
 - Path: ${repoPath}
 - Owner: ${repoOwner}
 - Repo: ${repoName}
-
-**Your Review Process:**
-
-1. **Checkout the branch:**
-   cd ${repoPath}
-   git checkout ${branch}
-   git pull origin ${branch}
-
-2. **Review all changes:**
-   git diff main...${branch}
-
-   Look at:
-   - Code quality and best practices
-   - Potential bugs or edge cases
-   - Performance improvements
-   - Security concerns
-   - Missing error handling
-   - Code readability and maintainability
-   - Missing tests
-
-3. **Add TODO and FIXME comments DIRECTLY in the code files:**
-   - Open each modified file
-   - Add clear, actionable comments where improvements are needed
-   - Use TODO for enhancements/nice-to-haves
-   - Use FIXME for bugs/critical issues that must be addressed
-   - Format: \`// TODO: [Enhancement suggestion]\` or \`// FIXME: [Critical issue]\`
-   - Be specific and constructive
-   - Focus on:
-     * FIXME: Bugs or critical issues
-     * FIXME: Missing error handling
-     * FIXME: Security vulnerabilities
-     * TODO: Edge cases not handled
-     * TODO: Performance optimizations
-     * TODO: Code clarity improvements
-     * TODO: Missing validation
-     * TODO: Additional tests needed
-
-4. **Commit your TODO and FIXME comments:**
-   git add .
-   git commit -m "review: Add TODO/FIXME comments from Codex review (#${taskId})"
-   git push origin ${branch}
-
-**Important Guidelines:**
-- Add TODO and FIXME comments INLINE in the code files (not in separate review files)
-- Be constructive and specific
-- Each comment should be actionable
-- Use FIXME for critical issues, TODO for enhancements
-- Focus on improvements, not just criticism
-- Don't rewrite the code, just add comments
-- Priority: FIXME > TODO
-
-**Example comments:**
-\`\`\`javascript
-// FIXME: This will crash when user is null - add null check
-// FIXME: SQL injection vulnerability - use parameterized query
-// FIXME: Race condition possible - add mutex lock
-// TODO: Add validation for empty email
-// TODO: Handle error case when API fails
-// TODO: Add unit test for edge case with negative numbers
-// TODO: Consider caching this expensive operation
-// TODO: Extract this logic into a separate function for reusability
-\`\`\`
 
 Begin your review now and add TODO/FIXME comments to the code!`;
 
