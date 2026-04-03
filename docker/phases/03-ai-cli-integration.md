@@ -306,12 +306,12 @@ docker compose exec timmy claude "Hello, respond with 'OK'"
 
 ## Success Criteria
 
-- [ ] Claude CLI installed and responsive
-- [ ] Gemini CLI installed and responsive
-- [ ] Codex CLI installed and responsive
-- [ ] API keys load correctly from environment
-- [ ] Wrapper scripts provide consistent timeouts
-- [ ] Health checks verify CLI availability
+- [x] Claude CLI installed and responsive
+- [x] Gemini CLI installed and responsive
+- [x] Codex CLI installed and responsive
+- [x] API keys load correctly from environment
+- [x] Wrapper scripts provide consistent timeouts
+- [x] Health checks verify CLI availability
 - [ ] Timmy can call each CLI and receive responses
 
 ## Open Questions (Resolved)

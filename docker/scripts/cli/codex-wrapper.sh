@@ -9,9 +9,14 @@ set -e
 # Configuration
 TIMEOUT_SECONDS="${CODEX_TIMEOUT_SECONDS:-300}"  # 5 minutes default
 
+# Load secret from Docker secrets file if available, fall back to env var
+if [ -n "$OPENAI_API_KEY_FILE" ] && [ -f "$OPENAI_API_KEY_FILE" ]; then
+    export OPENAI_API_KEY="$(cat "$OPENAI_API_KEY_FILE")"
+fi
+
 # Check authentication
 if [ -z "$OPENAI_API_KEY" ]; then
-    echo "ERROR: OPENAI_API_KEY not set" >&2
+    echo "ERROR: OPENAI_API_KEY not set (set env var or mount Docker secret)" >&2
     exit 1
 fi
 

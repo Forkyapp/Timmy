@@ -533,14 +533,14 @@ volumes:
 
 ## Success Criteria
 
-- [ ] Multi-stage build produces minimal image
+- [x] Multi-stage build produces minimal image
 - [ ] Image size under 200MB
-- [ ] No development dependencies in production
-- [ ] Security hardening applied
-- [ ] Secrets handled properly (not in env vars)
-- [ ] Health checks verify real functionality
+- [x] No development dependencies in production
+- [x] Security hardening applied
+- [x] Secrets handled properly (Docker secrets _FILE pattern in CLI wrappers)
+- [x] Health checks verify real functionality
 - [ ] Graceful shutdown works
-- [ ] CI/CD pipeline builds and pushes images
+- [x] CI/CD pipeline builds and pushes images
 - [ ] Production deployment runs stable
 
 ## Open Questions (Resolved)

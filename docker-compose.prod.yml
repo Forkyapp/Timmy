@@ -56,6 +56,11 @@ services:
     cap_drop:
       - ALL
 
+    # Read-only root filesystem — writes only via volumes and tmpfs
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+
     # Production health check (uses healthcheck.js)
     healthcheck:
       test: ["CMD", "node", "/app/scripts/healthcheck.js"]

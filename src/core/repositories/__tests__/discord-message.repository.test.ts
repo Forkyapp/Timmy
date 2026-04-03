@@ -150,14 +150,14 @@ describe('DiscordMessageRepository', () => {
       const oldMessage: ProcessedMessage = {
         messageId: '123',
         channelId: '456',
-        processedAt: new Date('2024-01-01T10:00:00Z'), // Old message
+        processedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago
         keywords: ['bug'],
       };
 
       const newMessage: ProcessedMessage = {
         messageId: '456',
         channelId: '456',
-        processedAt: new Date('2025-11-15T10:00:00Z'), // Recent message
+        processedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
         keywords: ['issue'],
       };
 
@@ -181,7 +181,7 @@ describe('DiscordMessageRepository', () => {
       const message: ProcessedMessage = {
         messageId: '123',
         channelId: '456',
-        processedAt: new Date('2025-11-15T10:00:00Z'),
+        processedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
         keywords: ['bug'],
       };
 

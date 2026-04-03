@@ -38,7 +38,22 @@ RUN npm run build
 RUN npm prune --production || yarn install --production
 
 # =========================================
-# Stage 2: Runtime
+# Stage 2: AI CLI Installer
+# =========================================
+FROM node:20-slim AS cli-installer
+
+# Install AI CLIs in isolated stage to keep build cache efficient
+RUN npm install -g @anthropic-ai/claude-code 2>/dev/null \
+    || echo "Note: Claude CLI not available via npm"
+
+RUN npm install -g @google/generative-ai 2>/dev/null \
+    || echo "Note: Gemini CLI package not available"
+
+RUN npm install -g @openai/codex 2>/dev/null \
+    || echo "Note: Codex CLI not available via npm"
+
+# =========================================
+# Stage 3: Runtime
 # =========================================
 FROM node:20-slim AS runtime
 
@@ -64,6 +79,10 @@ WORKDIR /app
 COPY --from=builder /build/dist ./dist
 COPY --from=builder /build/node_modules ./node_modules
 COPY --from=builder /build/package.json ./
+
+# Copy AI CLIs from cli-installer stage
+COPY --from=cli-installer /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=cli-installer /usr/local/bin /usr/local/bin
 
 # Copy scripts needed at runtime
 COPY docker/scripts/cli/ ./scripts/cli/

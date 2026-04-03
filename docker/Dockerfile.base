@@ -13,11 +13,15 @@ LABEL version="1.0"
 # - curl: API health checks and downloads
 # - ca-certificates: HTTPS connections
 # - gnupg: Package verification
+# - jq: JSON parsing for config files
+# - openssh-client: SSH authentication for private repos
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     ca-certificates \
     gnupg \
+    jq \
+    openssh-client \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
