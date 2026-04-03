@@ -6,6 +6,7 @@ import config, { RepositoryConfig } from '../../shared/config';
 import { timmy, colors } from '../../shared/ui';
 import { withRetry, RetryOptions } from '../../shared/utils/retry.util';
 import { loadContextForModel } from '../context/context-orchestrator';
+import { loadAndApplySkill, loadTemplate } from '../skills';
 import type { ClickUpTask } from '../../../src/types/clickup';
 import type { AnalysisResult, FeatureSpec, Progress } from '../../../src/types/ai';
 import type { ExecResult } from '../../../src/types/common';
@@ -74,7 +75,12 @@ async function analyzeTask(task: ClickUpTask, options: AnalyzeTaskOptions = {}):
 
   updateProgress(0, 3, 'Starting analysis...');
 
-  const analysisPrompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}You are a senior software architect analyzing a development task.
+  // Load analysis skill from markdown file
+  const analysisSkill = await loadAndApplySkill('analysis', {});
+
+  const analysisPrompt = `${smartContext ? smartContext + '\n\n' + '='.repeat(80) + '\n\n' : ''}${analysisSkill}
+
+## Task
 
 **Task ID:** ${taskId}
 **Title:** ${taskTitle}
@@ -83,47 +89,7 @@ ${taskDescription}
 
 **Repository:** ${repoPath}
 **Owner/Org:** ${repoOwner}
-**Repo Name:** ${repoName}
-
-Your job is to analyze this task and create a detailed feature specification. DO NOT include any code implementation.
-
-Please provide:
-
-1. **Feature Overview** (2-3 sentences)
-   - What needs to be built
-   - Why it's needed
-   - Expected outcome
-
-2. **Files to Modify** (CRITICAL - Be Specific)
-   List exact file paths that need to be created or modified:
-   - \`path/to/file.js\` - What changes are needed
-   - \`path/to/another.js\` - What changes are needed
-   - Include both new files and existing files to modify
-   - Use relative paths from repository root
-
-3. **Technical Approach** (4-6 bullet points)
-   - High-level architecture decisions
-   - Which parts of the codebase will be affected
-   - Any dependencies or prerequisites
-   - Potential challenges
-
-4. **Implementation Steps** (numbered list)
-   - Break down into logical steps
-   - Reference specific files from "Files to Modify" section
-   - Order of implementation
-
-5. **Testing Strategy** (3-4 bullet points)
-   - What should be tested
-   - Types of tests needed
-   - Edge cases to consider
-   - Which test files to create/modify
-
-6. **Acceptance Criteria** (checklist)
-   - Specific requirements that must be met
-   - Definition of done
-   - How to verify the feature works
-
-Format your response in clear Markdown. Be specific about file paths and changes. Focus on WHAT and WHY, not HOW (no code).`;
+**Repo Name:** ${repoName}`;
 
   try {
     // Save prompt to file
@@ -179,43 +145,17 @@ Format your response in clear Markdown. Be specific about file paths and changes
     const err = error as Error;
     console.log(timmy.error(`Gemini analysis failed: ${err.message}`));
 
-    // Create fallback feature spec
-    const fallbackSpec = `# Feature Specification - ${taskTitle}
-
-**Status:** Auto-generated fallback (Gemini unavailable)
-
-## Feature Overview
-${taskDescription || 'No description provided'}
-
-## Files to Modify
-⚠️ Manual analysis required - please identify affected files
-
-## Technical Approach
-- Implement the feature as described in the task description
-- Follow existing code patterns and conventions
-- Write tests for new functionality
-- Update documentation as needed
-
-## Implementation Steps
-1. Review task requirements carefully
-2. Identify affected files and modules
-3. Implement changes incrementally
-4. Test thoroughly
-5. Create pull request
-
-## Testing Strategy
-- Write unit tests for new functionality
-- Test edge cases
-- Verify integration with existing features
-
-## Acceptance Criteria
-- [ ] Feature implemented as described
-- [ ] Tests pass
-- [ ] Code follows project conventions
-- [ ] PR created and ready for review
-
-**Note:** This is a fallback specification. Gemini AI analysis was unavailable.
-`;
+    // Load fallback spec from skill template
+    let fallbackSpec: string;
+    try {
+      fallbackSpec = await loadTemplate('analysis/fallback.md', {
+        taskTitle,
+        taskDescription: taskDescription || 'No description provided',
+      });
+    } catch {
+      // Inline fallback if template also fails to load
+      fallbackSpec = `# Feature Specification - ${taskTitle}\n\n${taskDescription || 'No description provided'}\n\n**Note:** Fallback specification.`;
+    }
 
     const featureSpecFile = path.join(featureDir, 'feature-spec.md');
     fs.writeFileSync(featureSpecFile, fallbackSpec);
