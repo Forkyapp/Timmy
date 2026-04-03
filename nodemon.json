@@ -1,0 +1,21 @@
+{
+  "watch": ["src", "lib", "timmy.ts"],
+  "ext": "ts,json",
+  "ignore": [
+    "node_modules",
+    "data",
+    "dist",
+    "*.test.ts",
+    "__tests__",
+    "coverage",
+    ".git",
+    "docker"
+  ],
+  "delay": 1000,
+  "execMap": {
+    "ts": "ts-node -r tsconfig-paths/register"
+  },
+  "env": {
+    "TS_NODE_PROJECT": "tsconfig.json"
+  }
+}

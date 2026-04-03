@@ -434,7 +434,8 @@ export class SmartContextLoader {
    */
   private loadCache(key: string): CachedEmbedding | null {
     if (this.cache.has(key)) {
-      return this.cache.get(key)!;
+      const cached = this.cache.get(key);
+      return cached ?? null;
     }
 
     const cachePath = path.join(this.cacheDir, `${key}.json`);

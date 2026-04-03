@@ -54,7 +54,8 @@ export class DiscordService {
       guildId: config.discord.guildId,
       onMessage: async (message) => {
         // Only handle mentions in real-time
-        if (message.mentions.has(message.client.user!.id)) {
+        const userId = message.client.user?.id;
+        if (userId && message.mentions.has(userId)) {
           await this.handleMention(message);
         }
       },

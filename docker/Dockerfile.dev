@@ -1,0 +1,72 @@
+# =========================================
+# Timmy Development Image
+# Phase 02: Development Environment
+# Built on top of timmy-base
+# =========================================
+FROM timmy-base:latest
+
+# Switch to root for installing packages
+USER root
+
+# Install development tools globally
+# - nodemon: Auto-restart on file changes
+# - ts-node: Run TypeScript directly
+# - typescript: TypeScript compiler
+# - tsconfig-paths: Support for path aliases (@/...)
+RUN npm install -g \
+    nodemon \
+    ts-node \
+    typescript \
+    tsconfig-paths
+
+# =========================================
+# Phase 03: AI CLI Integration
+# =========================================
+# Install AI CLIs - failures are non-fatal (graceful degradation)
+# Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code 2>/dev/null \
+    || echo "Note: Claude CLI not available via npm, will use system claude if present"
+
+# Gemini CLI (if available)
+RUN npm install -g @google/generative-ai 2>/dev/null \
+    || echo "Note: Gemini CLI package not available"
+
+# OpenAI Codex CLI
+RUN npm install -g @openai/codex 2>/dev/null \
+    || echo "Note: Codex CLI not available via npm"
+
+# Create scripts directory and copy CLI wrappers
+RUN mkdir -p /app/scripts/cli
+COPY docker/scripts/cli/*.sh /app/scripts/cli/
+RUN chmod +x /app/scripts/cli/*.sh
+
+# Install additional dev utilities
+# - vim: Quick file editing inside container
+# - less: Better log viewing
+# - procps: Process utilities (ps, top)
+# - gosu: Drop privileges safely in entrypoint
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    vim \
+    less \
+    procps \
+    gosu \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy entrypoint script
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /app
+
+# Enable TypeScript path aliases
+ENV TS_NODE_PROJECT=/app/tsconfig.json
+
+# Expose Node.js debug port for VS Code debugging
+EXPOSE 9229
+
+# Entrypoint fixes permissions then drops to timmy user
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default development command with hot reload
+CMD ["sh", "-c", "npm install && nodemon --exec 'ts-node -r tsconfig-paths/register' timmy.ts"]
