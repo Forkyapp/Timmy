@@ -157,7 +157,7 @@ describe('DiscordMessageRepository', () => {
       const newMessage: ProcessedMessage = {
         messageId: '456',
         channelId: '456',
-        processedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        processedAt: new Date(), // Recent message (now)
         keywords: ['issue'],
       };
 
@@ -181,7 +181,7 @@ describe('DiscordMessageRepository', () => {
       const message: ProcessedMessage = {
         messageId: '123',
         channelId: '456',
-        processedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        processedAt: new Date(), // Recent message (now)
         keywords: ['bug'],
       };
 
