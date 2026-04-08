@@ -1,0 +1,29 @@
+trust5:
+  testable:
+    min_coverage: 85
+    require_unit_tests: true
+    require_integration_tests: false
+
+  readable:
+    max_complexity: 10
+    max_file_lines: 300
+    max_function_lines: 50
+    naming_convention: camelCase
+
+  unified:
+    linter: eslint
+    formatter: prettier
+    must_pass: true
+
+  secured:
+    scan_secrets: true
+    scan_vulnerabilities: true
+    max_severity: medium  # Block on high/critical
+
+  trackable:
+    conventional_commits: true
+    require_issue_reference: false
+
+enforcement:
+  block_on_failure: true
+  allow_override: false  # Supervisor can't skip gates
